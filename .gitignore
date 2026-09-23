@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor
+*.swp
+*.swo
+
+# Local corpus + database (immutable source archive is machine-local, not versioned)
+data/corpus/**
+!data/corpus/.gitkeep
+*.sqlite
+*.sqlite3
+*.db
