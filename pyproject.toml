@@ -1,13 +1,15 @@
 [project]
 name = "mehungry-extractor"
-version = "0.1.0"
-description = "Offline phase-aware recommendation extractor for Mehungry. Pulls condition/study pairs from the deployed app, fetches PubMed/PMC text, extracts phase-tagged dietary recommendations with an LLM (optionally grounded by biomedical NER), and posts review-gated candidates back over the token-guarded REST API."
+version = "0.2.0"
+description = "Deterministic, offline biomedical literature ingestion and evidence/provenance engine for Mehungry, plus the legacy LLM recommendation extractor. Archives PubMed/PMC sources immutably, builds an offset-addressable canonical document, and preserves complete provenance back to the exact source span."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "requests>=2.31",
     "anthropic>=0.40",
     "pydantic>=2.6",
+    "spacy>=3.7",
+    "sqlalchemy>=2.0",
 ]
 
 # Optional biomedical NER grounding (scispaCy). Heavy — install only on the GPU/NLP box:
@@ -20,7 +22,8 @@ ner = [
 ]
 
 [project.scripts]
-mehungry-extract = "mehungry_extractor.cli:main"
+mehungry-extract = "mehungry_extractor.cli:main"          # legacy LLM recommendation path
+mehungry = "mehungry_extractor.knowledge.stagecli:main"   # deterministic staged engine
 
 [build-system]
 requires = ["hatchling"]

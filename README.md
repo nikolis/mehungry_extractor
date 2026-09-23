@@ -1,9 +1,73 @@
 # mehungry-extractor
 
-Offline, **non-deployed** phase-aware recommendation extractor for Mehungry — a Python
-sibling of `apps/mehungry_local_ai`. It consumes the same token-guarded
-`/api/local_ai/*` REST seam but owns the whole extraction chain for *condition*
-recommendations.
+Offline, **non-deployed** biomedical literature tooling for Mehungry. It has two layers:
+
+1. **Deterministic knowledge/evidence engine** (`mehungry_extractor.knowledge`, CLI
+   `mehungry`) — the source of truth. It archives PubMed/PMC sources immutably, builds an
+   offset-addressable canonical document, and preserves complete provenance back to the exact
+   source span. **No LLM, no network inference, no randomness.** See
+   [Deterministic engine](#deterministic-engine-mehungry) below.
+2. **Legacy LLM recommendation extractor** (CLI `mehungry-extract`) — the original
+   phase-aware dietary-recommendation path, a Python sibling of `apps/mehungry_local_ai`.
+   Unchanged; documented under [LLM recommendation path](#llm-recommendation-path).
+
+The guiding requirement for layer 1: *if the system tells you a fact, it can show exactly
+which paper, section, sentence, phrase, extraction rule, and pipeline version produced it.*
+No normalized knowledge object exists without provenance.
+
+---
+
+## Deterministic engine (`mehungry`)
+
+### Pipeline (Phase 1)
+
+```
+PubMed / PMC
+  → acquire.py     raw XML fetch (reuses the E-utilities plumbing in pmc.py)
+  → corpus.py      immutable, idempotent local archive (never overwrites raw)
+  → jats.py / pubmed.py   structured section/paragraph + metadata parsing
+  → segment.py     deterministic sentence segmentation (spaCy blank + sentencizer)
+  → canonical.py   Document → Section → Paragraph → Sentence, absolute char offsets
+  → db/            SQLite persistence (SQLAlchemy)
+  + provenance.py  EvidenceRef + precision  ·  run.py  ExtractionRun (versions/git)
+```
+
+**Offset contract:** every document has one canonical `text`; every section/paragraph/
+sentence offset is absolute, so `document.text[start:end] == obj.text`. This is the
+reconstruction invariant provenance relies on, and it is enforced by tests.
+
+### Corpus layout
+
+```
+data/corpus/pmid_12345678/
+  raw/{pubmed.xml, pmc.xml, abstract.txt}   # immutable; never silently overwritten
+  canonical/document.json                    # the offset-addressable canonical doc
+  metadata.json                              # bibliographic + acquisition provenance + checksums
+  checksums.json                             # SHA-256 of every raw file
+```
+
+### Stages (each independently rerunnable)
+
+```bash
+mehungry ingest    --pmid 12345678           # network: acquire → archive → canonical → DB
+mehungry ingest    --pmids 111,222 --force   # batch; --force refreshes cached raw
+mehungry normalize --document pmid:12345678  # offline: rebuild canonical from cached raw
+mehungry export    --document pmid:12345678  # print canonical document.json
+mehungry list                                # list ingested documents
+# mehungry analyze/extract/audit → Phases 2/3/5 (registered stubs)
+```
+
+Determinism: same source + same pipeline version ⇒ byte-identical `document.json`.
+`analyze` (entities), `extract` (relations/claims), and `audit` are scaffolded stubs for
+later phases; no recommendation generation and no LLM live in this engine.
+
+---
+
+## LLM recommendation path
+
+Phase-aware recommendation extractor — a Python sibling of `apps/mehungry_local_ai`. It
+consumes the same token-guarded `/api/local_ai/*` REST seam and owns the whole extraction
+chain for *condition* recommendations.
 
 Why a separate service (and why Python): disease-phase advice (e.g. "avoid fiber during
 an active flare, encourage it in remission") lives only in study prose — PubTator
@@ -12,7 +76,7 @@ biomedical NLP stack (scispaCy). Keeping it offline means `anthropic`/`scispacy`
 never in the deployed release. Nothing it posts is auto-promoted; every finding lands in
 the `/professional/health` review queue.
 
-## Pipeline
+### Pipeline
 
 ```
 GET  /api/local_ai/condition_pending           → [{study_id, pmid, condition, states}]
@@ -50,6 +114,25 @@ mehungry-extract --no-ner              # skip scispaCy grounding
 ```
 
 ## Layout
+
+Deterministic engine (`mehungry_extractor/knowledge/`):
+
+| File | Role |
+|---|---|
+| `ids.py` | Deterministic, position-based IDs (`pmid_x`, `..._sec003_p007_s02`). |
+| `acquire.py` | Raw PubMed/PMC XML fetch (reuses `pmc.py` E-utilities plumbing). |
+| `corpus.py` | Immutable, idempotent on-disk archive + SHA-256 checksums. |
+| `jats.py` / `pubmed.py` | Structured section/paragraph + bibliographic-metadata parsing. |
+| `segment.py` | Deterministic sentence segmentation (spaCy blank + sentencizer). |
+| `canonical.py` | Canonical `Document/Section/Paragraph/Sentence` + absolute offsets. |
+| `provenance.py` | `EvidenceRef` + `ProvenancePrecision`. |
+| `run.py` | `ExtractionRun` — git commit + tool versions for reproducibility. |
+| `ingest.py` | Orchestration: `ingest_pmid` (network) / `normalize_document` (offline). |
+| `db/` | SQLAlchemy tables + persist/load (SQLite). |
+| `query.py` | Deterministic query + provenance API (Phase-1 subset; later stubs). |
+| `stagecli.py` | The `mehungry` staged CLI. |
+
+Legacy LLM path:
 
 | File | Role |
 |---|---|
