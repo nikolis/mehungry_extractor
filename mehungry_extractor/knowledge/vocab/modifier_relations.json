@@ -1,0 +1,8 @@
+{
+  "vocabulary": "mehungry_modifier_relations",
+  "version": "0.1.0",
+  "_doc": "Phase 12 — cue table for typing an entity's restrictive prep-phrase modifier. A modifier's relation is decided by the resolved object, never by the preposition alone ('of' is ambiguous). 'site_concepts' are the curated concept ids that read as a locus/site, so a prep-phrase resolving to one is a 'localized_in' edge (e.g. dysbiosis OF the gut microbiome). Any other attributive 'of'/'within' phrase falls back to the generic, non-discriminating 'qualified_by'. A condition preposition like 'in remission' is left to the Phase-6 qualifier layer and is NOT a modifier.",
+  "localized_in_prepositions": ["of", "in", "within"],
+  "attributive_prepositions": ["of", "within"],
+  "site_concepts": ["BIOM:gut_microbiota"]
+}

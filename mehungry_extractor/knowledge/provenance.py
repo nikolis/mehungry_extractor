@@ -93,3 +93,41 @@ class EvidenceRef(BaseModel):
             extraction_rule=extraction_rule,
             extraction_rule_version=extraction_rule_version,
         )
+
+    @classmethod
+    def for_span(
+        cls,
+        document: "Document",
+        start_char: int,
+        end_char: int,
+        *,
+        sentence: Optional["Sentence"] = None,
+        extraction_rule: str,
+        extraction_rule_version: str,
+    ) -> "EvidenceRef":
+        """Build an ``EXACT_SPAN`` evidence ref for a sub-sentence character span.
+
+        ``quoted_text`` is sliced from the canonical text at the given offsets, so the ref is
+        self-consistent with them by construction. The owning sentence is used to fill the
+        section/paragraph/sentence ids: pass it directly when known (the common case — the
+        caller scans sentence by sentence), otherwise the first canonical sentence that fully
+        contains the span is located. If no sentence contains the span the structural ids are
+        left ``None`` — the exact offsets still fully locate the evidence.
+        """
+        if sentence is None:
+            for sent in document.iter_sentences():
+                if sent.start_char <= start_char and end_char <= sent.end_char:
+                    sentence = sent
+                    break
+        return cls(
+            document_id=document.document_id,
+            section_id=sentence.section_id if sentence else None,
+            paragraph_id=sentence.paragraph_id if sentence else None,
+            sentence_id=sentence.sentence_id if sentence else None,
+            start_char=start_char,
+            end_char=end_char,
+            quoted_text=document.text[start_char:end_char],
+            precision=ProvenancePrecision.EXACT_SPAN,
+            extraction_rule=extraction_rule,
+            extraction_rule_version=extraction_rule_version,
+        )

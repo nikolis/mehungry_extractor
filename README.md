@@ -2,22 +2,24 @@
 
 Offline, **non-deployed** biomedical literature tooling for Mehungry. It has two layers:
 
-1. **Deterministic knowledge/evidence engine** (`mehungry_extractor.knowledge`, CLI
+1. **Offline knowledge/evidence engine** (`mehungry_extractor.knowledge`, CLI
    `mehungry`) — the source of truth. It archives PubMed/PMC sources immutably, builds an
    offset-addressable canonical document, and preserves complete provenance back to the exact
-   source span. **No LLM, no network inference, no randomness.** See
-   [Deterministic engine](#deterministic-engine-mehungry) below.
+   source span. **Runs entirely offline (no hosted APIs); every fact traces to its source
+   span.** Non-deterministic local techniques (embeddings, similarity, learned scorers) are
+   allowed as long as provenance is preserved. See [Offline engine](#offline-engine-mehungry) below.
 2. **Legacy LLM recommendation extractor** (CLI `mehungry-extract`) — the original
    phase-aware dietary-recommendation path, a Python sibling of `apps/mehungry_local_ai`.
    Unchanged; documented under [LLM recommendation path](#llm-recommendation-path).
 
-The guiding requirement for layer 1: *if the system tells you a fact, it can show exactly
-which paper, section, sentence, phrase, extraction rule, and pipeline version produced it.*
-No normalized knowledge object exists without provenance.
+The guiding requirement for layer 1: *if the system tells you a fact, it can show which paper,
+and — wherever the text supports it — which section, sentence, or phrase produced it.*
+No normalized knowledge object exists without provenance. Determinism is **not** a requirement;
+provenance is the guarantee we keep.
 
 ---
 
-## Deterministic engine (`mehungry`)
+## Offline engine (`mehungry`)
 
 ### Pipeline (Phase 1)
 
@@ -57,9 +59,12 @@ mehungry list                                # list ingested documents
 # mehungry analyze/extract/audit → Phases 2/3/5 (registered stubs)
 ```
 
-Determinism: same source + same pipeline version ⇒ byte-identical `document.json`.
-`analyze` (entities), `extract` (relations/claims), and `audit` are scaffolded stubs for
-later phases; no recommendation generation and no LLM live in this engine.
+Acquisition and canonicalization are deterministic parsing steps: same source + same pipeline
+version ⇒ byte-identical `document.json`. Downstream extraction (`analyze`/`extract`) may use
+non-deterministic **local** techniques (embeddings, similarity, learned scorers), as long as every
+fact keeps its provenance span. `analyze` (entities), `extract` (relations/claims), and `audit` are
+scaffolded stubs for later phases; no recommendation generation and no **hosted-model** calls live
+in this engine — the legacy `mehungry-extract` path owns those.
 
 ---
 
@@ -115,7 +120,7 @@ mehungry-extract --no-ner              # skip scispaCy grounding
 
 ## Layout
 
-Deterministic engine (`mehungry_extractor/knowledge/`):
+Offline engine (`mehungry_extractor/knowledge/`):
 
 | File | Role |
 |---|---|

@@ -1,0 +1,48 @@
+{
+  "version": "0.1.0",
+  "vocabulary": "mehungry_institutions",
+  "institutions": [
+    {
+      "institution_id": "INST:harvard",
+      "canonical_name": "Harvard University",
+      "institution_type": "university",
+      "surface_forms": ["harvard university", "harvard medical school", "harvard"]
+    },
+    {
+      "institution_id": "INST:oxford",
+      "canonical_name": "University of Oxford",
+      "institution_type": "university",
+      "surface_forms": ["university of oxford", "oxford university"]
+    },
+    {
+      "institution_id": "INST:cambridge",
+      "canonical_name": "University of Cambridge",
+      "institution_type": "university",
+      "surface_forms": ["university of cambridge", "cambridge university"]
+    },
+    {
+      "institution_id": "INST:mayo",
+      "canonical_name": "Mayo Clinic",
+      "institution_type": "hospital",
+      "surface_forms": ["mayo clinic"]
+    },
+    {
+      "institution_id": "INST:example",
+      "canonical_name": "University of Example",
+      "institution_type": "university",
+      "surface_forms": ["university of example"]
+    },
+    {
+      "institution_id": "INST:pfizer",
+      "canonical_name": "Pfizer",
+      "institution_type": "company",
+      "surface_forms": ["pfizer", "pfizer inc", "pfizer inc."]
+    },
+    {
+      "institution_id": "INST:nestle",
+      "canonical_name": "Nestlé",
+      "institution_type": "company",
+      "surface_forms": ["nestle", "nestlé", "nestle research", "nestlé research"]
+    }
+  ]
+}

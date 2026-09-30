@@ -1,0 +1,47 @@
+{
+  "version": "0.1.0",
+  "vocabulary": "mehungry_disease_states",
+  "disease_states": [
+    {
+      "concept_id": "DS:remission",
+      "canonical_name": "Remission",
+      "entity_type": "disease_state",
+      "surface_forms": [
+        "remission",
+        "clinical remission",
+        "quiescent",
+        "quiescence",
+        "quiescent disease",
+        "inactive disease"
+      ]
+    },
+    {
+      "concept_id": "DS:active_disease",
+      "canonical_name": "Active disease",
+      "entity_type": "disease_state",
+      "surface_forms": [
+        "active disease",
+        "active inflammation",
+        "clinically active",
+        "active flare",
+        "acute flare"
+      ]
+    },
+    {
+      "concept_id": "DS:flare",
+      "canonical_name": "Flare",
+      "entity_type": "disease_state",
+      "surface_forms": [
+        "flare",
+        "flares",
+	"active flares",
+        "flare-up",
+        "flare-ups",
+        "flareup",
+        "clinical flare",
+        "disease flare",
+        "relapse"
+      ]
+    }
+  ]
+}

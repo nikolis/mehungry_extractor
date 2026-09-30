@@ -6,7 +6,13 @@ low-level **observations** (inspectable, close to the text), then normalize to c
 "separate observations from claims" requirement (spec §5) is realized.
 
 **Prerequisite:** Phases 1–2. Subjects/objects come from Phase 2 `EntityMention`s; spans and
-provenance come from Phase 1.
+provenance come from Phase 1. Load mentions with
+`query.list_entities_for_document(engine, doc)` (persisted) or regenerate inline with
+`entities.extract(document)` — both deterministic and offline. Each `EntityMention` carries
+`mention_id, surface_text, entity_type, concept_id, status, sentence_id, start_char,
+end_char, evidence_ref`. **Note the `status`:** a mention may be `unmatched`/`ambiguous`
+with `concept_id=None` (Phase 2 never drops these). Relations can still be *observed* over
+such a mention; it just can't participate in a normalized `Claim` (see the data model).
 
 ## Deliverables
 
@@ -28,7 +34,11 @@ Do not try to cover every biomedical relation. Add rules incrementally, each tes
   (keep both the mention id and surface text).
 - `Claim`: the normalized/canonical form of one-or-more observations
   (`subject_concept, predicate, object_concept, context, polarity, certainty`) +
-  `evidence_refs`.
+  `evidence_refs`. Because `subject_concept`/`object_concept` are Phase 2 `EntityConcept`s,
+  a claim can only form when **both** endpoint mentions normalized (`status=normalized`,
+  `concept_id` set). An observation whose subject or object is `unmatched`/`ambiguous` is
+  retained at the observation layer but produces no claim — surface the drop count rather
+  than silently discarding it.
 - Enums (spec §8): `polarity ∈ {positive, negative, neutral}`;
   `certainty ∈ {asserted, possible, uncertain, hypothetical, insufficient_evidence}`.
 
@@ -46,7 +56,7 @@ Fill `find_claims(...)` in `knowledge/query.py` (deterministic filters only):
 `find_claims(condition=..., subject=..., predicate=..., polarity=...)`,
 `find_evidence(claim_id)`, `list_claims_for_document(document_id)`.
 
-## Determinism & provenance constraints
+## Provenance constraints (offline; determinism optional)
 - **Rules only** — spaCy `Matcher`/`DependencyMatcher`, regex, dictionaries. No statistical
   relation classifier, no LLM. Recommended start: token + lexical patterns via `Matcher`
   (no parser needed, fully deterministic); add `DependencyMatcher` later, which requires a
@@ -90,4 +100,5 @@ Fill `find_claims(...)` in `knowledge/query.py` (deterministic filters only):
 ## Done criteria
 `mehungry extract --document pmid:NNNN` produces observations and normalized claims, each
 traceable to an exact sentence/phrase and a rule id/version; `find_claims` returns
-deterministic filtered results. Bump `RULESET_VERSION` and `SCHEMA_VERSION`.
+deterministic filtered results. Bump `RULESET_VERSION` (Phase 2 left it at `0.1.0`) and
+`SCHEMA_VERSION` (Phase 2 left it at `0.2.0`).

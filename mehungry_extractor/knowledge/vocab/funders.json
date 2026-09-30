@@ -1,0 +1,96 @@
+{
+  "version": "0.1.0",
+  "vocabulary": "mehungry_funders",
+  "funders": [
+    {
+      "funder_id": "FUND:nih",
+      "canonical_name": "National Institutes of Health",
+      "funder_type": "government",
+      "surface_forms": ["national institutes of health", "nih", "u.s. national institutes of health"]
+    },
+    {
+      "funder_id": "FUND:nihr",
+      "canonical_name": "National Institute for Health Research",
+      "funder_type": "government",
+      "surface_forms": ["national institute for health research", "nihr"]
+    },
+    {
+      "funder_id": "FUND:nsf",
+      "canonical_name": "National Science Foundation",
+      "funder_type": "government",
+      "surface_forms": ["national science foundation", "nsf"]
+    },
+    {
+      "funder_id": "FUND:mrc",
+      "canonical_name": "Medical Research Council",
+      "funder_type": "government",
+      "surface_forms": ["medical research council", "mrc"]
+    },
+    {
+      "funder_id": "FUND:european_commission",
+      "canonical_name": "European Commission",
+      "funder_type": "government",
+      "surface_forms": ["european commission", "horizon 2020", "european union"]
+    },
+    {
+      "funder_id": "FUND:wellcome",
+      "canonical_name": "Wellcome Trust",
+      "funder_type": "charity",
+      "surface_forms": ["wellcome trust", "wellcome"]
+    },
+    {
+      "funder_id": "FUND:gates",
+      "canonical_name": "Bill & Melinda Gates Foundation",
+      "funder_type": "foundation",
+      "surface_forms": ["bill & melinda gates foundation", "gates foundation"]
+    },
+    {
+      "funder_id": "FUND:crohns_colitis",
+      "canonical_name": "Crohn's & Colitis Foundation",
+      "funder_type": "charity",
+      "surface_forms": ["crohn's & colitis foundation", "crohns and colitis foundation", "crohn's and colitis foundation"]
+    },
+    {
+      "funder_id": "FUND:pfizer",
+      "canonical_name": "Pfizer",
+      "funder_type": "pharmaceutical",
+      "surface_forms": ["pfizer", "pfizer inc", "pfizer inc."]
+    },
+    {
+      "funder_id": "FUND:novartis",
+      "canonical_name": "Novartis",
+      "funder_type": "pharmaceutical",
+      "surface_forms": ["novartis", "novartis pharmaceuticals"]
+    },
+    {
+      "funder_id": "FUND:abbvie",
+      "canonical_name": "AbbVie",
+      "funder_type": "pharmaceutical",
+      "surface_forms": ["abbvie", "abbvie inc"]
+    },
+    {
+      "funder_id": "FUND:merck",
+      "canonical_name": "Merck",
+      "funder_type": "pharmaceutical",
+      "surface_forms": ["merck", "merck & co", "msd"]
+    },
+    {
+      "funder_id": "FUND:nestle",
+      "canonical_name": "Nestlé",
+      "funder_type": "food_industry",
+      "surface_forms": ["nestle", "nestlé", "nestle health science", "nestlé health science"]
+    },
+    {
+      "funder_id": "FUND:danone",
+      "canonical_name": "Danone",
+      "funder_type": "food_industry",
+      "surface_forms": ["danone", "danone nutricia", "nutricia"]
+    },
+    {
+      "funder_id": "FUND:unilever",
+      "canonical_name": "Unilever",
+      "funder_type": "food_industry",
+      "surface_forms": ["unilever"]
+    }
+  ]
+}

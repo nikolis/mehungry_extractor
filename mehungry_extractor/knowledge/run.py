@@ -60,7 +60,20 @@ class ExtractionRun:
     document_ids: list[str] = field(default_factory=list)
 
 
-def build_run(document_ids: list[str], timestamp: Optional[str] = None) -> ExtractionRun:
+def build_run(
+    document_ids: list[str],
+    timestamp: Optional[str] = None,
+    *,
+    extra_fingerprint: Optional[list[str]] = None,
+) -> ExtractionRun:
+    """Build a deterministic :class:`ExtractionRun` for a set of documents.
+
+    ``extra_fingerprint`` folds additional stable identifiers into the ``run_id`` hash so that a
+    change in the tool that produced the run forks it. Phase 11 passes the open-relation detector's
+    ``[name, version]`` here: re-running the *same* detector reproduces the ``run_id`` (writes stay
+    idempotent), while switching detectors forks the run so the persisted rows are attributable to
+    the exact detector that produced them.
+    """
     doc_ids = sorted(set(document_ids))
     git_commit = _git_commit()
     spacy_version = _tool_version("spacy")
@@ -76,6 +89,7 @@ def build_run(document_ids: list[str], timestamp: Optional[str] = None) -> Extra
             spacy_version or "",
             scispacy_version or "",
             git_commit or "",
+            *(extra_fingerprint or []),
             *doc_ids,
         ]
     )

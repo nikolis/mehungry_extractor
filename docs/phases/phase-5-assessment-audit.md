@@ -39,7 +39,7 @@ the exact quoted sentence), MATCH (rule id/version, extractor version), FUNDING 
 source), DOCUMENT HASH (from `checksums.json`), EXTRACTION RUN. Add
 `knowledge/audit.py` for the rendering, keeping the CLI thin.
 
-## Determinism & provenance constraints
+## Provenance constraints (offline; determinism optional)
 - **Facts vs assessments stay separate.** `study_design=RCT`, `publication_year=2010`,
   `industry_funding=false`, `sample_size=120` are facts (Phase 4). A framework may map those
   to values; that mapping is versioned and reproducible and lives only in `assessments`.

@@ -1,22 +1,32 @@
 """Raw source acquisition from NCBI E-utilities.
 
-Fetches the *raw* XML artifacts (for durable archival) rather than the flattened text the
-legacy path uses — the immutable corpus keeps these bytes forever (spec §2). This module
-makes no parsing decisions beyond resolving a PMCID; structure/metadata parsing lives in
-``jats``/``pubmed``. It reuses the E-utilities plumbing from the legacy ``pmc`` module so
-there is a single source of truth for the endpoint and API-key handling.
+Fetches the *raw* XML artifacts (for durable archival): the immutable corpus keeps these bytes
+forever (spec §2). This module makes no parsing decisions beyond resolving a PMCID;
+structure/metadata parsing lives in ``jats``/``pubmed``. It owns its own thin E-utilities plumbing
+(endpoint + API-key handling) so the deterministic engine has no external dependencies.
 """
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
 import requests
 
-from .. import pmc  # reuse EUTILS, _params, _pmid_to_pmcid — no behavior change to pmc.py
 from .ids import normalize_pmid
+
+EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+_API_KEY = os.environ.get("NCBI_API_KEY")
+
+
+def _params(extra: dict) -> dict:
+    """Merge the optional NCBI API key into an E-utilities query param dict."""
+    p = dict(extra)
+    if _API_KEY:
+        p["api_key"] = _API_KEY
+    return p
 
 
 @dataclass
@@ -33,7 +43,26 @@ class RawSources:
 
 
 def _efetch_url(db: str, uid: str) -> str:
-    return f"{pmc.EUTILS}/efetch.fcgi?db={db}&id={uid}&retmode=xml"
+    return f"{EUTILS}/efetch.fcgi?db={db}&id={uid}&retmode=xml"
+
+
+def _pmid_to_pmcid(pmid: str, timeout: int) -> Optional[str]:
+    """Resolve a PMID to its PMC id via elink, or ``None`` when the article is not in PMC."""
+    resp = requests.get(
+        f"{EUTILS}/elink.fcgi",
+        params=_params({"dbfrom": "pubmed", "db": "pmc", "id": pmid, "retmode": "json"}),
+        timeout=timeout,
+    )
+    resp.raise_for_status()
+    try:
+        linksets = resp.json()["linksets"]
+        for ls in linksets:
+            for db in ls.get("linksetdbs", []):
+                if db.get("dbto") == "pmc" and db.get("links"):
+                    return f"PMC{db['links'][0]}"
+    except (KeyError, IndexError, ValueError):
+        pass
+    return None
 
 
 def fetch(pmid: str | int, timeout: int = 30) -> RawSources:
@@ -42,20 +71,20 @@ def fetch(pmid: str | int, timeout: int = 30) -> RawSources:
     urls: dict[str, str] = {}
 
     pubmed_resp = requests.get(
-        f"{pmc.EUTILS}/efetch.fcgi",
-        params=pmc._params({"db": "pubmed", "id": pmid, "retmode": "xml"}),
+        f"{EUTILS}/efetch.fcgi",
+        params=_params({"db": "pubmed", "id": pmid, "retmode": "xml"}),
         timeout=timeout,
     )
     pubmed_resp.raise_for_status()
     pubmed_xml = pubmed_resp.content
     urls["pubmed"] = _efetch_url("pubmed", pmid)
 
-    pmcid = pmc._pmid_to_pmcid(pmid, timeout)
+    pmcid = _pmid_to_pmcid(pmid, timeout)
     pmc_xml: Optional[bytes] = None
     if pmcid:
         pmc_resp = requests.get(
-            f"{pmc.EUTILS}/efetch.fcgi",
-            params=pmc._params({"db": "pmc", "id": pmcid.replace("PMC", ""), "retmode": "xml"}),
+            f"{EUTILS}/efetch.fcgi",
+            params=_params({"db": "pmc", "id": pmcid.replace("PMC", ""), "retmode": "xml"}),
             timeout=timeout,
         )
         pmc_resp.raise_for_status()

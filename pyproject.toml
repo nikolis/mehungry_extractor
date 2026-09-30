@@ -1,29 +1,48 @@
 [project]
 name = "mehungry-extractor"
-version = "0.2.0"
-description = "Deterministic, offline biomedical literature ingestion and evidence/provenance engine for Mehungry, plus the legacy LLM recommendation extractor. Archives PubMed/PMC sources immutably, builds an offset-addressable canonical document, and preserves complete provenance back to the exact source span."
+version = "0.3.0"
+description = "Deterministic, offline biomedical literature ingestion and evidence/provenance engine for Mehungry. Archives PubMed/PMC sources immutably, builds an offset-addressable canonical document, and preserves complete provenance back to the exact source span."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "requests>=2.31",
-    "anthropic>=0.40",
     "pydantic>=2.6",
-    "spacy>=3.7",
+    # scispaCy is a first-class detector (Concept 6): en_ner_bc5cdr_md is the authoritative
+    # Chemical/Disease span source and its pipeline also supplies the parser used by Phase 10.
+    # spaCy is pinned to the model's supported range (>=3.7.4,<3.8.0): spaCy 3.8 tightened config
+    # bool parsing and fails to load the v0.5.4 model wheel.
+    "spacy>=3.7.4,<3.8.0",
+    "scispacy>=0.5.4",
+    "en_ner_bc5cdr_md @ https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.4/en_ner_bc5cdr_md-0.5.4.tar.gz",
     "sqlalchemy>=2.0",
 ]
 
-# Optional biomedical NER grounding (scispaCy). Heavy — install only on the GPU/NLP box:
-#   uv pip install -e '.[ner]'
-#   python -m spacy download en_ner_bc5cdr_md   # or the scispaCy model wheel
 [project.optional-dependencies]
+# Back-compat alias: the scispaCy NER stack is now a core dependency (above), so `.[ner]` is a
+# no-op kept so existing `uv pip install -e '.[ner]'` invocations still resolve.
 ner = [
     "scispacy>=0.5.4",
-    "spacy>=3.7",
+    "spacy>=3.7.4,<3.8.0",
+]
+# REST API for batch PMID topic analysis (mehungry_extractor.knowledge.api). Kept optional so the
+# core library + CLI stay dependency-light:
+#   uv pip install -e '.[api]'
+api = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+]
+# Open relation discovery (Phase 11, mehungry_extractor.knowledge.openrel). The default detector is
+# an off-the-shelf REBEL-style seq2seq model run *purely as a detector* (its triples are discarded).
+# Kept optional and lazily loaded so the core library never pulls in transformers/torch:
+#   uv pip install -e '.[openrel]'
+openrel = [
+    "transformers>=4.30",
+    "torch>=2.0",
 ]
 
 [project.scripts]
-mehungry-extract = "mehungry_extractor.cli:main"          # legacy LLM recommendation path
 mehungry = "mehungry_extractor.knowledge.stagecli:main"   # deterministic staged engine
+mehungry-api = "mehungry_extractor.knowledge.api.app:run"  # batch analysis REST API ([api] extra)
 
 [build-system]
 requires = ["hatchling"]

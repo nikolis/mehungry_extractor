@@ -46,17 +46,20 @@ persist. Independently rerunnable.
 Add `list_entities_for_document(engine, doc)` and `find_mentions(concept_id=...)` to
 `knowledge/query.py`.
 
-## Determinism & provenance constraints
+## Provenance constraints (offline; determinism optional)
 - **scispaCy is deterministic at inference** (fixed weights, greedy decoding — no sampling).
   Pin the exact model wheel + version and record it in `ExtractionRun.ontology_versions`
   (and `scispacy_version`, already captured). Load with a cached singleton like
   `segment._nlp()`; disable components you don't use.
-- **Prefer dictionary/exact matching as the backbone**; use scispaCy as a candidate
-  generator. Exact/dictionary matches are trivially reproducible and auditable; keep the
-  model optional and behind the same "no-op if unavailable" degradation as `ner.py`.
-- **Normalization must be deterministic and offline.** The scispaCy UMLS/MeSH linker is
-  deterministic but downloads large data — if used, pin its version and treat the KB as a
-  versioned ontology artifact. Otherwise ship curated dictionaries under `knowledge/vocab/`.
+- **Keep dictionary/exact matching as the backbone**; use scispaCy (and, now, any **local**
+  model) as a candidate generator. Exact/dictionary matches are the transparent, auditable floor;
+  keep the model optional and behind the same "no-op if unavailable" degradation as `ner.py`.
+- **Normalization must be offline; it no longer has to be deterministic.** A **local** embedding
+  or similarity resolver may now link surfaces the dictionary missed (e.g. "cholecalciferol" →
+  "vitamin D"), provided the mention keeps its `EXACT_SPAN` and records how it was resolved (the
+  matched concept + score). The scispaCy UMLS/MeSH linker is still fine if pinned and treated as a
+  versioned KB artifact; curated dictionaries under `knowledge/vocab/` remain the backbone. Hosted
+  linking APIs stay out (online).
 - Every mention gets `EvidenceRef` with `precision=EXACT_SPAN`. Add
   `EvidenceRef.for_span(...)` in `provenance.py` for sub-sentence spans (find the owning
   sentence from the mention offsets). `extraction_rule` = the extractor/dictionary id;

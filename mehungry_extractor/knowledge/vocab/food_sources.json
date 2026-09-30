@@ -1,0 +1,2083 @@
+{
+  "version": "0.2.0",
+  "ontology": "mehungry_food_sources",
+  "relation": "found_in",
+  "edges": [
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:berries"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:blackberries"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:blueberries"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:boysenberries"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:cherries_sour"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:cherries_sweet"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:cherry"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:chokecherries"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:cloudberries"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:cranberries"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:currants_european"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:currants_red_and_white"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:currants_zante"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:eggplant"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:elderberries"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:gooseberries"
+    },
+    {
+      "source_concept_id": "CHEM:anthocyanins",
+      "food_concept_id": "FOOD:grape"
+    },
+    {
+      "source_concept_id": "CHEM:caffeine",
+      "food_concept_id": "FOOD:chocolate"
+    },
+    {
+      "source_concept_id": "CHEM:caffeine",
+      "food_concept_id": "FOOD:cocoa"
+    },
+    {
+      "source_concept_id": "CHEM:caffeine",
+      "food_concept_id": "FOOD:coffee"
+    },
+    {
+      "source_concept_id": "CHEM:caffeine",
+      "food_concept_id": "FOOD:tea"
+    },
+    {
+      "source_concept_id": "CHEM:capsaicin",
+      "food_concept_id": "FOOD:chili_pepper"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:apricot"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:arugula"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:beet_greens"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:carrot"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:chard"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:chili_pepper"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:collards"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:dandelion_greens"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:endive"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:escarole"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:kale"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "CHEM:carotenoids",
+      "food_concept_id": "FOOD:tomato"
+    },
+    {
+      "source_concept_id": "CHEM:catechins",
+      "food_concept_id": "FOOD:apple"
+    },
+    {
+      "source_concept_id": "CHEM:catechins",
+      "food_concept_id": "FOOD:chocolate"
+    },
+    {
+      "source_concept_id": "CHEM:catechins",
+      "food_concept_id": "FOOD:cocoa"
+    },
+    {
+      "source_concept_id": "CHEM:catechins",
+      "food_concept_id": "FOOD:grape"
+    },
+    {
+      "source_concept_id": "CHEM:catechins",
+      "food_concept_id": "FOOD:tea"
+    },
+    {
+      "source_concept_id": "CHEM:curcumin",
+      "food_concept_id": "FOOD:turmeric"
+    },
+    {
+      "source_concept_id": "CHEM:egcg",
+      "food_concept_id": "FOOD:tea"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:apple"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:berries"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:capers"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:chocolate"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:citrus"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:clementines"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:cocoa"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:grape"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:kale"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:onion"
+    },
+    {
+      "source_concept_id": "CHEM:flavonoids",
+      "food_concept_id": "FOOD:tea"
+    },
+    {
+      "source_concept_id": "CHEM:fructose",
+      "food_concept_id": "FOOD:agave"
+    },
+    {
+      "source_concept_id": "CHEM:fructose",
+      "food_concept_id": "FOOD:apple"
+    },
+    {
+      "source_concept_id": "CHEM:fructose",
+      "food_concept_id": "FOOD:banana"
+    },
+    {
+      "source_concept_id": "CHEM:fructose",
+      "food_concept_id": "FOOD:dates_deglet_noor"
+    },
+    {
+      "source_concept_id": "CHEM:fructose",
+      "food_concept_id": "FOOD:dates_medjool"
+    },
+    {
+      "source_concept_id": "CHEM:fructose",
+      "food_concept_id": "FOOD:figs"
+    },
+    {
+      "source_concept_id": "CHEM:fructose",
+      "food_concept_id": "FOOD:fruits"
+    },
+    {
+      "source_concept_id": "CHEM:fructose",
+      "food_concept_id": "FOOD:grape"
+    },
+    {
+      "source_concept_id": "CHEM:fructose",
+      "food_concept_id": "FOOD:honey"
+    },
+    {
+      "source_concept_id": "CHEM:histamine",
+      "food_concept_id": "FOOD:anchovies"
+    },
+    {
+      "source_concept_id": "CHEM:histamine",
+      "food_concept_id": "FOOD:cheese"
+    },
+    {
+      "source_concept_id": "CHEM:histamine",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "CHEM:histamine",
+      "food_concept_id": "FOOD:processed_meat"
+    },
+    {
+      "source_concept_id": "CHEM:lactose",
+      "food_concept_id": "FOOD:cheese"
+    },
+    {
+      "source_concept_id": "CHEM:lactose",
+      "food_concept_id": "FOOD:dairy"
+    },
+    {
+      "source_concept_id": "CHEM:lactose",
+      "food_concept_id": "FOOD:kefir"
+    },
+    {
+      "source_concept_id": "CHEM:lactose",
+      "food_concept_id": "FOOD:yogurt"
+    },
+    {
+      "source_concept_id": "CHEM:nitrates",
+      "food_concept_id": "FOOD:arugula"
+    },
+    {
+      "source_concept_id": "CHEM:nitrates",
+      "food_concept_id": "FOOD:beet_greens"
+    },
+    {
+      "source_concept_id": "CHEM:nitrates",
+      "food_concept_id": "FOOD:celery"
+    },
+    {
+      "source_concept_id": "CHEM:nitrates",
+      "food_concept_id": "FOOD:chard"
+    },
+    {
+      "source_concept_id": "CHEM:nitrates",
+      "food_concept_id": "FOOD:processed_meat"
+    },
+    {
+      "source_concept_id": "CHEM:nitrates",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:apple"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:artichokes"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:berries"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:blueberries"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:chocolate"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:cocoa"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:coffee"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:flaxseed"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:grape"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:olive_oil"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:tea"
+    },
+    {
+      "source_concept_id": "CHEM:polyphenols",
+      "food_concept_id": "FOOD:walnuts"
+    },
+    {
+      "source_concept_id": "CHEM:quercetin",
+      "food_concept_id": "FOOD:apple"
+    },
+    {
+      "source_concept_id": "CHEM:quercetin",
+      "food_concept_id": "FOOD:berries"
+    },
+    {
+      "source_concept_id": "CHEM:quercetin",
+      "food_concept_id": "FOOD:broccoli"
+    },
+    {
+      "source_concept_id": "CHEM:quercetin",
+      "food_concept_id": "FOOD:capers"
+    },
+    {
+      "source_concept_id": "CHEM:quercetin",
+      "food_concept_id": "FOOD:chili_pepper"
+    },
+    {
+      "source_concept_id": "CHEM:quercetin",
+      "food_concept_id": "FOOD:grape"
+    },
+    {
+      "source_concept_id": "CHEM:quercetin",
+      "food_concept_id": "FOOD:kale"
+    },
+    {
+      "source_concept_id": "CHEM:quercetin",
+      "food_concept_id": "FOOD:onion"
+    },
+    {
+      "source_concept_id": "CHEM:quercetin",
+      "food_concept_id": "FOOD:tea"
+    },
+    {
+      "source_concept_id": "CHEM:resveratrol",
+      "food_concept_id": "FOOD:blueberries"
+    },
+    {
+      "source_concept_id": "CHEM:resveratrol",
+      "food_concept_id": "FOOD:cocoa"
+    },
+    {
+      "source_concept_id": "CHEM:resveratrol",
+      "food_concept_id": "FOOD:grape"
+    },
+    {
+      "source_concept_id": "CHEM:sucrose",
+      "food_concept_id": "FOOD:agave"
+    },
+    {
+      "source_concept_id": "CHEM:sucrose",
+      "food_concept_id": "FOOD:dates_deglet_noor"
+    },
+    {
+      "source_concept_id": "CHEM:sucrose",
+      "food_concept_id": "FOOD:dates_medjool"
+    },
+    {
+      "source_concept_id": "CHEM:sucrose",
+      "food_concept_id": "FOOD:fruits"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:arugula"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:broccoli"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:broccoli_chinese"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:broccoli_raab"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:brussels_sprouts"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:cabbage"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:cauliflower"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:collards"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:cress"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:kale"
+    },
+    {
+      "source_concept_id": "CHEM:sulforaphane",
+      "food_concept_id": "FOOD:kohlrabi"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:artichokes"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:berries"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:blackberries"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:blueberries"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:chocolate"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:cocoa"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:coffee"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:grape"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:kale"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:nuts"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "NUTR:antioxidants",
+      "food_concept_id": "FOOD:tea"
+    },
+    {
+      "source_concept_id": "NUTR:beta_glucan",
+      "food_concept_id": "FOOD:barley"
+    },
+    {
+      "source_concept_id": "NUTR:beta_glucan",
+      "food_concept_id": "FOOD:mushrooms"
+    },
+    {
+      "source_concept_id": "NUTR:beta_glucan",
+      "food_concept_id": "FOOD:oats"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:almonds"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:broccoli"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:chard"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:cheese"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:chia"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:collards"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:dairy"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:dandelion_greens"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:figs"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:kale"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:kefir"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:seaweed"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:tofu"
+    },
+    {
+      "source_concept_id": "NUTR:calcium",
+      "food_concept_id": "FOOD:yogurt"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:amaranth"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:banana"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:barley"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:buckwheat"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:bulgur"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:cassava"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:chickpeas"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:corn"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:couscous"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:dates_medjool"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:einkorn"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:farro_pearled"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:oats"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:potato"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:rice"
+    },
+    {
+      "source_concept_id": "NUTR:carbohydrate",
+      "food_concept_id": "FOOD:whole_grains"
+    },
+    {
+      "source_concept_id": "NUTR:choline",
+      "food_concept_id": "FOOD:beef"
+    },
+    {
+      "source_concept_id": "NUTR:choline",
+      "food_concept_id": "FOOD:broccoli"
+    },
+    {
+      "source_concept_id": "NUTR:choline",
+      "food_concept_id": "FOOD:brussels_sprouts"
+    },
+    {
+      "source_concept_id": "NUTR:choline",
+      "food_concept_id": "FOOD:eggs"
+    },
+    {
+      "source_concept_id": "NUTR:choline",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:choline",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:choline",
+      "food_concept_id": "FOOD:poultry"
+    },
+    {
+      "source_concept_id": "NUTR:choline",
+      "food_concept_id": "FOOD:soy"
+    },
+    {
+      "source_concept_id": "NUTR:copper",
+      "food_concept_id": "FOOD:chocolate"
+    },
+    {
+      "source_concept_id": "NUTR:copper",
+      "food_concept_id": "FOOD:cocoa"
+    },
+    {
+      "source_concept_id": "NUTR:copper",
+      "food_concept_id": "FOOD:crab_blue"
+    },
+    {
+      "source_concept_id": "NUTR:copper",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:copper",
+      "food_concept_id": "FOOD:lobster_northern"
+    },
+    {
+      "source_concept_id": "NUTR:copper",
+      "food_concept_id": "FOOD:mushrooms"
+    },
+    {
+      "source_concept_id": "NUTR:copper",
+      "food_concept_id": "FOOD:nuts"
+    },
+    {
+      "source_concept_id": "NUTR:copper",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:copper",
+      "food_concept_id": "FOOD:whole_grains"
+    },
+    {
+      "source_concept_id": "NUTR:dha",
+      "food_concept_id": "FOOD:anchovies"
+    },
+    {
+      "source_concept_id": "NUTR:dha",
+      "food_concept_id": "FOOD:cod"
+    },
+    {
+      "source_concept_id": "NUTR:dha",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:almonds"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:amaranth"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:apple"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:artichokes"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:avocado"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:barley"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:berries"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:blackberries"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:blackeye_pea"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:broccoli"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:brussels_sprouts"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:buckwheat"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:bulgur"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:burdock_root"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:cassava"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:chia"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:chickpeas"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:cowpeas"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:dates_medjool"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:fava_bean"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:figs"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:flaxseed"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:nuts"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:oats"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:vegetables"
+    },
+    {
+      "source_concept_id": "NUTR:dietary_fiber",
+      "food_concept_id": "FOOD:whole_grains"
+    },
+    {
+      "source_concept_id": "NUTR:epa",
+      "food_concept_id": "FOOD:anchovies"
+    },
+    {
+      "source_concept_id": "NUTR:epa",
+      "food_concept_id": "FOOD:cod"
+    },
+    {
+      "source_concept_id": "NUTR:epa",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:artichokes"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:asparagus"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:avocado"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:beet_greens"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:blackeye_pea"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:broccoli"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:brussels_sprouts"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:chickpeas"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:citrus"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:collards"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:corn"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:cowpeas"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:fava_bean"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:folate",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "NUTR:gluten",
+      "food_concept_id": "FOOD:barley"
+    },
+    {
+      "source_concept_id": "NUTR:gluten",
+      "food_concept_id": "FOOD:bulgur"
+    },
+    {
+      "source_concept_id": "NUTR:gluten",
+      "food_concept_id": "FOOD:couscous"
+    },
+    {
+      "source_concept_id": "NUTR:gluten",
+      "food_concept_id": "FOOD:einkorn"
+    },
+    {
+      "source_concept_id": "NUTR:gluten",
+      "food_concept_id": "FOOD:farro_pearled"
+    },
+    {
+      "source_concept_id": "NUTR:gluten",
+      "food_concept_id": "FOOD:whole_grains"
+    },
+    {
+      "source_concept_id": "NUTR:insoluble_fiber",
+      "food_concept_id": "FOOD:cabbage"
+    },
+    {
+      "source_concept_id": "NUTR:insoluble_fiber",
+      "food_concept_id": "FOOD:cauliflower"
+    },
+    {
+      "source_concept_id": "NUTR:insoluble_fiber",
+      "food_concept_id": "FOOD:nuts"
+    },
+    {
+      "source_concept_id": "NUTR:insoluble_fiber",
+      "food_concept_id": "FOOD:potato"
+    },
+    {
+      "source_concept_id": "NUTR:insoluble_fiber",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:insoluble_fiber",
+      "food_concept_id": "FOOD:vegetables"
+    },
+    {
+      "source_concept_id": "NUTR:insoluble_fiber",
+      "food_concept_id": "FOOD:whole_grains"
+    },
+    {
+      "source_concept_id": "NUTR:inulin",
+      "food_concept_id": "FOOD:agave"
+    },
+    {
+      "source_concept_id": "NUTR:inulin",
+      "food_concept_id": "FOOD:artichokes"
+    },
+    {
+      "source_concept_id": "NUTR:inulin",
+      "food_concept_id": "FOOD:asparagus"
+    },
+    {
+      "source_concept_id": "NUTR:inulin",
+      "food_concept_id": "FOOD:banana"
+    },
+    {
+      "source_concept_id": "NUTR:inulin",
+      "food_concept_id": "FOOD:burdock_root"
+    },
+    {
+      "source_concept_id": "NUTR:inulin",
+      "food_concept_id": "FOOD:chicory"
+    },
+    {
+      "source_concept_id": "NUTR:inulin",
+      "food_concept_id": "FOOD:dandelion_greens"
+    },
+    {
+      "source_concept_id": "NUTR:inulin",
+      "food_concept_id": "FOOD:garlic"
+    },
+    {
+      "source_concept_id": "NUTR:inulin",
+      "food_concept_id": "FOOD:onion"
+    },
+    {
+      "source_concept_id": "NUTR:iodine",
+      "food_concept_id": "FOOD:cod"
+    },
+    {
+      "source_concept_id": "NUTR:iodine",
+      "food_concept_id": "FOOD:dairy"
+    },
+    {
+      "source_concept_id": "NUTR:iodine",
+      "food_concept_id": "FOOD:eggs"
+    },
+    {
+      "source_concept_id": "NUTR:iodine",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:iodine",
+      "food_concept_id": "FOOD:seaweed"
+    },
+    {
+      "source_concept_id": "NUTR:iodine",
+      "food_concept_id": "FOOD:shrimp"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:amaranth"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:beef"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:beet_greens"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:bison"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:blackeye_pea"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:chard"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:chia"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:chickpeas"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:cockles"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:collards"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:cowpeas"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:crab_blue"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:dates_medjool"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:elk"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:fava_bean"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:oats"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:red_meat"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:shrimp"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:soy"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "NUTR:iron",
+      "food_concept_id": "FOOD:tofu"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:almonds"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:avocado"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:banana"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:buckwheat"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:chard"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:chia"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:chocolate"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:cocoa"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:nuts"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:oats"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:soy"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:tofu"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:walnuts"
+    },
+    {
+      "source_concept_id": "NUTR:magnesium",
+      "food_concept_id": "FOOD:whole_grains"
+    },
+    {
+      "source_concept_id": "NUTR:niacin",
+      "food_concept_id": "FOOD:beef"
+    },
+    {
+      "source_concept_id": "NUTR:niacin",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:niacin",
+      "food_concept_id": "FOOD:mushrooms"
+    },
+    {
+      "source_concept_id": "NUTR:niacin",
+      "food_concept_id": "FOOD:poultry"
+    },
+    {
+      "source_concept_id": "NUTR:niacin",
+      "food_concept_id": "FOOD:rice"
+    },
+    {
+      "source_concept_id": "NUTR:niacin",
+      "food_concept_id": "FOOD:whole_grains"
+    },
+    {
+      "source_concept_id": "NUTR:omega_3",
+      "food_concept_id": "FOOD:anchovies"
+    },
+    {
+      "source_concept_id": "NUTR:omega_3",
+      "food_concept_id": "FOOD:chia"
+    },
+    {
+      "source_concept_id": "NUTR:omega_3",
+      "food_concept_id": "FOOD:cod"
+    },
+    {
+      "source_concept_id": "NUTR:omega_3",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:omega_3",
+      "food_concept_id": "FOOD:flaxseed"
+    },
+    {
+      "source_concept_id": "NUTR:omega_3",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:omega_3",
+      "food_concept_id": "FOOD:soy"
+    },
+    {
+      "source_concept_id": "NUTR:omega_3",
+      "food_concept_id": "FOOD:walnuts"
+    },
+    {
+      "source_concept_id": "NUTR:omega_6",
+      "food_concept_id": "FOOD:nuts"
+    },
+    {
+      "source_concept_id": "NUTR:omega_6",
+      "food_concept_id": "FOOD:poultry"
+    },
+    {
+      "source_concept_id": "NUTR:omega_6",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:omega_6",
+      "food_concept_id": "FOOD:soy"
+    },
+    {
+      "source_concept_id": "NUTR:omega_6",
+      "food_concept_id": "FOOD:walnuts"
+    },
+    {
+      "source_concept_id": "NUTR:pectin",
+      "food_concept_id": "FOOD:apple"
+    },
+    {
+      "source_concept_id": "NUTR:pectin",
+      "food_concept_id": "FOOD:apricot"
+    },
+    {
+      "source_concept_id": "NUTR:pectin",
+      "food_concept_id": "FOOD:berries"
+    },
+    {
+      "source_concept_id": "NUTR:pectin",
+      "food_concept_id": "FOOD:citrus"
+    },
+    {
+      "source_concept_id": "NUTR:pectin",
+      "food_concept_id": "FOOD:currants_red_and_white"
+    },
+    {
+      "source_concept_id": "NUTR:pectin",
+      "food_concept_id": "FOOD:gooseberries"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:cheese"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:dairy"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:eggs"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:nuts"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:poultry"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:red_meat"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:whole_grains"
+    },
+    {
+      "source_concept_id": "NUTR:phosphorus",
+      "food_concept_id": "FOOD:yogurt"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:apricot"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:avocado"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:banana"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:beet_greens"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:cassava"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:chard"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:chickpeas"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:dandelion_greens"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:dates_deglet_noor"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:dates_medjool"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:potato"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "NUTR:potassium",
+      "food_concept_id": "FOOD:tomato"
+    },
+    {
+      "source_concept_id": "NUTR:prebiotics",
+      "food_concept_id": "FOOD:asparagus"
+    },
+    {
+      "source_concept_id": "NUTR:prebiotics",
+      "food_concept_id": "FOOD:banana"
+    },
+    {
+      "source_concept_id": "NUTR:prebiotics",
+      "food_concept_id": "FOOD:burdock_root"
+    },
+    {
+      "source_concept_id": "NUTR:prebiotics",
+      "food_concept_id": "FOOD:chicory"
+    },
+    {
+      "source_concept_id": "NUTR:prebiotics",
+      "food_concept_id": "FOOD:dandelion_greens"
+    },
+    {
+      "source_concept_id": "NUTR:prebiotics",
+      "food_concept_id": "FOOD:garlic"
+    },
+    {
+      "source_concept_id": "NUTR:prebiotics",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:prebiotics",
+      "food_concept_id": "FOOD:oats"
+    },
+    {
+      "source_concept_id": "NUTR:prebiotics",
+      "food_concept_id": "FOOD:onion"
+    },
+    {
+      "source_concept_id": "NUTR:probiotics",
+      "food_concept_id": "FOOD:kefir"
+    },
+    {
+      "source_concept_id": "NUTR:probiotics",
+      "food_concept_id": "FOOD:yogurt"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:almonds"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:amaranth"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:anchovies"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:beef"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:bison"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:buckwheat"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:cheese"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:chia"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:chickpeas"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:cockles"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:cod"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:cowpeas"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:crab_blue"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:dairy"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:eggs"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:elk"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:fava_bean"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:lobster_northern"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:nuts"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:poultry"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:shrimp"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:soy"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:tofu"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:veal"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:walnuts"
+    },
+    {
+      "source_concept_id": "NUTR:protein",
+      "food_concept_id": "FOOD:yogurt"
+    },
+    {
+      "source_concept_id": "NUTR:resistant_starch",
+      "food_concept_id": "FOOD:banana"
+    },
+    {
+      "source_concept_id": "NUTR:resistant_starch",
+      "food_concept_id": "FOOD:barley"
+    },
+    {
+      "source_concept_id": "NUTR:resistant_starch",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:resistant_starch",
+      "food_concept_id": "FOOD:oats"
+    },
+    {
+      "source_concept_id": "NUTR:resistant_starch",
+      "food_concept_id": "FOOD:potato"
+    },
+    {
+      "source_concept_id": "NUTR:resistant_starch",
+      "food_concept_id": "FOOD:rice"
+    },
+    {
+      "source_concept_id": "NUTR:riboflavin",
+      "food_concept_id": "FOOD:almonds"
+    },
+    {
+      "source_concept_id": "NUTR:riboflavin",
+      "food_concept_id": "FOOD:cheese"
+    },
+    {
+      "source_concept_id": "NUTR:riboflavin",
+      "food_concept_id": "FOOD:dairy"
+    },
+    {
+      "source_concept_id": "NUTR:riboflavin",
+      "food_concept_id": "FOOD:eggs"
+    },
+    {
+      "source_concept_id": "NUTR:riboflavin",
+      "food_concept_id": "FOOD:mushrooms"
+    },
+    {
+      "source_concept_id": "NUTR:riboflavin",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "NUTR:riboflavin",
+      "food_concept_id": "FOOD:yogurt"
+    },
+    {
+      "source_concept_id": "NUTR:selenium",
+      "food_concept_id": "FOOD:anchovies"
+    },
+    {
+      "source_concept_id": "NUTR:selenium",
+      "food_concept_id": "FOOD:cod"
+    },
+    {
+      "source_concept_id": "NUTR:selenium",
+      "food_concept_id": "FOOD:crab_blue"
+    },
+    {
+      "source_concept_id": "NUTR:selenium",
+      "food_concept_id": "FOOD:eggs"
+    },
+    {
+      "source_concept_id": "NUTR:selenium",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:selenium",
+      "food_concept_id": "FOOD:lobster_northern"
+    },
+    {
+      "source_concept_id": "NUTR:selenium",
+      "food_concept_id": "FOOD:rice"
+    },
+    {
+      "source_concept_id": "NUTR:selenium",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:selenium",
+      "food_concept_id": "FOOD:shrimp"
+    },
+    {
+      "source_concept_id": "NUTR:selenium",
+      "food_concept_id": "FOOD:whole_grains"
+    },
+    {
+      "source_concept_id": "NUTR:soluble_fiber",
+      "food_concept_id": "FOOD:apple"
+    },
+    {
+      "source_concept_id": "NUTR:soluble_fiber",
+      "food_concept_id": "FOOD:avocado"
+    },
+    {
+      "source_concept_id": "NUTR:soluble_fiber",
+      "food_concept_id": "FOOD:banana"
+    },
+    {
+      "source_concept_id": "NUTR:soluble_fiber",
+      "food_concept_id": "FOOD:barley"
+    },
+    {
+      "source_concept_id": "NUTR:soluble_fiber",
+      "food_concept_id": "FOOD:chia"
+    },
+    {
+      "source_concept_id": "NUTR:soluble_fiber",
+      "food_concept_id": "FOOD:chickpeas"
+    },
+    {
+      "source_concept_id": "NUTR:soluble_fiber",
+      "food_concept_id": "FOOD:citrus"
+    },
+    {
+      "source_concept_id": "NUTR:soluble_fiber",
+      "food_concept_id": "FOOD:flaxseed"
+    },
+    {
+      "source_concept_id": "NUTR:soluble_fiber",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:soluble_fiber",
+      "food_concept_id": "FOOD:oats"
+    },
+    {
+      "source_concept_id": "NUTR:thiamine",
+      "food_concept_id": "FOOD:buckwheat"
+    },
+    {
+      "source_concept_id": "NUTR:thiamine",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:thiamine",
+      "food_concept_id": "FOOD:oats"
+    },
+    {
+      "source_concept_id": "NUTR:thiamine",
+      "food_concept_id": "FOOD:poultry"
+    },
+    {
+      "source_concept_id": "NUTR:thiamine",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:thiamine",
+      "food_concept_id": "FOOD:whole_grains"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:apricot"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:arugula"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:beet_greens"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:broccoli"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:carrot"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:chard"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:collards"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:dairy"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:dandelion_greens"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:eggs"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:endive"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:escarole"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:kale"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_a",
+      "food_concept_id": "FOOD:tomato"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:anchovies"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:beef"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:cheese"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:cockles"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:cod"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:crab_blue"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:dairy"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:eggs"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:lobster_northern"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:poultry"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:red_meat"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:shrimp"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b12",
+      "food_concept_id": "FOOD:yogurt"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b6",
+      "food_concept_id": "FOOD:banana"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b6",
+      "food_concept_id": "FOOD:beef"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b6",
+      "food_concept_id": "FOOD:chickpeas"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b6",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b6",
+      "food_concept_id": "FOOD:potato"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_b6",
+      "food_concept_id": "FOOD:poultry"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:acerola"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:berries"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:blackberries"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:blueberries"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:broccoli"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:brussels_sprouts"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:cabbage"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:carambola_starfruit"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:cauliflower"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:chili_pepper"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:citrus"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:clementines"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:collards"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:cress"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:currants_red_and_white"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:feijoa"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:gooseberries"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:kale"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:kiwifruit"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_c",
+      "food_concept_id": "FOOD:tomato"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_d",
+      "food_concept_id": "FOOD:cod"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_d",
+      "food_concept_id": "FOOD:eggs"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_d",
+      "food_concept_id": "FOOD:fish"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_d",
+      "food_concept_id": "FOOD:mushrooms"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_e",
+      "food_concept_id": "FOOD:almonds"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_e",
+      "food_concept_id": "FOOD:avocado"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_e",
+      "food_concept_id": "FOOD:chia"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_e",
+      "food_concept_id": "FOOD:olive_oil"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_e",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_e",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_e",
+      "food_concept_id": "FOOD:walnuts"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:arugula"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:asparagus"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:beet_greens"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:broccoli"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:brussels_sprouts"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:cabbage"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:chard"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:collards"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:cress"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:dandelion_greens"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:endive"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:escarole"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:kale"
+    },
+    {
+      "source_concept_id": "NUTR:vitamin_k",
+      "food_concept_id": "FOOD:spinach"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:beef"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:chia"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:chickpeas"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:cockles"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:crab_blue"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:legumes"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:lobster_northern"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:nuts"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:oats"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:poultry"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:red_meat"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:seeds"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:shrimp"
+    },
+    {
+      "source_concept_id": "NUTR:zinc",
+      "food_concept_id": "FOOD:whole_grains"
+    }
+  ]
+}

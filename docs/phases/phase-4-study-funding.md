@@ -53,7 +53,7 @@ carries `run_id` and (for facts derived from text) an evidence reference.
 Fold extraction into a document metadata pass — extend the `analyze`/`extract` pipeline (or
 add a dedicated pass invoked by both). Keep it independently rerunnable per document.
 
-## Determinism & provenance constraints
+## Provenance constraints (offline; determinism optional)
 - Prefer authoritative structured metadata (PubMed publication types, JATS funding-group)
   over text mining. Record `classification_source` so the origin is auditable.
 - Text-derived facts (sample size "n = 412", follow-up "two years", country) come from

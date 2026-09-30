@@ -1,0 +1,21 @@
+{
+  "version": "0.1.0",
+  "vocabulary": "mehungry_countries",
+  "countries": [
+    {"canonical_name": "United States", "surface_forms": ["united states", "usa", "u.s.a.", "u.s.", "united states of america"]},
+    {"canonical_name": "United Kingdom", "surface_forms": ["united kingdom", "uk", "u.k.", "england", "scotland", "wales"]},
+    {"canonical_name": "Canada", "surface_forms": ["canada"]},
+    {"canonical_name": "Australia", "surface_forms": ["australia"]},
+    {"canonical_name": "Germany", "surface_forms": ["germany"]},
+    {"canonical_name": "France", "surface_forms": ["france"]},
+    {"canonical_name": "Netherlands", "surface_forms": ["netherlands", "the netherlands"]},
+    {"canonical_name": "Sweden", "surface_forms": ["sweden"]},
+    {"canonical_name": "Italy", "surface_forms": ["italy"]},
+    {"canonical_name": "Spain", "surface_forms": ["spain"]},
+    {"canonical_name": "China", "surface_forms": ["china"]},
+    {"canonical_name": "Japan", "surface_forms": ["japan"]},
+    {"canonical_name": "Denmark", "surface_forms": ["denmark"]},
+    {"canonical_name": "Norway", "surface_forms": ["norway"]},
+    {"canonical_name": "Switzerland", "surface_forms": ["switzerland"]}
+  ]
+}

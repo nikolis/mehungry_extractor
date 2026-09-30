@@ -1,0 +1,148 @@
+{
+  "description": "Hand-labeled gold-standard observations for evaluating the extraction pipeline. Each record anchors to a real sentence in the cached corpus (by sentence_id) and lists the observations a perfect extractor should emit. Scored by mehungry_extractor.knowledge.goldeval against query.list_observations_for_document. Endpoints carry concept_id + in_vocab (set from normalize.normalize): in_vocab=false marks a recall ceiling from vocabulary coverage, separated from relation/clause logic in the report (achievable vs end-to-end recall). failure_mode is a human root-cause hint used by the histogram. expected observations with \"unscorable\": true are recorded for completeness but skipped by the scorer (no clean triple).",
+  "vocabulary": "mehungry:v1 (25 concepts)",
+  "sentences": [
+    {
+      "pmid": "42676636",
+      "sentence_id": "pmid_42676636_sec001_p000_s07",
+      "sentence_quote": "It's well established that IBD is strongly associated with dysbiosis of the gut microbiome, a measurable shift in bacterial diversity, richness, and composition compared with healthy individuals",
+      "expected": [
+        {
+          "subject": {"text": "Inflammatory bowel disease", "concept_id": "DIS:ibd", "in_vocab": true},
+          "predicate": "associated_with",
+          "object": {"text": "dysbiosis of the gut microbiome", "concept_id": "DIS:dysbiosis", "in_vocab": true},
+          "polarity": "positive",
+          "certainty": "asserted",
+          "qualifiers": [],
+          "failure_mode": "object_granularity",
+          "note": "Correct at concept level (DIS:dysbiosis). The full phrase 'dysbiosis of the gut microbiome' is unmatched; concept-level normalization keeps only the head 'dysbiosis'."
+        }
+      ]
+    },
+    {
+      "pmid": "42676636",
+      "sentence_id": "pmid_42676636_sec001_p001_s10",
+      "sentence_quote": "However, a fundamental unanswered question is whether these shifts in the gut microbiome are a cause of IBD or simply a consequence of the inflammation, as evidence supports both possibilities without establishing clear causality in humans",
+      "expected": [
+        {
+          "subject": {"text": "shifts in the gut microbiome", "concept_id": "BIOM:gut_microbiota", "in_vocab": true},
+          "predicate": "causes",
+          "object": {"text": "IBD", "concept_id": "DIS:ibd", "in_vocab": true},
+          "polarity": "positive",
+          "certainty": "insufficient_evidence",
+          "qualifiers": [],
+          "failure_mode": "hedging_missed",
+          "note": "Hedged / explicitly unresolved ('unanswered question', 'without establishing clear causality'). Must NOT be emitted as asserted."
+        }
+      ]
+    },
+    {
+      "pmid": "42676636",
+      "sentence_id": "pmid_42676636_sec016_p000_s03",
+      "sentence_quote": "This suggests microbial dysbiosis is closely linked to disease activity and may recover during remission.",
+      "expected": [
+        {
+          "subject": {"text": "microbial dysbiosis", "concept_id": "DIS:dysbiosis", "in_vocab": true},
+          "predicate": "associated_with",
+          "object": {"text": "disease activity", "concept_id": null, "in_vocab": false},
+          "polarity": "positive",
+          "certainty": "asserted",
+          "qualifiers": [],
+          "failure_mode": "vocab_gap",
+          "note": "First conjunct ('closely linked to disease activity'). Object 'disease activity' is out of vocabulary; also dropped because the sentence's coordination is not split."
+        },
+        {
+          "subject": {"text": "microbial dysbiosis", "concept_id": "DIS:dysbiosis", "in_vocab": true},
+          "predicate": "associated_with",
+          "object": {"text": "remission", "concept_id": "OUT:remission", "in_vocab": true},
+          "polarity": "negative",
+          "certainty": "possible",
+          "qualifiers": [{"qualifier_type": "disease_state", "value_text": "remission"}],
+          "failure_mode": "wrong_polarity",
+          "note": "Second conjunct ('may recover during remission'): dysbiosis DECREASES in remission -> negative association, disease_state=remission. Pipeline emits positive."
+        }
+      ]
+    },
+    {
+      "pmid": "42676636",
+      "sentence_id": "pmid_42676636_sec019_p001_s00",
+      "sentence_quote": "This finding is particularly exciting, as Lachnospiraceae are key prominent butyrate-producing bacteria in the human gut, and their absence has been linked to IBD development",
+      "expected": [
+        {
+          "subject": {"text": "Lachnospiraceae absence", "concept_id": null, "in_vocab": false},
+          "predicate": "associated_with",
+          "object": {"text": "IBD", "concept_id": "DIS:ibd", "in_vocab": true},
+          "polarity": "positive",
+          "certainty": "asserted",
+          "qualifiers": [],
+          "failure_mode": "vocab_gap",
+          "note": "True subject is 'Lachnospiraceae absence' (out of vocabulary). Pipeline instead pairs the modifier-embedded 'butyrate' (in 'butyrate-producing') with IBD -> a spurious observation (argument_mispairing)."
+        }
+      ]
+    },
+    {
+      "pmid": "42626304",
+      "sentence_id": "pmid_42626304_sec002_p000_s05",
+      "sentence_quote": "For example, exclusive enteral nutrition in paediatric CD has demonstrated similar efficacy to corticosteroids for clinical remission but is superior in achieving mucosal healing[6].",
+      "expected": [
+        {
+          "subject": {"text": "exclusive enteral nutrition", "concept_id": "INT:exclusive_enteral_nutrition", "in_vocab": true},
+          "predicate": "achieves",
+          "object": {"text": "mucosal healing", "concept_id": "OUT:mucosal_healing", "in_vocab": true},
+          "polarity": "positive",
+          "certainty": "asserted",
+          "qualifiers": [],
+          "failure_mode": "object_granularity",
+          "note": "Correctly extracted today."
+        },
+        {
+          "subject": {"text": "exclusive enteral nutrition", "concept_id": "INT:exclusive_enteral_nutrition", "in_vocab": true},
+          "predicate": "achieves",
+          "object": {"text": "clinical remission", "concept_id": "OUT:remission", "in_vocab": true},
+          "polarity": "positive",
+          "certainty": "asserted",
+          "qualifiers": [],
+          "failure_mode": "coordination_missing",
+          "note": "Second target of the comparative ('similar efficacy ... for clinical remission but superior in ... mucosal healing'). Both endpoints in vocabulary -> a pure logic recall miss (achievable)."
+        }
+      ]
+    },
+    {
+      "pmid": "42626304",
+      "sentence_id": "pmid_42626304_sec002_p001_s08",
+      "sentence_quote": "Environmental exposures - including antibiotic use and a high-fat, low-fiber diet - interact with the microbiome to worsen dysbiosis, reduce SCFA production, and favor pathobiont expansion, thereby contributing to the vicious cycle of barrier dysfunction, microbial imbalance, and chronic intestinal inflammation",
+      "expected": [
+        {
+          "subject": {"text": "environmental exposures", "concept_id": null, "in_vocab": false},
+          "predicate": "increases",
+          "object": {"text": "microbial imbalance", "concept_id": null, "in_vocab": false},
+          "polarity": "positive",
+          "certainty": "asserted",
+          "qualifiers": [],
+          "failure_mode": "vocab_gap",
+          "note": "Subject list distributes over multiple objects. All endpoints out of vocabulary. Pipeline instead emits 'dysbiosis decreases SCFA' by pairing two adjacent downstream mentions (argument_mispairing)."
+        },
+        {
+          "subject": {"text": "antibiotic use", "concept_id": null, "in_vocab": false},
+          "predicate": "increases",
+          "object": {"text": "chronic intestinal inflammation", "concept_id": null, "in_vocab": false},
+          "polarity": "positive",
+          "certainty": "asserted",
+          "qualifiers": [],
+          "failure_mode": "vocab_gap",
+          "note": "Second subject in the list."
+        },
+        {
+          "subject": {"text": "high-fat, low-fiber diet", "concept_id": null, "in_vocab": false},
+          "predicate": "increases",
+          "object": {"text": "microbial imbalance", "concept_id": null, "in_vocab": false},
+          "polarity": "positive",
+          "certainty": "asserted",
+          "qualifiers": [],
+          "failure_mode": "vocab_gap",
+          "note": "Third subject in the list."
+        }
+      ]
+    }
+  ]
+}

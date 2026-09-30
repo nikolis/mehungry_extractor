@@ -11,7 +11,9 @@ PubMed/PMC → acquire → immutable corpus → JATS/PubMed parse → segment
           → SQLite;  + EvidenceRef provenance;  + ExtractionRun reproducibility
 ```
 
-All under `mehungry_extractor/knowledge/`. No LLM, no inference, no randomness.
+All under `mehungry_extractor/knowledge/`. Runs offline; this foundation stage is deterministic
+parsing (no models). Later stages may use local non-deterministic techniques — see the updated
+foundation in [`docs/phases/README.md`](README.md) — but every fact must keep its provenance span.
 
 ## Public surface you will reuse
 

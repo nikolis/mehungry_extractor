@@ -1,0 +1,2166 @@
+{
+  "version": "0.4.0",
+  "vocabulary": "mehungry_curated",
+  "concepts": [
+    {
+      "concept_id": "NUTR:dietary_fiber",
+      "canonical_name": "Dietary fiber",
+      "entity_type": "nutrient",
+      "surface_forms": ["dietary fiber", "dietary fibre", "fiber", "fibre", "roughage"]
+    },
+    {
+      "concept_id": "NUTR:soluble_fiber",
+      "canonical_name": "Soluble fiber",
+      "entity_type": "nutrient",
+      "surface_forms": ["soluble fiber", "soluble fibre"]
+    },
+    {
+      "concept_id": "NUTR:protein",
+      "canonical_name": "Protein",
+      "entity_type": "nutrient",
+      "surface_forms": ["protein", "dietary protein"]
+    },
+    {
+      "concept_id": "NUTR:omega_3",
+      "canonical_name": "Omega-3 fatty acids",
+      "entity_type": "nutrient",
+      "surface_forms": ["omega-3 fatty acids", "omega-3", "n-3 fatty acids", "omega 3 fatty acids"]
+    },
+    {
+      "concept_id": "NUTR:calcium",
+      "canonical_name": "Calcium",
+      "entity_type": "nutrient",
+      "surface_forms": ["calcium"]
+    },
+    {
+      "concept_id": "NUTR:iron",
+      "canonical_name": "Iron",
+      "entity_type": "nutrient",
+      "surface_forms": ["dietary iron"]
+    },
+    {
+      "concept_id": "NUTR:vitamin_d",
+      "canonical_name": "Vitamin D",
+      "entity_type": "nutrient",
+      "surface_forms": ["vitamin d", "cholecalciferol", "vitamin d3"]
+    },
+    {
+      "concept_id": "FOOD:whole_grains",
+      "canonical_name": "Whole grains",
+      "entity_type": "food",
+      "surface_forms": ["whole grains", "whole grain", "wholegrain"]
+    },
+    {
+      "concept_id": "FOOD:fish",
+      "canonical_name": "Fish",
+      "entity_type": "food",
+      "surface_forms": ["fish", "oily fish", "fatty fish"]
+    },
+    {
+      "concept_id": "FOOD:yogurt",
+      "canonical_name": "Yogurt",
+      "entity_type": "food",
+      "surface_forms": ["yogurt", "yoghurt"]
+    },
+    {
+      "concept_id": "FOOD:legumes",
+      "canonical_name": "Legumes",
+      "entity_type": "food",
+      "surface_forms": ["legumes", "pulses", "beans"]
+    },
+    {
+      "concept_id": "FOOD:vegetables",
+      "canonical_name": "Vegetables",
+      "entity_type": "food",
+      "surface_forms": ["vegetables", "vegetable"]
+    },
+    {
+      "concept_id": "DIS:crohn_disease",
+      "canonical_name": "Crohn disease",
+      "entity_type": "disease",
+      "surface_forms": ["crohn disease", "crohn's disease", "crohns disease"]
+    },
+    {
+      "concept_id": "DIS:ibd",
+      "canonical_name": "Inflammatory bowel disease",
+      "entity_type": "disease",
+      "surface_forms": ["inflammatory bowel disease", "ibd"]
+    },
+    {
+      "concept_id": "DIS:ulcerative_colitis",
+      "canonical_name": "Ulcerative colitis",
+      "entity_type": "disease",
+      "surface_forms": ["ulcerative colitis"]
+    },
+    {
+      "concept_id": "DIS:type_2_diabetes",
+      "canonical_name": "Type 2 diabetes mellitus",
+      "entity_type": "disease",
+      "surface_forms": ["type 2 diabetes", "type 2 diabetes mellitus", "t2dm", "type ii diabetes"]
+    },
+    {
+      "concept_id": "DIS:hypertension",
+      "canonical_name": "Hypertension",
+      "entity_type": "disease",
+      "surface_forms": ["hypertension", "high blood pressure"]
+    },
+    {
+      "concept_id": "CHEM:glucose",
+      "canonical_name": "Glucose",
+      "entity_type": "chemical",
+      "surface_forms": ["glucose", "dextrose"]
+    },
+    {
+      "concept_id": "CHEM:cholesterol",
+      "canonical_name": "Cholesterol",
+      "entity_type": "chemical",
+      "surface_forms": ["cholesterol"]
+    },
+    {
+      "concept_id": "SYMP:diarrhea",
+      "canonical_name": "Diarrhea",
+      "entity_type": "symptom",
+      "surface_forms": ["diarrhea", "diarrhoea"]
+    },
+    {
+      "concept_id": "SYMP:abdominal_pain",
+      "canonical_name": "Abdominal pain",
+      "entity_type": "symptom",
+      "surface_forms": ["abdominal pain"]
+    },
+    {
+      "concept_id": "BIOM:crp",
+      "canonical_name": "C-reactive protein",
+      "entity_type": "biomarker",
+      "surface_forms": ["c-reactive protein", "crp"]
+    },
+    {
+      "concept_id": "BIOM:hba1c",
+      "canonical_name": "Hemoglobin A1c",
+      "entity_type": "biomarker",
+      "surface_forms": ["hba1c", "hemoglobin a1c", "glycated hemoglobin"]
+    },
+    {
+      "concept_id": "OUT:remission",
+      "canonical_name": "Remission",
+      "entity_type": "outcome",
+      "surface_forms": ["remission", "clinical remission"]
+    },
+    {
+      "concept_id": "INT:dietary_intervention",
+      "canonical_name": "Dietary intervention",
+      "entity_type": "intervention",
+      "surface_forms": ["dietary intervention", "diet intervention"]
+    },
+    {
+      "concept_id": "NUTR:insoluble_fiber",
+      "canonical_name": "Insoluble fiber",
+      "entity_type": "nutrient",
+      "surface_forms": ["insoluble fiber", "insoluble fibre"]
+    },
+    {
+      "concept_id": "NUTR:inulin",
+      "canonical_name": "Inulin",
+      "entity_type": "nutrient",
+      "surface_forms": ["inulin"]
+    },
+    {
+      "concept_id": "NUTR:pectin",
+      "canonical_name": "Pectin",
+      "entity_type": "nutrient",
+      "surface_forms": ["pectin"]
+    },
+    {
+      "concept_id": "NUTR:beta_glucan",
+      "canonical_name": "Beta-glucan",
+      "entity_type": "nutrient",
+      "surface_forms": ["beta-glucan", "beta glucan", "β-glucan"]
+    },
+    {
+      "concept_id": "NUTR:resistant_starch",
+      "canonical_name": "Resistant starch",
+      "entity_type": "nutrient",
+      "surface_forms": ["resistant starch"]
+    },
+    {
+      "concept_id": "NUTR:prebiotics",
+      "canonical_name": "Prebiotics",
+      "entity_type": "nutrient",
+      "surface_forms": ["prebiotic", "prebiotics"]
+    },
+    {
+      "concept_id": "NUTR:probiotics",
+      "canonical_name": "Probiotics",
+      "entity_type": "nutrient",
+      "surface_forms": ["probiotic", "probiotics"]
+    },
+    {
+      "concept_id": "NUTR:synbiotics",
+      "canonical_name": "Synbiotics",
+      "entity_type": "nutrient",
+      "surface_forms": ["synbiotic", "synbiotics"]
+    },
+    {
+      "concept_id": "NUTR:carbohydrate",
+      "canonical_name": "Carbohydrate",
+      "entity_type": "nutrient",
+      "surface_forms": ["carbohydrate", "carbohydrates", "dietary carbohydrate"]
+    },
+    {
+      "concept_id": "NUTR:fat_total",
+      "canonical_name": "Dietary fat",
+      "entity_type": "nutrient",
+      "surface_forms": ["dietary fat", "total fat"]
+    },
+    {
+      "concept_id": "NUTR:saturated_fat",
+      "canonical_name": "Saturated fat",
+      "entity_type": "nutrient",
+      "surface_forms": ["saturated fat", "saturated fats", "saturated fatty acids"]
+    },
+    {
+      "concept_id": "NUTR:trans_fat",
+      "canonical_name": "Trans fat",
+      "entity_type": "nutrient",
+      "surface_forms": ["trans fat", "trans fats", "trans fatty acids"]
+    },
+    {
+      "concept_id": "NUTR:monounsaturated_fat",
+      "canonical_name": "Monounsaturated fat",
+      "entity_type": "nutrient",
+      "surface_forms": ["monounsaturated fat", "monounsaturated fatty acids", "mufa"]
+    },
+    {
+      "concept_id": "NUTR:polyunsaturated_fat",
+      "canonical_name": "Polyunsaturated fat",
+      "entity_type": "nutrient",
+      "surface_forms": ["polyunsaturated fat", "polyunsaturated fatty acids", "pufa"]
+    },
+    {
+      "concept_id": "NUTR:omega_6",
+      "canonical_name": "Omega-6 fatty acids",
+      "entity_type": "nutrient",
+      "surface_forms": ["omega-6 fatty acids", "omega-6", "n-6 fatty acids", "omega 6 fatty acids"]
+    },
+    {
+      "concept_id": "NUTR:epa",
+      "canonical_name": "Eicosapentaenoic acid",
+      "entity_type": "nutrient",
+      "surface_forms": ["eicosapentaenoic acid", "epa"]
+    },
+    {
+      "concept_id": "NUTR:dha",
+      "canonical_name": "Docosahexaenoic acid",
+      "entity_type": "nutrient",
+      "surface_forms": ["docosahexaenoic acid", "dha"]
+    },
+    {
+      "concept_id": "NUTR:vitamin_a",
+      "canonical_name": "Vitamin A",
+      "entity_type": "nutrient",
+      "surface_forms": ["vitamin a", "retinol"]
+    },
+    {
+      "concept_id": "NUTR:vitamin_c",
+      "canonical_name": "Vitamin C",
+      "entity_type": "nutrient",
+      "surface_forms": ["vitamin c", "ascorbic acid"]
+    },
+    {
+      "concept_id": "NUTR:vitamin_e",
+      "canonical_name": "Vitamin E",
+      "entity_type": "nutrient",
+      "surface_forms": ["vitamin e", "tocopherol"]
+    },
+    {
+      "concept_id": "NUTR:vitamin_k",
+      "canonical_name": "Vitamin K",
+      "entity_type": "nutrient",
+      "surface_forms": ["vitamin k"]
+    },
+    {
+      "concept_id": "NUTR:vitamin_b6",
+      "canonical_name": "Vitamin B6",
+      "entity_type": "nutrient",
+      "surface_forms": ["vitamin b6", "pyridoxine"]
+    },
+    {
+      "concept_id": "NUTR:vitamin_b12",
+      "canonical_name": "Vitamin B12",
+      "entity_type": "nutrient",
+      "surface_forms": ["vitamin b12", "cobalamin"]
+    },
+    {
+      "concept_id": "NUTR:folate",
+      "canonical_name": "Folate",
+      "entity_type": "nutrient",
+      "surface_forms": ["folate", "folic acid", "vitamin b9"]
+    },
+    {
+      "concept_id": "NUTR:thiamine",
+      "canonical_name": "Thiamine",
+      "entity_type": "nutrient",
+      "surface_forms": ["thiamine", "vitamin b1"]
+    },
+    {
+      "concept_id": "NUTR:riboflavin",
+      "canonical_name": "Riboflavin",
+      "entity_type": "nutrient",
+      "surface_forms": ["riboflavin", "vitamin b2"]
+    },
+    {
+      "concept_id": "NUTR:niacin",
+      "canonical_name": "Niacin",
+      "entity_type": "nutrient",
+      "surface_forms": ["niacin", "vitamin b3"]
+    },
+    {
+      "concept_id": "NUTR:zinc",
+      "canonical_name": "Zinc",
+      "entity_type": "nutrient",
+      "surface_forms": ["zinc"]
+    },
+    {
+      "concept_id": "NUTR:magnesium",
+      "canonical_name": "Magnesium",
+      "entity_type": "nutrient",
+      "surface_forms": ["magnesium"]
+    },
+    {
+      "concept_id": "NUTR:selenium",
+      "canonical_name": "Selenium",
+      "entity_type": "nutrient",
+      "surface_forms": ["selenium"]
+    },
+    {
+      "concept_id": "NUTR:potassium",
+      "canonical_name": "Potassium",
+      "entity_type": "nutrient",
+      "surface_forms": ["potassium"]
+    },
+    {
+      "concept_id": "NUTR:sodium",
+      "canonical_name": "Sodium",
+      "entity_type": "nutrient",
+      "surface_forms": ["sodium", "dietary sodium", "salt", "dietary salt"]
+    },
+    {
+      "concept_id": "NUTR:phosphorus",
+      "canonical_name": "Phosphorus",
+      "entity_type": "nutrient",
+      "surface_forms": ["phosphorus"]
+    },
+    {
+      "concept_id": "NUTR:copper",
+      "canonical_name": "Copper",
+      "entity_type": "nutrient",
+      "surface_forms": ["copper"]
+    },
+    {
+      "concept_id": "NUTR:iodine",
+      "canonical_name": "Iodine",
+      "entity_type": "nutrient",
+      "surface_forms": ["iodine"]
+    },
+    {
+      "concept_id": "NUTR:choline",
+      "canonical_name": "Choline",
+      "entity_type": "nutrient",
+      "surface_forms": ["choline"]
+    },
+    {
+      "concept_id": "NUTR:antioxidants",
+      "canonical_name": "Antioxidants",
+      "entity_type": "nutrient",
+      "surface_forms": ["antioxidant", "antioxidants"]
+    },
+    {
+      "concept_id": "NUTR:added_sugar",
+      "canonical_name": "Added sugar",
+      "entity_type": "nutrient",
+      "surface_forms": ["added sugar", "added sugars", "free sugars", "refined sugar"]
+    },
+    {
+      "concept_id": "NUTR:gluten",
+      "canonical_name": "Gluten",
+      "entity_type": "nutrient",
+      "surface_forms": ["gluten"]
+    },
+    {
+      "concept_id": "FOOD:fruits",
+      "canonical_name": "Fruits",
+      "entity_type": "food",
+      "surface_forms": ["fruit", "fruits"]
+    },
+    {
+      "concept_id": "FOOD:berries",
+      "canonical_name": "Berries",
+      "entity_type": "food",
+      "surface_forms": ["berry", "berries"]
+    },
+    {
+      "concept_id": "FOOD:apple",
+      "canonical_name": "Apple",
+      "entity_type": "food",
+      "surface_forms": ["apple", "apples"]
+    },
+    {
+      "concept_id": "FOOD:banana",
+      "canonical_name": "Banana",
+      "entity_type": "food",
+      "surface_forms": ["banana", "bananas"]
+    },
+    {
+      "concept_id": "FOOD:citrus",
+      "canonical_name": "Citrus fruit",
+      "entity_type": "food",
+      "surface_forms": ["citrus", "citrus fruits", "citrus fruit"]
+    },
+    {
+      "concept_id": "FOOD:broccoli",
+      "canonical_name": "Broccoli",
+      "entity_type": "food",
+      "surface_forms": ["broccoli"]
+    },
+    {
+      "concept_id": "FOOD:spinach",
+      "canonical_name": "Spinach",
+      "entity_type": "food",
+      "surface_forms": ["spinach"]
+    },
+    {
+      "concept_id": "FOOD:kale",
+      "canonical_name": "Kale",
+      "entity_type": "food",
+      "surface_forms": ["kale"]
+    },
+    {
+      "concept_id": "FOOD:carrot",
+      "canonical_name": "Carrot",
+      "entity_type": "food",
+      "surface_forms": ["carrot", "carrots"]
+    },
+    {
+      "concept_id": "FOOD:tomato",
+      "canonical_name": "Tomato",
+      "entity_type": "food",
+      "surface_forms": ["tomato", "tomatoes"]
+    },
+    {
+      "concept_id": "FOOD:garlic",
+      "canonical_name": "Garlic",
+      "entity_type": "food",
+      "surface_forms": ["garlic"]
+    },
+    {
+      "concept_id": "FOOD:onion",
+      "canonical_name": "Onion",
+      "entity_type": "food",
+      "surface_forms": ["onion", "onions"]
+    },
+    {
+      "concept_id": "FOOD:potato",
+      "canonical_name": "Potato",
+      "entity_type": "food",
+      "surface_forms": ["potato", "potatoes"]
+    },
+    {
+      "concept_id": "FOOD:nuts",
+      "canonical_name": "Nuts",
+      "entity_type": "food",
+      "surface_forms": ["nuts", "tree nuts"]
+    },
+    {
+      "concept_id": "FOOD:almonds",
+      "canonical_name": "Almonds",
+      "entity_type": "food",
+      "surface_forms": ["almond", "almonds"]
+    },
+    {
+      "concept_id": "FOOD:walnuts",
+      "canonical_name": "Walnuts",
+      "entity_type": "food",
+      "surface_forms": ["walnut", "walnuts"]
+    },
+    {
+      "concept_id": "FOOD:seeds",
+      "canonical_name": "Seeds",
+      "entity_type": "food",
+      "surface_forms": ["seeds"]
+    },
+    {
+      "concept_id": "FOOD:flaxseed",
+      "canonical_name": "Flaxseed",
+      "entity_type": "food",
+      "surface_forms": ["flaxseed", "flaxseeds", "linseed"]
+    },
+    {
+      "concept_id": "FOOD:olive_oil",
+      "canonical_name": "Olive oil",
+      "entity_type": "food",
+      "surface_forms": ["olive oil", "extra virgin olive oil"]
+    },
+    {
+      "concept_id": "FOOD:red_meat",
+      "canonical_name": "Red meat",
+      "entity_type": "food",
+      "surface_forms": ["red meat"]
+    },
+    {
+      "concept_id": "FOOD:processed_meat",
+      "canonical_name": "Processed meat",
+      "entity_type": "food",
+      "surface_forms": ["processed meat", "processed meats"]
+    },
+    {
+      "concept_id": "FOOD:poultry",
+      "canonical_name": "Poultry",
+      "entity_type": "food",
+      "surface_forms": ["poultry", "chicken"]
+    },
+    {
+      "concept_id": "FOOD:eggs",
+      "canonical_name": "Eggs",
+      "entity_type": "food",
+      "surface_forms": ["egg", "eggs"]
+    },
+    {
+      "concept_id": "FOOD:dairy",
+      "canonical_name": "Dairy",
+      "entity_type": "food",
+      "surface_forms": ["dairy", "dairy products", "milk"]
+    },
+    {
+      "concept_id": "FOOD:cheese",
+      "canonical_name": "Cheese",
+      "entity_type": "food",
+      "surface_forms": ["cheese"]
+    },
+    {
+      "concept_id": "FOOD:kefir",
+      "canonical_name": "Kefir",
+      "entity_type": "food",
+      "surface_forms": ["kefir"]
+    },
+    {
+      "concept_id": "FOOD:oats",
+      "canonical_name": "Oats",
+      "entity_type": "food",
+      "surface_forms": ["oats", "oatmeal"]
+    },
+    {
+      "concept_id": "FOOD:rice",
+      "canonical_name": "Rice",
+      "entity_type": "food",
+      "surface_forms": ["rice", "brown rice", "white rice"]
+    },
+    {
+      "concept_id": "FOOD:refined_grains",
+      "canonical_name": "Refined grains",
+      "entity_type": "food",
+      "surface_forms": ["refined grains", "refined grain"]
+    },
+    {
+      "concept_id": "FOOD:ultra_processed_food",
+      "canonical_name": "Ultra-processed food",
+      "entity_type": "food",
+      "surface_forms": ["ultra-processed food", "ultra-processed foods", "ultraprocessed food"]
+    },
+    {
+      "concept_id": "FOOD:fast_food",
+      "canonical_name": "Fast food",
+      "entity_type": "food",
+      "surface_forms": ["fast food"]
+    },
+    {
+      "concept_id": "FOOD:fried_food",
+      "canonical_name": "Fried food",
+      "entity_type": "food",
+      "surface_forms": ["fried food", "fried foods"]
+    },
+    {
+      "concept_id": "FOOD:coffee",
+      "canonical_name": "Coffee",
+      "entity_type": "food",
+      "surface_forms": ["coffee"]
+    },
+    {
+      "concept_id": "FOOD:tea",
+      "canonical_name": "Tea",
+      "entity_type": "food",
+      "surface_forms": ["tea", "green tea", "black tea"]
+    },
+    {
+      "concept_id": "FOOD:alcohol",
+      "canonical_name": "Alcohol",
+      "entity_type": "food",
+      "surface_forms": ["alcohol", "alcoholic beverages"]
+    },
+    {
+      "concept_id": "FOOD:soft_drinks",
+      "canonical_name": "Sugar-sweetened beverages",
+      "entity_type": "food",
+      "surface_forms": ["soft drinks", "sugar-sweetened beverages", "soda"]
+    },
+    {
+      "concept_id": "FOOD:mushrooms",
+      "canonical_name": "Mushrooms",
+      "entity_type": "food",
+      "surface_forms": ["mushroom", "mushrooms"]
+    },
+    {
+      "concept_id": "FOOD:soy",
+      "canonical_name": "Soy",
+      "entity_type": "food",
+      "surface_forms": ["soy", "soya", "soybeans"]
+    },
+    {
+      "concept_id": "FOOD:tofu",
+      "canonical_name": "Tofu",
+      "entity_type": "food",
+      "surface_forms": ["tofu"]
+    },
+    {
+      "concept_id": "FOOD:seaweed",
+      "canonical_name": "Seaweed",
+      "entity_type": "food",
+      "surface_forms": ["seaweed"]
+    },
+    {
+      "concept_id": "FOOD:chocolate",
+      "canonical_name": "Chocolate",
+      "entity_type": "food",
+      "surface_forms": ["chocolate", "dark chocolate"]
+    },
+    {
+      "concept_id": "FOOD:honey",
+      "canonical_name": "Honey",
+      "entity_type": "food",
+      "surface_forms": ["honey"]
+    },
+    {
+      "concept_id": "CHEM:curcumin",
+      "canonical_name": "Curcumin",
+      "entity_type": "chemical",
+      "surface_forms": ["curcumin"]
+    },
+    {
+      "concept_id": "CHEM:resveratrol",
+      "canonical_name": "Resveratrol",
+      "entity_type": "chemical",
+      "surface_forms": ["resveratrol"]
+    },
+    {
+      "concept_id": "CHEM:quercetin",
+      "canonical_name": "Quercetin",
+      "entity_type": "chemical",
+      "surface_forms": ["quercetin"]
+    },
+    {
+      "concept_id": "CHEM:egcg",
+      "canonical_name": "Epigallocatechin gallate",
+      "entity_type": "chemical",
+      "surface_forms": ["epigallocatechin gallate", "egcg"]
+    },
+    {
+      "concept_id": "CHEM:sulforaphane",
+      "canonical_name": "Sulforaphane",
+      "entity_type": "chemical",
+      "surface_forms": ["sulforaphane"]
+    },
+    {
+      "concept_id": "CHEM:anthocyanins",
+      "canonical_name": "Anthocyanins",
+      "entity_type": "chemical",
+      "surface_forms": ["anthocyanin", "anthocyanins"]
+    },
+    {
+      "concept_id": "CHEM:flavonoids",
+      "canonical_name": "Flavonoids",
+      "entity_type": "chemical",
+      "surface_forms": ["flavonoid", "flavonoids"]
+    },
+    {
+      "concept_id": "CHEM:carotenoids",
+      "canonical_name": "Carotenoids",
+      "entity_type": "chemical",
+      "surface_forms": ["carotenoid", "carotenoids"]
+    },
+    {
+      "concept_id": "CHEM:polyphenols",
+      "canonical_name": "Polyphenols",
+      "entity_type": "chemical",
+      "surface_forms": ["polyphenol", "polyphenols"]
+    },
+    {
+      "concept_id": "CHEM:catechins",
+      "canonical_name": "Catechins",
+      "entity_type": "chemical",
+      "surface_forms": ["catechin", "catechins"]
+    },
+    {
+      "concept_id": "CHEM:fructose",
+      "canonical_name": "Fructose",
+      "entity_type": "chemical",
+      "surface_forms": ["fructose"]
+    },
+    {
+      "concept_id": "CHEM:lactose",
+      "canonical_name": "Lactose",
+      "entity_type": "chemical",
+      "surface_forms": ["lactose"]
+    },
+    {
+      "concept_id": "CHEM:sucrose",
+      "canonical_name": "Sucrose",
+      "entity_type": "chemical",
+      "surface_forms": ["sucrose"]
+    },
+    {
+      "concept_id": "CHEM:caffeine",
+      "canonical_name": "Caffeine",
+      "entity_type": "chemical",
+      "surface_forms": ["caffeine"]
+    },
+    {
+      "concept_id": "CHEM:capsaicin",
+      "canonical_name": "Capsaicin",
+      "entity_type": "chemical",
+      "surface_forms": ["capsaicin"]
+    },
+    {
+      "concept_id": "CHEM:histamine",
+      "canonical_name": "Histamine",
+      "entity_type": "chemical",
+      "surface_forms": ["histamine"]
+    },
+    {
+      "concept_id": "CHEM:scfa",
+      "canonical_name": "Short-chain fatty acids",
+      "entity_type": "chemical",
+      "surface_forms": ["short-chain fatty acids", "short chain fatty acids", "scfa", "scfas"]
+    },
+    {
+      "concept_id": "CHEM:butyrate",
+      "canonical_name": "Butyrate",
+      "entity_type": "chemical",
+      "surface_forms": ["butyrate", "butyric acid"]
+    },
+    {
+      "concept_id": "CHEM:acetate",
+      "canonical_name": "Acetate",
+      "entity_type": "chemical",
+      "surface_forms": ["acetate"]
+    },
+    {
+      "concept_id": "CHEM:propionate",
+      "canonical_name": "Propionate",
+      "entity_type": "chemical",
+      "surface_forms": ["propionate"]
+    },
+    {
+      "concept_id": "CHEM:tmao",
+      "canonical_name": "Trimethylamine N-oxide",
+      "entity_type": "chemical",
+      "surface_forms": ["trimethylamine n-oxide", "tmao"]
+    },
+    {
+      "concept_id": "CHEM:nitrates",
+      "canonical_name": "Nitrates",
+      "entity_type": "chemical",
+      "surface_forms": ["nitrate", "nitrates"]
+    },
+    {
+      "concept_id": "CHEM:lps",
+      "canonical_name": "Lipopolysaccharide",
+      "entity_type": "chemical",
+      "surface_forms": ["lipopolysaccharide", "lps"]
+    },
+    {
+      "concept_id": "DIS:ibs",
+      "canonical_name": "Irritable bowel syndrome",
+      "entity_type": "disease",
+      "surface_forms": ["irritable bowel syndrome", "ibs"]
+    },
+    {
+      "concept_id": "DIS:celiac_disease",
+      "canonical_name": "Celiac disease",
+      "entity_type": "disease",
+      "surface_forms": ["celiac disease", "coeliac disease"]
+    },
+    {
+      "concept_id": "DIS:type_1_diabetes",
+      "canonical_name": "Type 1 diabetes mellitus",
+      "entity_type": "disease",
+      "surface_forms": ["type 1 diabetes", "type 1 diabetes mellitus", "t1dm", "type i diabetes"]
+    },
+    {
+      "concept_id": "DIS:obesity",
+      "canonical_name": "Obesity",
+      "entity_type": "disease",
+      "surface_forms": ["obesity", "obese"]
+    },
+    {
+      "concept_id": "DIS:metabolic_syndrome",
+      "canonical_name": "Metabolic syndrome",
+      "entity_type": "disease",
+      "surface_forms": ["metabolic syndrome"]
+    },
+    {
+      "concept_id": "DIS:nafld",
+      "canonical_name": "Non-alcoholic fatty liver disease",
+      "entity_type": "disease",
+      "surface_forms": ["non-alcoholic fatty liver disease", "nafld", "masld"]
+    },
+    {
+      "concept_id": "DIS:nash",
+      "canonical_name": "Non-alcoholic steatohepatitis",
+      "entity_type": "disease",
+      "surface_forms": ["non-alcoholic steatohepatitis", "nash"]
+    },
+    {
+      "concept_id": "DIS:fatty_liver",
+      "canonical_name": "Fatty liver",
+      "entity_type": "disease",
+      "surface_forms": ["fatty liver", "hepatic steatosis"]
+    },
+    {
+      "concept_id": "DIS:cardiovascular_disease",
+      "canonical_name": "Cardiovascular disease",
+      "entity_type": "disease",
+      "surface_forms": ["cardiovascular disease", "cvd", "heart disease", "coronary heart disease"]
+    },
+    {
+      "concept_id": "DIS:colorectal_cancer",
+      "canonical_name": "Colorectal cancer",
+      "entity_type": "disease",
+      "surface_forms": ["colorectal cancer", "colon cancer", "bowel cancer"]
+    },
+    {
+      "concept_id": "DIS:osteoporosis",
+      "canonical_name": "Osteoporosis",
+      "entity_type": "disease",
+      "surface_forms": ["osteoporosis"]
+    },
+    {
+      "concept_id": "DIS:gerd",
+      "canonical_name": "Gastroesophageal reflux disease",
+      "entity_type": "disease",
+      "surface_forms": ["gastroesophageal reflux disease", "gerd", "acid reflux"]
+    },
+    {
+      "concept_id": "DIS:diverticulitis",
+      "canonical_name": "Diverticular disease",
+      "entity_type": "disease",
+      "surface_forms": ["diverticulitis", "diverticular disease"]
+    },
+    {
+      "concept_id": "DIS:sibo",
+      "canonical_name": "Small intestinal bacterial overgrowth",
+      "entity_type": "disease",
+      "surface_forms": ["small intestinal bacterial overgrowth", "sibo"]
+    },
+    {
+      "concept_id": "DIS:pouchitis",
+      "canonical_name": "Pouchitis",
+      "entity_type": "disease",
+      "surface_forms": ["pouchitis"]
+    },
+    {
+      "concept_id": "DIS:microscopic_colitis",
+      "canonical_name": "Microscopic colitis",
+      "entity_type": "disease",
+      "surface_forms": ["microscopic colitis"]
+    },
+    {
+      "concept_id": "DIS:proctitis",
+      "canonical_name": "Proctitis",
+      "entity_type": "disease",
+      "surface_forms": ["proctitis"]
+    },
+    {
+      "concept_id": "DIS:dysbiosis",
+      "canonical_name": "Dysbiosis",
+      "entity_type": "disease",
+      "surface_forms": ["dysbiosis", "gut dysbiosis"]
+    },
+    {
+      "concept_id": "DIS:depression",
+      "canonical_name": "Depression",
+      "entity_type": "disease",
+      "surface_forms": ["depression"]
+    },
+    {
+      "concept_id": "DIS:anxiety",
+      "canonical_name": "Anxiety",
+      "entity_type": "disease",
+      "surface_forms": ["anxiety"]
+    },
+    {
+      "concept_id": "DIS:anemia",
+      "canonical_name": "Anemia",
+      "entity_type": "disease",
+      "surface_forms": ["anemia", "anaemia", "iron deficiency anemia"]
+    },
+    {
+      "concept_id": "DIS:malnutrition",
+      "canonical_name": "Malnutrition",
+      "entity_type": "disease",
+      "surface_forms": ["malnutrition"]
+    },
+    {
+      "concept_id": "DIS:food_allergy",
+      "canonical_name": "Food allergy",
+      "entity_type": "disease",
+      "surface_forms": ["food allergy", "food allergies"]
+    },
+    {
+      "concept_id": "DIS:lactose_intolerance",
+      "canonical_name": "Lactose intolerance",
+      "entity_type": "disease",
+      "surface_forms": ["lactose intolerance"]
+    },
+    {
+      "concept_id": "DIS:stroke",
+      "canonical_name": "Stroke",
+      "entity_type": "disease",
+      "surface_forms": ["stroke"]
+    },
+    {
+      "concept_id": "SYMP:constipation",
+      "canonical_name": "Constipation",
+      "entity_type": "symptom",
+      "surface_forms": ["constipation"]
+    },
+    {
+      "concept_id": "SYMP:bloating",
+      "canonical_name": "Bloating",
+      "entity_type": "symptom",
+      "surface_forms": ["bloating", "abdominal bloating"]
+    },
+    {
+      "concept_id": "SYMP:cramping",
+      "canonical_name": "Abdominal cramping",
+      "entity_type": "symptom",
+      "surface_forms": ["cramping", "abdominal cramping", "cramps"]
+    },
+    {
+      "concept_id": "SYMP:nausea",
+      "canonical_name": "Nausea",
+      "entity_type": "symptom",
+      "surface_forms": ["nausea"]
+    },
+    {
+      "concept_id": "SYMP:vomiting",
+      "canonical_name": "Vomiting",
+      "entity_type": "symptom",
+      "surface_forms": ["vomiting"]
+    },
+    {
+      "concept_id": "SYMP:fatigue",
+      "canonical_name": "Fatigue",
+      "entity_type": "symptom",
+      "surface_forms": ["fatigue"]
+    },
+    {
+      "concept_id": "SYMP:weight_loss",
+      "canonical_name": "Weight loss",
+      "entity_type": "symptom",
+      "surface_forms": ["weight loss"]
+    },
+    {
+      "concept_id": "SYMP:rectal_bleeding",
+      "canonical_name": "Rectal bleeding",
+      "entity_type": "symptom",
+      "surface_forms": ["rectal bleeding", "blood in stool", "bloody stool", "hematochezia"]
+    },
+    {
+      "concept_id": "SYMP:flatulence",
+      "canonical_name": "Flatulence",
+      "entity_type": "symptom",
+      "surface_forms": ["flatulence"]
+    },
+    {
+      "concept_id": "SYMP:urgency",
+      "canonical_name": "Bowel urgency",
+      "entity_type": "symptom",
+      "surface_forms": ["bowel urgency", "fecal urgency"]
+    },
+    {
+      "concept_id": "SYMP:tenesmus",
+      "canonical_name": "Tenesmus",
+      "entity_type": "symptom",
+      "surface_forms": ["tenesmus"]
+    },
+    {
+      "concept_id": "SYMP:steatorrhea",
+      "canonical_name": "Steatorrhea",
+      "entity_type": "symptom",
+      "surface_forms": ["steatorrhea", "steatorrhoea"]
+    },
+    {
+      "concept_id": "SYMP:heartburn",
+      "canonical_name": "Heartburn",
+      "entity_type": "symptom",
+      "surface_forms": ["heartburn"]
+    },
+    {
+      "concept_id": "SYMP:dyspepsia",
+      "canonical_name": "Dyspepsia",
+      "entity_type": "symptom",
+      "surface_forms": ["dyspepsia", "indigestion"]
+    },
+    {
+      "concept_id": "SYMP:malabsorption",
+      "canonical_name": "Malabsorption",
+      "entity_type": "symptom",
+      "surface_forms": ["malabsorption"]
+    },
+    {
+      "concept_id": "BIOM:fecal_calprotectin",
+      "canonical_name": "Fecal calprotectin",
+      "entity_type": "biomarker",
+      "surface_forms": ["fecal calprotectin", "faecal calprotectin", "calprotectin"]
+    },
+    {
+      "concept_id": "BIOM:esr",
+      "canonical_name": "Erythrocyte sedimentation rate",
+      "entity_type": "biomarker",
+      "surface_forms": ["erythrocyte sedimentation rate", "esr"]
+    },
+    {
+      "concept_id": "BIOM:ldl",
+      "canonical_name": "LDL cholesterol",
+      "entity_type": "biomarker",
+      "surface_forms": ["ldl cholesterol", "low-density lipoprotein", "ldl-c"]
+    },
+    {
+      "concept_id": "BIOM:hdl",
+      "canonical_name": "HDL cholesterol",
+      "entity_type": "biomarker",
+      "surface_forms": ["hdl cholesterol", "high-density lipoprotein", "hdl-c"]
+    },
+    {
+      "concept_id": "BIOM:triglycerides",
+      "canonical_name": "Triglycerides",
+      "entity_type": "biomarker",
+      "surface_forms": ["triglycerides", "triglyceride"]
+    },
+    {
+      "concept_id": "BIOM:fasting_glucose",
+      "canonical_name": "Fasting glucose",
+      "entity_type": "biomarker",
+      "surface_forms": ["fasting glucose", "fasting blood glucose", "fasting plasma glucose"]
+    },
+    {
+      "concept_id": "BIOM:insulin",
+      "canonical_name": "Insulin",
+      "entity_type": "biomarker",
+      "surface_forms": ["insulin", "fasting insulin"]
+    },
+    {
+      "concept_id": "BIOM:homa_ir",
+      "canonical_name": "Insulin resistance (HOMA-IR)",
+      "entity_type": "biomarker",
+      "surface_forms": ["homa-ir", "insulin resistance"]
+    },
+    {
+      "concept_id": "BIOM:blood_pressure",
+      "canonical_name": "Blood pressure",
+      "entity_type": "biomarker",
+      "surface_forms": ["blood pressure", "systolic blood pressure", "diastolic blood pressure"]
+    },
+    {
+      "concept_id": "BIOM:bmi",
+      "canonical_name": "Body mass index",
+      "entity_type": "biomarker",
+      "surface_forms": ["body mass index", "bmi"]
+    },
+    {
+      "concept_id": "BIOM:albumin",
+      "canonical_name": "Serum albumin",
+      "entity_type": "biomarker",
+      "surface_forms": ["albumin", "serum albumin"]
+    },
+    {
+      "concept_id": "BIOM:hemoglobin",
+      "canonical_name": "Hemoglobin",
+      "entity_type": "biomarker",
+      "surface_forms": ["hemoglobin", "haemoglobin"]
+    },
+    {
+      "concept_id": "BIOM:ferritin",
+      "canonical_name": "Ferritin",
+      "entity_type": "biomarker",
+      "surface_forms": ["ferritin", "serum ferritin"]
+    },
+    {
+      "concept_id": "BIOM:tnf_alpha",
+      "canonical_name": "TNF-alpha",
+      "entity_type": "biomarker",
+      "surface_forms": ["tnf-alpha", "tumor necrosis factor alpha", "tnf-α"]
+    },
+    {
+      "concept_id": "BIOM:il6",
+      "canonical_name": "Interleukin-6",
+      "entity_type": "biomarker",
+      "surface_forms": ["interleukin-6", "il-6"]
+    },
+    {
+      "concept_id": "BIOM:vitamin_d_level",
+      "canonical_name": "Serum vitamin D",
+      "entity_type": "biomarker",
+      "surface_forms": ["25-hydroxyvitamin d", "serum vitamin d"]
+    },
+    {
+      "concept_id": "BIOM:waist_circumference",
+      "canonical_name": "Waist circumference",
+      "entity_type": "biomarker",
+      "surface_forms": ["waist circumference"]
+    },
+    {
+      "concept_id": "BIOM:gut_microbiota",
+      "canonical_name": "Gut microbiota",
+      "entity_type": "biomarker",
+      "surface_forms": ["gut microbiota", "gut microbiome", "intestinal microbiota"]
+    },
+    {
+      "concept_id": "OUT:mucosal_healing",
+      "canonical_name": "Mucosal healing",
+      "entity_type": "outcome",
+      "surface_forms": ["mucosal healing"]
+    },
+    {
+      "concept_id": "OUT:endoscopic_remission",
+      "canonical_name": "Endoscopic remission",
+      "entity_type": "outcome",
+      "surface_forms": ["endoscopic remission"]
+    },
+    {
+      "concept_id": "OUT:clinical_response",
+      "canonical_name": "Clinical response",
+      "entity_type": "outcome",
+      "surface_forms": ["clinical response", "treatment response"]
+    },
+    {
+      "concept_id": "OUT:quality_of_life",
+      "canonical_name": "Quality of life",
+      "entity_type": "outcome",
+      "surface_forms": ["quality of life", "qol"]
+    },
+    {
+      "concept_id": "OUT:hospitalization",
+      "canonical_name": "Hospitalization",
+      "entity_type": "outcome",
+      "surface_forms": ["hospitalization", "hospitalisation", "hospital admission"]
+    },
+    {
+      "concept_id": "OUT:surgery",
+      "canonical_name": "Surgery",
+      "entity_type": "outcome",
+      "surface_forms": ["colectomy", "surgical resection"]
+    },
+    {
+      "concept_id": "OUT:steroid_free_remission",
+      "canonical_name": "Steroid-free remission",
+      "entity_type": "outcome",
+      "surface_forms": ["steroid-free remission", "corticosteroid-free remission"]
+    },
+    {
+      "concept_id": "OUT:glycemic_control",
+      "canonical_name": "Glycemic control",
+      "entity_type": "outcome",
+      "surface_forms": ["glycemic control", "glycaemic control"]
+    },
+    {
+      "concept_id": "INT:mediterranean_diet",
+      "canonical_name": "Mediterranean diet",
+      "entity_type": "intervention",
+      "surface_forms": ["mediterranean diet"]
+    },
+    {
+      "concept_id": "INT:low_fodmap_diet",
+      "canonical_name": "Low-FODMAP diet",
+      "entity_type": "intervention",
+      "surface_forms": ["low-fodmap diet", "low fodmap diet", "fodmap diet"]
+    },
+    {
+      "concept_id": "INT:exclusive_enteral_nutrition",
+      "canonical_name": "Exclusive enteral nutrition",
+      "entity_type": "intervention",
+      "surface_forms": ["exclusive enteral nutrition", "een", "enteral nutrition"]
+    },
+    {
+      "concept_id": "INT:cded",
+      "canonical_name": "Crohn's disease exclusion diet",
+      "entity_type": "intervention",
+      "surface_forms": ["crohn's disease exclusion diet", "cded"]
+    },
+    {
+      "concept_id": "INT:specific_carbohydrate_diet",
+      "canonical_name": "Specific carbohydrate diet",
+      "entity_type": "intervention",
+      "surface_forms": ["specific carbohydrate diet", "scd"]
+    },
+    {
+      "concept_id": "INT:gluten_free_diet",
+      "canonical_name": "Gluten-free diet",
+      "entity_type": "intervention",
+      "surface_forms": ["gluten-free diet", "gluten free diet"]
+    },
+    {
+      "concept_id": "INT:dash_diet",
+      "canonical_name": "DASH diet",
+      "entity_type": "intervention",
+      "surface_forms": ["dash diet"]
+    },
+    {
+      "concept_id": "INT:plant_based_diet",
+      "canonical_name": "Plant-based diet",
+      "entity_type": "intervention",
+      "surface_forms": ["plant-based diet", "plant based diet"]
+    },
+    {
+      "concept_id": "INT:vegetarian_diet",
+      "canonical_name": "Vegetarian diet",
+      "entity_type": "intervention",
+      "surface_forms": ["vegetarian diet"]
+    },
+    {
+      "concept_id": "INT:vegan_diet",
+      "canonical_name": "Vegan diet",
+      "entity_type": "intervention",
+      "surface_forms": ["vegan diet"]
+    },
+    {
+      "concept_id": "INT:elimination_diet",
+      "canonical_name": "Elimination diet",
+      "entity_type": "intervention",
+      "surface_forms": ["elimination diet"]
+    },
+    {
+      "concept_id": "INT:anti_inflammatory_diet",
+      "canonical_name": "Anti-inflammatory diet",
+      "entity_type": "intervention",
+      "surface_forms": ["anti-inflammatory diet"]
+    },
+    {
+      "concept_id": "INT:caloric_restriction",
+      "canonical_name": "Caloric restriction",
+      "entity_type": "intervention",
+      "surface_forms": ["caloric restriction", "calorie restriction"]
+    },
+    {
+      "concept_id": "INT:intermittent_fasting",
+      "canonical_name": "Intermittent fasting",
+      "entity_type": "intervention",
+      "surface_forms": ["intermittent fasting"]
+    },
+    {
+      "concept_id": "INT:western_diet",
+      "canonical_name": "Western diet",
+      "entity_type": "intervention",
+      "surface_forms": ["western diet"]
+    },
+    {
+      "concept_id": "INT:high_fiber_diet",
+      "canonical_name": "High-fiber diet",
+      "entity_type": "intervention",
+      "surface_forms": ["high-fiber diet", "high fiber diet", "high-fibre diet"]
+    },
+    {
+      "concept_id": "INT:fecal_transplant",
+      "canonical_name": "Fecal microbiota transplantation",
+      "entity_type": "intervention",
+      "surface_forms": ["fecal microbiota transplantation", "faecal microbiota transplantation", "fmt"]
+    },
+    {
+      "concept_id": "INT:supplementation",
+      "canonical_name": "Dietary supplementation",
+      "entity_type": "intervention",
+      "surface_forms": ["supplementation", "dietary supplement", "dietary supplements"]
+    },
+    {
+      "concept_id": "FOOD:abiyuch",
+      "canonical_name": "abiyuch",
+      "entity_type": "food",
+      "surface_forms": ["Crateva religiosa", "abiyuch", "caper"]
+    },
+    {
+      "concept_id": "FOOD:acerola",
+      "canonical_name": "Acerola",
+      "entity_type": "food",
+      "surface_forms": ["Malpighia emarginata", "Malpighiaceae", "Acerola"]
+    },
+    {
+      "concept_id": "FOOD:agave",
+      "canonical_name": "Agave",
+      "entity_type": "food",
+      "surface_forms": ["Agavoideae", "Agave"]
+    },
+    {
+      "concept_id": "FOOD:alfalfa",
+      "canonical_name": "Alfalfa",
+      "entity_type": "food",
+      "surface_forms": ["Medicago sativa", "Alfalfa"]
+    },
+    {
+      "concept_id": "FOOD:amaranth",
+      "canonical_name": "Amaranth",
+      "entity_type": "food",
+      "surface_forms": ["Amaranthus", "Amaranth"]
+    },
+    {
+      "concept_id": "FOOD:anchovies",
+      "canonical_name": "Anchovies",
+      "entity_type": "food",
+      "surface_forms": ["Engraulidae", "Anchovies", "Engraulis"]
+    },
+    {
+      "concept_id": "FOOD:apricot",
+      "canonical_name": "Apricot",
+      "entity_type": "food",
+      "surface_forms": ["Prunus armeniaca", "Apricot"]
+    },
+    {
+      "concept_id": "FOOD:arrowhead",
+      "canonical_name": "Arrowhead",
+      "entity_type": "food",
+      "surface_forms": ["Alismataceae", "Sagittaria", "Arrowhead"]
+    },
+    {
+      "concept_id": "FOOD:arrowroot",
+      "canonical_name": "Arrowroot",
+      "entity_type": "food",
+      "surface_forms": ["arrowroot family"]
+    },
+    {
+      "concept_id": "FOOD:artichokes",
+      "canonical_name": "Artichokes",
+      "entity_type": "food",
+      "surface_forms": ["Cynara cardunculus var. scolymus", "Cynara scolymus", "Artichokes"]
+    },
+    {
+      "concept_id": "FOOD:arugula",
+      "canonical_name": "Arugula",
+      "entity_type": "food",
+      "surface_forms": ["Eruca vesicaria", "Arugula"]
+    },
+    {
+      "concept_id": "FOOD:asparagus",
+      "canonical_name": "Asparagus",
+      "entity_type": "food",
+      "surface_forms": ["⁠Asparagus officinalis", "Asparagus"]
+    },
+    {
+      "concept_id": "FOOD:avocado",
+      "canonical_name": "Avocado",
+      "entity_type": "food",
+      "surface_forms": ["Persea americana", "Lauraceae", "Avocado"]
+    },
+    {
+      "concept_id": "FOOD:baked_products",
+      "canonical_name": "Baked Products",
+      "entity_type": "food",
+      "surface_forms": ["Baked Products"]
+    },
+    {
+      "concept_id": "FOOD:balsam_pear",
+      "canonical_name": "Balsam-pear",
+      "entity_type": "food",
+      "surface_forms": ["Momordica charantia", "Balsam-pear"]
+    },
+    {
+      "concept_id": "FOOD:bamboo",
+      "canonical_name": "Bamboo",
+      "entity_type": "food",
+      "surface_forms": ["Bamboo"]
+    },
+    {
+      "concept_id": "FOOD:barley",
+      "canonical_name": "Barley",
+      "entity_type": "food",
+      "surface_forms": ["Hordeum vulgare", "Barley"]
+    },
+    {
+      "concept_id": "FOOD:basil",
+      "canonical_name": "Basil",
+      "entity_type": "food",
+      "surface_forms": ["Ocimum basilicum", "Basil"]
+    },
+    {
+      "concept_id": "FOOD:bear_black",
+      "canonical_name": "Bear-black",
+      "entity_type": "food",
+      "surface_forms": ["Ursus americanus", "Bear-black"]
+    },
+    {
+      "concept_id": "FOOD:beef",
+      "canonical_name": "Beef",
+      "entity_type": "food",
+      "surface_forms": ["⁠Bos taurus", "Beef"]
+    },
+    {
+      "concept_id": "FOOD:beer",
+      "canonical_name": "Beer",
+      "entity_type": "food",
+      "surface_forms": ["Beer"]
+    },
+    {
+      "concept_id": "FOOD:beer_salami_mix_meat",
+      "canonical_name": "Beer salami - mix meat",
+      "entity_type": "food",
+      "surface_forms": ["Beer salami - mix meat"]
+    },
+    {
+      "concept_id": "FOOD:beer_salami_pork",
+      "canonical_name": "Beer salami - pork",
+      "entity_type": "food",
+      "surface_forms": ["Beer salami - pork"]
+    },
+    {
+      "concept_id": "FOOD:beet_greens",
+      "canonical_name": "Beet greens",
+      "entity_type": "food",
+      "surface_forms": ["⁠Amaranthaceae", "⁠Beta vulgaris", "Beet greens"]
+    },
+    {
+      "concept_id": "FOOD:bison",
+      "canonical_name": "Bison",
+      "entity_type": "food",
+      "surface_forms": ["Bison"]
+    },
+    {
+      "concept_id": "FOOD:blackberries",
+      "canonical_name": "Blackberries",
+      "entity_type": "food",
+      "surface_forms": ["Blackberries", "Rubus"]
+    },
+    {
+      "concept_id": "FOOD:blackeye_pea",
+      "canonical_name": "Blackeye pea",
+      "entity_type": "food",
+      "surface_forms": ["Blackeye pea"]
+    },
+    {
+      "concept_id": "FOOD:blueberries",
+      "canonical_name": "Blueberries",
+      "entity_type": "food",
+      "surface_forms": ["Blueberries", "Vaccinium"]
+    },
+    {
+      "concept_id": "FOOD:borage",
+      "canonical_name": "Borage",
+      "entity_type": "food",
+      "surface_forms": ["Borago officinalis", "Boraginaceae", "Borage"]
+    },
+    {
+      "concept_id": "FOOD:boysenberries",
+      "canonical_name": "Boysenberries",
+      "entity_type": "food",
+      "surface_forms": ["Boysenberries", "Rubus ursinus", "Rubus idaeus"]
+    },
+    {
+      "concept_id": "FOOD:braunschweiger_pork",
+      "canonical_name": "Braunschweiger - pork",
+      "entity_type": "food",
+      "surface_forms": ["Braunschweiger - pork"]
+    },
+    {
+      "concept_id": "FOOD:broccoli_chinese",
+      "canonical_name": "Broccoli chinese",
+      "entity_type": "food",
+      "surface_forms": ["Brassica oleracea var. alboglabra", "Broccoli chinese"]
+    },
+    {
+      "concept_id": "FOOD:broccoli_raab",
+      "canonical_name": "Broccoli raab",
+      "entity_type": "food",
+      "surface_forms": ["Broccoli raab"]
+    },
+    {
+      "concept_id": "FOOD:brussels_sprouts",
+      "canonical_name": "Brussels sprouts",
+      "entity_type": "food",
+      "surface_forms": ["Brassica oleracea var. gemmifera", "Brussels sprouts", "Gemmifera Group"]
+    },
+    {
+      "concept_id": "FOOD:buckwheat",
+      "canonical_name": "Buckwheat",
+      "entity_type": "food",
+      "surface_forms": ["Fagopyrum esculentum", "Buckwheat"]
+    },
+    {
+      "concept_id": "FOOD:buffalo_shoshone_bannock",
+      "canonical_name": "Buffalo (Shoshone Bannock)",
+      "entity_type": "food",
+      "surface_forms": ["Shoshone Bannock", "Buffalo"]
+    },
+    {
+      "concept_id": "FOOD:bulgur",
+      "canonical_name": "Bulgur",
+      "entity_type": "food",
+      "surface_forms": ["Bulgur"]
+    },
+    {
+      "concept_id": "FOOD:burdock_root",
+      "canonical_name": "Burdock root",
+      "entity_type": "food",
+      "surface_forms": ["⁠Arctium lappa", "Burdock root", "⁠Asteraceae"]
+    },
+    {
+      "concept_id": "FOOD:cabbage",
+      "canonical_name": "Cabbage",
+      "entity_type": "food",
+      "surface_forms": ["pekinensis for Napa cabbage"]
+    },
+    {
+      "concept_id": "FOOD:cabbage_27",
+      "canonical_name": "Cabbage",
+      "entity_type": "food",
+      "surface_forms": ["Brassica oleracea var. sabauda"]
+    },
+    {
+      "concept_id": "FOOD:cabbage_26",
+      "canonical_name": "Cabbage",
+      "entity_type": "food",
+      "surface_forms": ["Brassica oleracea var. capitata"]
+    },
+    {
+      "concept_id": "FOOD:cabbage_40",
+      "canonical_name": "Cabbage",
+      "entity_type": "food",
+      "surface_forms": ["Brassica oleracea var. capitata f. rubra"]
+    },
+    {
+      "concept_id": "FOOD:cabbage_29",
+      "canonical_name": "Cabbage",
+      "entity_type": "food",
+      "surface_forms": ["Brassica rapa subsp. pekinensis"]
+    },
+    {
+      "concept_id": "FOOD:canada_goose",
+      "canonical_name": "Canada Goose",
+      "entity_type": "food",
+      "surface_forms": ["Branta canadensis", "Canada Goose"]
+    },
+    {
+      "concept_id": "FOOD:capers",
+      "canonical_name": "Capers",
+      "entity_type": "food",
+      "surface_forms": ["Capparis spinosa", "Capers"]
+    },
+    {
+      "concept_id": "FOOD:carambola_starfruit",
+      "canonical_name": "Carambola (starfruit)",
+      "entity_type": "food",
+      "surface_forms": ["Averrhoa carambola", "Oxalidaceae", "Carambola", "starfruit"]
+    },
+    {
+      "concept_id": "FOOD:cardoon",
+      "canonical_name": "Cardoon",
+      "entity_type": "food",
+      "surface_forms": ["Cynara cardunculus", "Cardoon"]
+    },
+    {
+      "concept_id": "FOOD:caribou",
+      "canonical_name": "Caribou",
+      "entity_type": "food",
+      "surface_forms": ["Rangifer tarandus", "Caribou"]
+    },
+    {
+      "concept_id": "FOOD:carissa_natal_plum",
+      "canonical_name": "Carissa (natal-plum)",
+      "entity_type": "food",
+      "surface_forms": ["Carissa macrocarpa", "Apocynaceae", "natal-plum", "Carissa"]
+    },
+    {
+      "concept_id": "FOOD:cassava",
+      "canonical_name": "Cassava",
+      "entity_type": "food",
+      "surface_forms": ["Manihot esculenta", "Euphorbiaceae", "Cassava"]
+    },
+    {
+      "concept_id": "FOOD:cattail",
+      "canonical_name": "Cattail",
+      "entity_type": "food",
+      "surface_forms": ["Typha latifolia", "Typhaceae", "Cattail"]
+    },
+    {
+      "concept_id": "FOOD:cauliflower",
+      "canonical_name": "Cauliflower",
+      "entity_type": "food",
+      "surface_forms": ["Brassica oleracea var. botrytis", "Cauliflower"]
+    },
+    {
+      "concept_id": "FOOD:celeriac",
+      "canonical_name": "Celeriac",
+      "entity_type": "food",
+      "surface_forms": ["Apium graveolens var. rapaceum", "Celeriac"]
+    },
+    {
+      "concept_id": "FOOD:celery",
+      "canonical_name": "Celery",
+      "entity_type": "food",
+      "surface_forms": ["Apium graveolens", "Celery"]
+    },
+    {
+      "concept_id": "FOOD:celtuce",
+      "canonical_name": "Celtuce",
+      "entity_type": "food",
+      "surface_forms": ["Lactuca sativa var. augustana", "var. asparagina", "Celtuce"]
+    },
+    {
+      "concept_id": "FOOD:chard",
+      "canonical_name": "Chard",
+      "entity_type": "food",
+      "surface_forms": ["Beta vulgaris subsp. cicla", "Chard"]
+    },
+    {
+      "concept_id": "FOOD:chayote",
+      "canonical_name": "Chayote",
+      "entity_type": "food",
+      "surface_forms": ["Sechium edule", "Chayote"]
+    },
+    {
+      "concept_id": "FOOD:cherimoya",
+      "canonical_name": "Cherimoya",
+      "entity_type": "food",
+      "surface_forms": ["Annona cherimola", "Cherimoya"]
+    },
+    {
+      "concept_id": "FOOD:cherries_sour",
+      "canonical_name": "Cherries-sour",
+      "entity_type": "food",
+      "surface_forms": ["Cherries-sour", "Cherries", "sour"]
+    },
+    {
+      "concept_id": "FOOD:cherries_sweet",
+      "canonical_name": "Cherries-sweet",
+      "entity_type": "food",
+      "surface_forms": ["Cherries-sweet", "Prunus avium"]
+    },
+    {
+      "concept_id": "FOOD:cherry",
+      "canonical_name": "Cherry",
+      "entity_type": "food",
+      "surface_forms": ["Cherry"]
+    },
+    {
+      "concept_id": "FOOD:chia",
+      "canonical_name": "Chia",
+      "entity_type": "food",
+      "surface_forms": ["Salvia hispanica", "Chia"]
+    },
+    {
+      "concept_id": "FOOD:chickpeas",
+      "canonical_name": "Chickpeas",
+      "entity_type": "food",
+      "surface_forms": ["Cicer arietinum", "Chickpeas"]
+    },
+    {
+      "concept_id": "FOOD:chicory",
+      "canonical_name": "Chicory",
+      "entity_type": "food",
+      "surface_forms": ["Cichorium intybus", "Chicory"]
+    },
+    {
+      "concept_id": "FOOD:chives",
+      "canonical_name": "Chives",
+      "entity_type": "food",
+      "surface_forms": ["Allium schoenoprasum", "Amaryllidaceae", "Chives"]
+    },
+    {
+      "concept_id": "FOOD:chocoloate",
+      "canonical_name": "Chocoloate",
+      "entity_type": "food",
+      "surface_forms": ["heobroma cacao", "Chocoloate"]
+    },
+    {
+      "concept_id": "FOOD:chokecherries",
+      "canonical_name": "Chokecherries",
+      "entity_type": "food",
+      "surface_forms": ["Prunus virginiana", "Chokecherries"]
+    },
+    {
+      "concept_id": "FOOD:chrysanthemum",
+      "canonical_name": "Chrysanthemum",
+      "entity_type": "food",
+      "surface_forms": ["Chrysanthemum"]
+    },
+    {
+      "concept_id": "FOOD:clementines",
+      "canonical_name": "Clementines",
+      "entity_type": "food",
+      "surface_forms": ["Citrus × clementina", "Clementines", "Rutaceae"]
+    },
+    {
+      "concept_id": "FOOD:cloudberries",
+      "canonical_name": "Cloudberries",
+      "entity_type": "food",
+      "surface_forms": ["Rubus chamaemorus", "Cloudberries"]
+    },
+    {
+      "concept_id": "FOOD:cockles",
+      "canonical_name": "Cockles",
+      "entity_type": "food",
+      "surface_forms": ["Clinocardium nuttallii", "Cardiidae", "Cockles"]
+    },
+    {
+      "concept_id": "FOOD:cocoa",
+      "canonical_name": "Cocoa",
+      "entity_type": "food",
+      "surface_forms": ["Theobroma cacao", "Cocoa"]
+    },
+    {
+      "concept_id": "FOOD:cod",
+      "canonical_name": "Cod",
+      "entity_type": "food",
+      "surface_forms": ["Gadus macrocephalus", "Gadidae", "Cod"]
+    },
+    {
+      "concept_id": "FOOD:collards",
+      "canonical_name": "Collards",
+      "entity_type": "food",
+      "surface_forms": ["Brassica oleracea", "Collards"]
+    },
+    {
+      "concept_id": "FOOD:coriander",
+      "canonical_name": "Coriander",
+      "entity_type": "food",
+      "surface_forms": ["Coriandrum sativum", "Coriander"]
+    },
+    {
+      "concept_id": "FOOD:corn",
+      "canonical_name": "Corn",
+      "entity_type": "food",
+      "surface_forms": ["Zea mays", "Corn"]
+    },
+    {
+      "concept_id": "FOOD:couscous",
+      "canonical_name": "Couscous",
+      "entity_type": "food",
+      "surface_forms": ["Triticum durum", "Couscous"]
+    },
+    {
+      "concept_id": "FOOD:cowpeas",
+      "canonical_name": "Cowpeas",
+      "entity_type": "food",
+      "surface_forms": ["Cowpeas"]
+    },
+    {
+      "concept_id": "FOOD:crab_alaska_king",
+      "canonical_name": "crab, alaska king",
+      "entity_type": "food",
+      "surface_forms": ["Paralithodes camtschaticus", "red king crab", "alaska king", "Lithodidae"]
+    },
+    {
+      "concept_id": "FOOD:crabapples",
+      "canonical_name": "Crabapples",
+      "entity_type": "food",
+      "surface_forms": ["Crabapples", "Malus"]
+    },
+    {
+      "concept_id": "FOOD:crab_blue",
+      "canonical_name": "crab, blue",
+      "entity_type": "food",
+      "surface_forms": ["Callinectes sapidus", "Portunidae", "blue"]
+    },
+    {
+      "concept_id": "FOOD:crab_dungeness",
+      "canonical_name": "crab, dungeness",
+      "entity_type": "food",
+      "surface_forms": ["Metacarcinus magister", "Cancridae", "dungeness"]
+    },
+    {
+      "concept_id": "FOOD:crab_queen",
+      "canonical_name": "crab, queen",
+      "entity_type": "food",
+      "surface_forms": ["Chionoecetes opilio", "Oregoniidae", "queen"]
+    },
+    {
+      "concept_id": "FOOD:cranberries",
+      "canonical_name": "Cranberries",
+      "entity_type": "food",
+      "surface_forms": ["Vaccinium macrocarpon"]
+    },
+    {
+      "concept_id": "FOOD:cranberries_alaska_native",
+      "canonical_name": "Cranberries (Alaska Native)",
+      "entity_type": "food",
+      "surface_forms": ["Vaccinium oxycoccos", "Alaska Native"]
+    },
+    {
+      "concept_id": "FOOD:cress",
+      "canonical_name": "Cress",
+      "entity_type": "food",
+      "surface_forms": ["Lepidium sativum", "Cress"]
+    },
+    {
+      "concept_id": "FOOD:cucumber",
+      "canonical_name": "Cucumber",
+      "entity_type": "food",
+      "surface_forms": ["Cucumis sativus", "Cucumber"]
+    },
+    {
+      "concept_id": "FOOD:currants_european",
+      "canonical_name": "Currants, european",
+      "entity_type": "food",
+      "surface_forms": ["Ribes nigrum", "european"]
+    },
+    {
+      "concept_id": "FOOD:currants_red_and_white",
+      "canonical_name": "Currants, red and white",
+      "entity_type": "food",
+      "surface_forms": ["red and white", "Ribes rubrum"]
+    },
+    {
+      "concept_id": "FOOD:currants_zante",
+      "canonical_name": "Currants, zante",
+      "entity_type": "food",
+      "surface_forms": ["Vitis vinifera 'Black Corinth'", "zante"]
+    },
+    {
+      "concept_id": "FOOD:custard_apple",
+      "canonical_name": "Custard-apple",
+      "entity_type": "food",
+      "surface_forms": ["Annona reticulata", "Custard-apple"]
+    },
+    {
+      "concept_id": "FOOD:dandelion_greens",
+      "canonical_name": "Dandelion greens",
+      "entity_type": "food",
+      "surface_forms": ["Taraxacum officinale", "Dandelion greens"]
+    },
+    {
+      "concept_id": "FOOD:dates_deglet_noor",
+      "canonical_name": "Dates, deglet noor",
+      "entity_type": "food",
+      "surface_forms": ["deglet noor"]
+    },
+    {
+      "concept_id": "FOOD:dates_medjool",
+      "canonical_name": "Dates, medjool",
+      "entity_type": "food",
+      "surface_forms": ["medjool"]
+    },
+    {
+      "concept_id": "FOOD:dessert",
+      "canonical_name": "dessert",
+      "entity_type": "food",
+      "surface_forms": ["dessert"]
+    },
+    {
+      "concept_id": "FOOD:dill_weed",
+      "canonical_name": "Dill weed",
+      "entity_type": "food",
+      "surface_forms": ["Anethum graveolens", "Dill weed"]
+    },
+    {
+      "concept_id": "FOOD:dip",
+      "canonical_name": "Dip",
+      "entity_type": "food",
+      "surface_forms": ["Dip"]
+    },
+    {
+      "concept_id": "FOOD:dock",
+      "canonical_name": "Dock",
+      "entity_type": "food",
+      "surface_forms": ["Rumex crispus", "Dock"]
+    },
+    {
+      "concept_id": "FOOD:dove",
+      "canonical_name": "Dove",
+      "entity_type": "food",
+      "surface_forms": ["Columbidae", "Dove"]
+    },
+    {
+      "concept_id": "FOOD:drumstick",
+      "canonical_name": "Drumstick",
+      "entity_type": "food",
+      "surface_forms": ["Moringa oleifera", "Moringaceae", "Drumstick"]
+    },
+    {
+      "concept_id": "FOOD:duck_domesticated",
+      "canonical_name": "Duck (domesticated)",
+      "entity_type": "food",
+      "surface_forms": ["domesticated"]
+    },
+    {
+      "concept_id": "FOOD:duck_scoter_white_winged",
+      "canonical_name": "Duck, scoter, white-winged",
+      "entity_type": "food",
+      "surface_forms": ["Melanitta deglandi", "white-winged", "scoter"]
+    },
+    {
+      "concept_id": "FOOD:duck_white_pekin",
+      "canonical_name": "Duck, White Pekin",
+      "entity_type": "food",
+      "surface_forms": ["White Pekin"]
+    },
+    {
+      "concept_id": "FOOD:duck_wild",
+      "canonical_name": "Duck, wild",
+      "entity_type": "food",
+      "surface_forms": ["wild"]
+    },
+    {
+      "concept_id": "FOOD:durian",
+      "canonical_name": "Durian",
+      "entity_type": "food",
+      "surface_forms": ["Durio zibethinus", "Durian"]
+    },
+    {
+      "concept_id": "FOOD:egg_duck",
+      "canonical_name": "Egg duck",
+      "entity_type": "food",
+      "surface_forms": ["Egg duck"]
+    },
+    {
+      "concept_id": "FOOD:egg_goose",
+      "canonical_name": "egg goose",
+      "entity_type": "food",
+      "surface_forms": ["egg goose"]
+    },
+    {
+      "concept_id": "FOOD:eggplant",
+      "canonical_name": "Eggplant",
+      "entity_type": "food",
+      "surface_forms": ["Solanum melongena", "Solanaceae", "Eggplant"]
+    },
+    {
+      "concept_id": "FOOD:egg_quail",
+      "canonical_name": "Egg, quail",
+      "entity_type": "food",
+      "surface_forms": ["quail"]
+    },
+    {
+      "concept_id": "FOOD:egg_substitute",
+      "canonical_name": "Egg substitute",
+      "entity_type": "food",
+      "surface_forms": ["Egg substitute"]
+    },
+    {
+      "concept_id": "FOOD:egg_turkey",
+      "canonical_name": "Egg, turkey",
+      "entity_type": "food",
+      "surface_forms": ["turkey"]
+    },
+    {
+      "concept_id": "FOOD:einkorn",
+      "canonical_name": "Einkorn",
+      "entity_type": "food",
+      "surface_forms": ["Triticum monococcum", "Einkorn"]
+    },
+    {
+      "concept_id": "FOOD:elderberries",
+      "canonical_name": "Elderberries",
+      "entity_type": "food",
+      "surface_forms": ["Elderberries", "Adoxaceae", "Sambucus"]
+    },
+    {
+      "concept_id": "FOOD:elk",
+      "canonical_name": "Elk",
+      "entity_type": "food",
+      "surface_forms": ["Cervus canadensis", "Elk"]
+    },
+    {
+      "concept_id": "FOOD:emu",
+      "canonical_name": "Emu",
+      "entity_type": "food",
+      "surface_forms": ["Dromaius novaehollandiae", "Casuariidae", "Emu"]
+    },
+    {
+      "concept_id": "FOOD:endive",
+      "canonical_name": "Endive",
+      "entity_type": "food",
+      "surface_forms": ["Endive"]
+    },
+    {
+      "concept_id": "FOOD:epazote",
+      "canonical_name": "Epazote",
+      "entity_type": "food",
+      "surface_forms": ["Dysphania ambrosioides", "Epazote"]
+    },
+    {
+      "concept_id": "FOOD:eppaw",
+      "canonical_name": "Eppaw",
+      "entity_type": "food",
+      "surface_forms": ["Perideridia oregana", "Eppaw"]
+    },
+    {
+      "concept_id": "FOOD:escarole",
+      "canonical_name": "Escarole",
+      "entity_type": "food",
+      "surface_forms": ["Escarole"]
+    },
+    {
+      "concept_id": "FOOD:farro_pearled",
+      "canonical_name": "Farro, pearled",
+      "entity_type": "food",
+      "surface_forms": ["pearled", "Farro"]
+    },
+    {
+      "concept_id": "FOOD:fava_bean",
+      "canonical_name": "Fava bean",
+      "entity_type": "food",
+      "surface_forms": ["Vicia faba", "Fava bean"]
+    },
+    {
+      "concept_id": "FOOD:feijoa",
+      "canonical_name": "Feijoa",
+      "entity_type": "food",
+      "surface_forms": ["Feijoa sellowiana", "Myrtaceae", "Feijoa"]
+    },
+    {
+      "concept_id": "FOOD:fennel",
+      "canonical_name": "Fennel",
+      "entity_type": "food",
+      "surface_forms": ["Foeniculum vulgare", "Fennel"]
+    },
+    {
+      "concept_id": "FOOD:fiddlehead_ferns",
+      "canonical_name": "Fiddlehead ferns",
+      "entity_type": "food",
+      "surface_forms": ["Matteuccia struthiopteris", "Fiddlehead ferns", "Onocleaceae"]
+    },
+    {
+      "concept_id": "FOOD:figs",
+      "canonical_name": "Figs",
+      "entity_type": "food",
+      "surface_forms": ["Ficus carica", "Moraceae", "Figs"]
+    },
+    {
+      "concept_id": "FOOD:fireweed",
+      "canonical_name": "Fireweed",
+      "entity_type": "food",
+      "surface_forms": ["Chamaenerion angustifolium", "Onagraceae", "Fireweed"]
+    },
+    {
+      "concept_id": "FOOD:frozen_foods",
+      "canonical_name": "frozen foods",
+      "entity_type": "food",
+      "surface_forms": ["frozen foods"]
+    },
+    {
+      "concept_id": "FOOD:ginger_root",
+      "canonical_name": "Ginger root",
+      "entity_type": "food",
+      "surface_forms": ["Zingiber officinale", "Zingiberaceae", "Ginger root"]
+    },
+    {
+      "concept_id": "FOOD:gin_rum_vodka_whiskey",
+      "canonical_name": "Gin, Rum, Vodka, Whiskey",
+      "entity_type": "food",
+      "surface_forms": ["Whiskey", "Vodka", "Gin", "Rum"]
+    },
+    {
+      "concept_id": "FOOD:gooseberries",
+      "canonical_name": "Gooseberries",
+      "entity_type": "food",
+      "surface_forms": ["Ribes uva-crispa", "Gooseberries"]
+    },
+    {
+      "concept_id": "FOOD:grape",
+      "canonical_name": "Grape",
+      "entity_type": "food",
+      "surface_forms": ["Vitis vinifera", "Grape"]
+    },
+    {
+      "concept_id": "FOOD:gumboot_chiton",
+      "canonical_name": "gumboot chiton",
+      "entity_type": "food",
+      "surface_forms": ["Cryptochiton stelleri", "gumboot chiton"]
+    },
+    {
+      "concept_id": "FOOD:kiwifruit",
+      "canonical_name": "Kiwifruit",
+      "entity_type": "food",
+      "surface_forms": ["Actinidia deliciosa", "Actinidiaceae", "Kiwifruit"]
+    },
+    {
+      "concept_id": "FOOD:kohlrabi",
+      "canonical_name": "Kohlrabi",
+      "entity_type": "food",
+      "surface_forms": ["Brassica oleracea var. gongylodes", "Kohlrabi"]
+    },
+    {
+      "concept_id": "FOOD:lobster_northern",
+      "canonical_name": "lobster, northern",
+      "entity_type": "food",
+      "surface_forms": ["Homarus americanus", "Nephropidae", "northern", "lobster"]
+    },
+    {
+      "concept_id": "FOOD:meals",
+      "canonical_name": "Meals",
+      "entity_type": "food",
+      "surface_forms": ["Meals"]
+    },
+    {
+      "concept_id": "FOOD:packed_sauces",
+      "canonical_name": "Packed sauces",
+      "entity_type": "food",
+      "surface_forms": ["Packed sauces"]
+    },
+    {
+      "concept_id": "FOOD:polar_bear",
+      "canonical_name": "Polar bear",
+      "entity_type": "food",
+      "surface_forms": ["Ursus maritimus", "Polar bear"]
+    },
+    {
+      "concept_id": "FOOD:processed_food_animal_products",
+      "canonical_name": "Processed Food Animal Products",
+      "entity_type": "food",
+      "surface_forms": ["Processed Food Animal Products", "Animal Products"]
+    },
+    {
+      "concept_id": "FOOD:sausage_mix_meat",
+      "canonical_name": "Sausage mix meat",
+      "entity_type": "food",
+      "surface_forms": ["Sausage mix meat"]
+    },
+    {
+      "concept_id": "FOOD:shrimp",
+      "canonical_name": "shrimp",
+      "entity_type": "food",
+      "surface_forms": ["shrimp"]
+    },
+    {
+      "concept_id": "FOOD:sitka_deer",
+      "canonical_name": "Sitka deer",
+      "entity_type": "food",
+      "surface_forms": ["Odocoileus hemionus sitkensis", "Sitka deer"]
+    },
+    {
+      "concept_id": "FOOD:snacks",
+      "canonical_name": "snacks",
+      "entity_type": "food",
+      "surface_forms": ["snacks"]
+    },
+    {
+      "concept_id": "FOOD:veal",
+      "canonical_name": "Veal",
+      "entity_type": "food",
+      "surface_forms": ["Bos taurus", "Veal"]
+    },
+    {
+      "concept_id": "FOOD:turmeric",
+      "canonical_name": "Turmeric",
+      "entity_type": "food",
+      "surface_forms": ["turmeric"]
+    },
+    {
+      "concept_id": "FOOD:ginger",
+      "canonical_name": "Ginger",
+      "entity_type": "food",
+      "surface_forms": ["ginger"]
+    },
+    {
+      "concept_id": "FOOD:chili_pepper",
+      "canonical_name": "Chili pepper",
+      "entity_type": "food",
+      "surface_forms": ["chili pepper", "chilli pepper", "chili peppers", "cayenne pepper"]
+    }
+  ]
+}

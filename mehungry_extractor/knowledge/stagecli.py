@@ -8,12 +8,11 @@ DB, so stages compose without hidden state:
     mehungry normalize --document pmid:12345678   # offline: rebuild canonical from cached raw
     mehungry export    --document pmid:12345678   # print canonical document.json
     mehungry list                                 # list ingested documents
-
-    mehungry analyze  ...   # Phase 2 (entities)        — not yet implemented
-    mehungry extract  ...   # Phase 3 (relations/claims) — not yet implemented
-    mehungry audit    ...   # Phase 5 (audit rendering)  — not yet implemented
-
-The legacy LLM path keeps its own ``mehungry-extract`` entry point, untouched.
+    mehungry analyze   --document pmid:12345678   # offline: extract + normalize entities
+    mehungry extract   --document pmid:12345678   # offline: relations/claims + study/funding + assessments
+    mehungry audit     --claim <claim_id>         # print a claim's full provenance block
+    mehungry audit     --document pmid:12345678   # list a paper's claim ids
+    mehungry eval-gold                            # score extraction vs the hand-labeled gold set
 """
 
 from __future__ import annotations
@@ -137,12 +136,103 @@ def _stage_list(args) -> int:
     return 0
 
 
-def _stage_not_implemented(phase: str, name: str):
-    def _run(_args) -> int:
-        print(f"`mehungry {name}` is not yet implemented (arrives in {phase}).", file=sys.stderr)
+def _stage_analyze(args) -> int:
+    from .entities import analyze_document
+
+    pmids = _pmids_from_args(args)
+    if not pmids:
+        print("analyze: provide --document/--pmid, --pmids, or --file", file=sys.stderr)
         return 2
 
-    return _run
+    corpus = _corpus(args)
+    engine = None if args.no_persist else _engine(args)
+    rc = 0
+    for pmid in pmids:
+        try:
+            doc, mentions = analyze_document(
+                pmid, corpus=corpus, engine=engine, persist=not args.no_persist
+            )
+        except Exception as exc:  # noqa: BLE001 — one failure must not abort the batch
+            print(f"  pmid {pmid}: FAILED ({exc})", file=sys.stderr)
+            rc = 1
+            continue
+        n_norm = sum(1 for m in mentions if m.status == "normalized")
+        print(
+            f"  {doc.document_id} [{doc.source_type}]: "
+            f"{len(mentions)} mentions ({n_norm} normalized)"
+        )
+    return rc
+
+
+def _stage_extract(args) -> int:
+    from .pipeline import extract_document
+
+    pmids = _pmids_from_args(args)
+    if not pmids:
+        print("extract: provide --document/--pmid, --pmids, or --file", file=sys.stderr)
+        return 2
+
+    corpus = _corpus(args)
+    engine = None if args.no_persist else _engine(args)
+    rc = 0
+    for pmid in pmids:
+        try:
+            s = extract_document(pmid, corpus=corpus, engine=engine, persist=not args.no_persist)
+        except Exception as exc:  # noqa: BLE001 — one failure must not abort the batch
+            print(f"  pmid {pmid}: FAILED ({exc})", file=sys.stderr)
+            rc = 1
+            continue
+        print(
+            f"  {s.document_id}: {s.mentions} mentions, {s.observations} observations, "
+            f"{s.claims} claims ({s.dropped_observations} dropped), "
+            f"{s.qualifiers} qualifiers, "
+            f"{s.study_characteristics} study facts, {s.funding_relationships} funders, "
+            f"{s.assessments} assessments"
+        )
+    return rc
+
+
+def _stage_audit(args) -> int:
+    from .audit import render_claim
+    from .query import list_claims_for_document
+
+    engine = _engine(args)
+
+    if getattr(args, "claim", None):
+        block = render_claim(engine, args.claim)
+        if block is None:
+            print(f"audit: no claim {args.claim!r} (run `mehungry extract` first?)", file=sys.stderr)
+            return 1
+        sys.stdout.write(block)
+        return 0
+
+    pmids = _pmids_from_args(args)
+    if not pmids:
+        print("audit: provide --claim <id>, or --document/--pmid to list a paper's claims", file=sys.stderr)
+        return 2
+    for pmid in pmids:
+        claims = list_claims_for_document(engine, pmid)
+        if not claims:
+            print(f"  {pmid}: no claims", file=sys.stderr)
+            continue
+        for c in claims:
+            quals = "".join(
+                f"  [{q['qualifier_type']}: {q['value_concept_id'] or q['value_text']}]"
+                for q in c.get("qualifiers") or []
+            )
+            print(
+                f"  {c['claim_id']}  {c['subject_name']} — {c['predicate']} "
+                f"({c['polarity']}, {c['certainty']}) — {c['object_name']}{quals}"
+            )
+    return 0
+
+
+def _stage_eval_gold(args) -> int:
+    from .audit import render_gold_eval
+
+    engine = _engine(args)
+    sys.stdout.write(render_gold_eval(engine, getattr(args, "gold", None)))
+    return 0
 
 
 # --- arg parsing ----------------------------------------------------------------
@@ -181,9 +271,27 @@ def build_parser() -> argparse.ArgumentParser:
     _add_common(p_list, doc_selectors=False)
     p_list.set_defaults(func=_stage_list)
 
-    for name, phase in (("analyze", "Phase 2"), ("extract", "Phase 3"), ("audit", "Phase 5")):
-        p = sub.add_parser(name, help=f"{phase} — not yet implemented")
-        p.set_defaults(func=_stage_not_implemented(phase, name))
+    p_analyze = sub.add_parser("analyze", help="Phase 2 — extract + normalize entities (offline)")
+    _add_common(p_analyze)
+    p_analyze.set_defaults(func=_stage_analyze)
+
+    p_extract = sub.add_parser(
+        "extract", help="Phases 3-5 — relations/claims + study/funding + assessments (offline)"
+    )
+    _add_common(p_extract)
+    p_extract.set_defaults(func=_stage_extract)
+
+    p_audit = sub.add_parser("audit", help="Phase 5 — print a claim's full provenance block")
+    _add_common(p_audit)
+    p_audit.add_argument("--claim", help="claim id to audit")
+    p_audit.set_defaults(func=_stage_audit)
+
+    p_eval = sub.add_parser(
+        "eval-gold", help="score extraction against the hand-labeled gold set (precision/recall)"
+    )
+    _add_common(p_eval, doc_selectors=False)
+    p_eval.add_argument("--gold", help="path to gold JSON (default: tests/gold/observations.json)")
+    p_eval.set_defaults(func=_stage_eval_gold)
 
     return parser
 
