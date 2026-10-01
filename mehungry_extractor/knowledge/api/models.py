@@ -64,6 +64,47 @@ class AnalyzeRequest(BaseModel):
         return out
 
 
+# --- observe surface requests (stage-by-stage inspection) ---------------------------
+
+
+class ObserveIngestRequest(BaseModel):
+    """Run the acquisition → canonical stage for one PMID."""
+
+    pmid: str = Field(..., min_length=1)
+    force: bool = Field(False, description="Re-download cached raw sources before rebuilding.")
+    ingest: bool = Field(True, description="Allow the (single) network fetch. If false, an "
+                         "un-cached paper is reported rather than fetched.")
+
+
+class ObserveStageRequest(BaseModel):
+    """Run an offline per-paper stage (entities, or the full extraction pass) for one PMID."""
+
+    pmid: str = Field(..., min_length=1)
+    use_model: bool = Field(True, description="Use the scispaCy model as a candidate generator "
+                            "when installed.")
+
+
+class ObserveSynthesizeRequest(BaseModel):
+    """Run the batch stage (cohesion + synthesis) over several PMIDs."""
+
+    pmids: list[str] = Field(..., min_length=1, max_length=MAX_PMIDS)
+    options: AnalyzeOptions = Field(default_factory=AnalyzeOptions)
+
+    @field_validator("pmids")
+    @classmethod
+    def _clean_pmids(cls, value: list[str]) -> list[str]:
+        seen: set[str] = set()
+        out: list[str] = []
+        for raw in value:
+            pmid = (raw or "").strip()
+            if pmid and pmid not in seen:
+                seen.add(pmid)
+                out.append(pmid)
+        if not out:
+            raise ValueError("no non-empty PMIDs provided")
+        return out
+
+
 # --- response -----------------------------------------------------------------------
 
 

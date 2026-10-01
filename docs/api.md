@@ -17,9 +17,9 @@ What it does with a batch:
    them — they are flagged, but their observations are still returned, never silently dropped.
 4. **Returns**, per paper, every rule-detected observation with its full detail and source span.
 
-> **Note:** this endpoint currently returns the *observation* layer only. Cross-paper synthesis
-> (`conclusions` / `derived_conclusions` / `facts`) is computed by the engine but is not part of
-> the response for now.
+> **Note:** `/analyze` returns the *observation* layer only. Cross-paper synthesis (`conclusions` /
+> `derived_conclusions` / `facts`) is computed by the engine but is not part of *its* response — it is
+> surfaced by the observation endpoint [`POST /observe/synthesize`](#observe-surface--inspect-the-output-of-every-pipeline-stage).
 
 ---
 
@@ -286,6 +286,67 @@ Return the already-persisted relation-bearing spans for **one** paper (no re-ext
 reviewer can re-open results without recomputing. Response is a single `papers[]` entry
 (`PaperOpenRelations`, shape as above). A paper with no persisted spans comes back with an empty
 `relations` list — never a 404.
+
+---
+
+## Observe surface — inspect the output of every pipeline stage
+
+The `/observe/*` routes expose the engine's **intermediate stage outputs** for a single paper (and
+the batch stage over several), so you can watch a PMID move through the pipeline one stage at a time.
+They are **purely observational**: each route either runs an existing stage entry point or reads what
+a stage already persisted — none of them change extraction behavior. They power the bundled web UI
+(see "Web UI" below) but are usable directly.
+
+All of these honor the same storage/env config (`MEHUNGRY_CORPUS_DIR`, `MEHUNGRY_DB`) and the same
+title-filter discipline as `/analyze`.
+
+### Read a stage's persisted output
+
+| Method & path | Returns |
+|---|---|
+| `GET /observe/documents` | Every ingested paper (`document_id`, `pmid`, `title`, `source_type`, …) — the paper picker. |
+| `GET /observe/document/{pmid}` | The **canonical document**: the single offset-addressable `text`, its `sections`/`paragraphs`/`sentences` (with absolute char offsets), `metadata`, and a `summary` (section/sentence/char counts). `404` if the paper was never ingested. |
+| `GET /observe/entities/{pmid}` | **Entity mentions**: each with `surface_text`, `entity_type`, `concept_id`, `status` (normalized/ambiguous/unmatched), `start_char`/`end_char`, and restrictive `modifiers`. |
+| `GET /observe/observations/{pmid}` | **Observations** (audit layer): subject/predicate/object, `polarity`/`certainty`, `qualifiers`, the `rule_id`/`rule_version` that fired, and inline `evidence_refs`. |
+| `GET /observe/claims/{pmid}` | **Claims** (concept layer): grouped `(subject, predicate, object, polarity, certainty)` with `qualifiers`. |
+| `GET /observe/facts/{pmid}` | **Paper facts**: `study_characteristics`, `funding`, `affiliations` (authors + institutions), and `assessments`. |
+| `GET /observe/open-relations/{pmid}` | The opt-in **Phase 11** relation-bearing spans (most-confident first). Empty list if none were discovered. |
+| `GET /observe/provenance/claim/{claim_id}` | The **full provenance block** for one claim (`explain_claim`): claim → `evidence` refs (each with `quoted_text` and a `reconstructed_text` re-sliced from the canonical text) → `document` → `run` → `study`/`funding`/`assessments`/`observations`. `404` for an unknown claim id. |
+
+### `GET /observe/deconstruct/{pmid}` — the entities → observations sub-pipeline
+
+Exposes **how each sentence becomes observations** — the sub-pipeline that `observations.extract` runs
+internally and otherwise discards. It rebuilds mentions from the persisted entity rows (no NER re-run)
+and, for every candidate sentence (≥2 mentions, or one that produced an observation), returns:
+
+- `clauses` — the flat binder's clause segmentation (`but`/`whereas`/`;` …), each with its `marker`/`contrastive` flag.
+- `parse` — the dependency parse `tokens` (`text`, `lemma`, `pos`, `dep`, `head`), the discovered
+  `predicate_heads`, and any `clausal_subjects`. Each predicate head records the verb/lemma, the
+  selected `rule` (predicate + `rule_id`/`version`) or `null`, the `object_is_risk`/`object_direction`
+  promotions, `negated`, the resolved `subjects`/`objects` (or `unresolved`), condition phrases, and a
+  plain-language `note` explaining the binding outcome (bound / dropped / deferred to the flat binder).
+- `observations` — the observations actually emitted for that sentence (with their `context` binder tag).
+
+Response envelope also carries `parse_available`, `sentence_count`, and `deconstructed_count`. It
+mirrors the real parse binder (`observations._parse_bind_sentence`) over a fresh parse — it changes no
+engine behavior and persists nothing.
+
+### Run a stage live
+
+| Method & path | Body | Does |
+|---|---|---|
+| `POST /observe/ingest` | `{ "pmid": "…", "force": false, "ingest": true }` | Acquisition → canonical stage (network, once). A title-filtered paper returns `status: "excluded"` (not an error); with `ingest:false` an un-cached paper returns `status: "not_ingested"`. |
+| `POST /observe/analyze` | `{ "pmid": "…", "use_model": true }` | Entity stage; returns the counts plus the persisted `entities` (same shape as the GET). |
+| `POST /observe/extract` | `{ "pmid": "…", "use_model": true }` | The full knowledge pass (observations/claims/facts/assessments); returns the `ExtractionSummary` counts. |
+| `POST /observe/synthesize` | `{ "pmids": ["…"], "options": {…} }` | The **batch stage**: reuses `/analyze`'s ingest + extract + cohesion, then additionally runs cross-paper **synthesis**. Returns `{ "report": <AnalyzeResponse>, "synthesis": { conclusions, derived_conclusions, facts, warnings } }` — this is where the synthesized `conclusions` (which `/analyze` omits) are surfaced. |
+
+### Web UI
+
+A single-page app under [`webapp/`](../webapp) (Vite + React + TypeScript) consumes these routes to
+let you walk a PMID through every stage, drill into a claim's provenance, and run batch synthesis.
+Build it (`cd webapp && npm install && npm run build`) and `mehungry-api` serves it at
+**`http://127.0.0.1:8000/app/`**; or run it in dev with `npm run dev` (proxying to the API on
+`:8000`). See [`webapp/README.md`](../webapp/README.md).
 
 ---
 
