@@ -89,17 +89,40 @@ RULES: tuple[RelationRule, ...] = (
         r"\badverse (?:event|effect|reaction|outcome)s?\b",
         description="subject associated with an adverse event",
     ),
+    # Kept symmetric on purpose: the reduce/increase direction words mirror each other so "lower risk"
+    # is caught exactly as "higher risk" is. ``low\w*``/``high\w*`` match the bare adjective ("lower
+    # risk", "higher risk") as well as inflected forms — the earlier ``lower\w+`` silently missed the
+    # bare "lower risk" (it demanded a suffix char), which read a protective association as a null one.
     _rule(
         "rel_reduces_risk",
         "reduces_risk",
-        r"\b(?:reduc\w+|lower\w+|decreas\w+) (?:the |a )?risk\b",
+        r"\b(?:reduc\w+|low\w*|decreas\w+|diminish\w+|declin\w+|lessen\w+|smaller|fewer) (?:the |a )?risk\b",
         description="subject reduces the risk of object",
     ),
     _rule(
         "rel_increases_risk",
         "increases_risk",
-        r"\b(?:increas\w+|rais\w+|elevat\w+|higher) (?:the |a )?risk\b",
+        r"\b(?:increas\w+|rais\w+|elevat\w+|high\w*|greater|larger|more) (?:the |a )?risk\b",
         description="subject increases the risk of object",
+    ),
+    # Association *with a directional object* (no "risk") — "associated with **reduced** CRP", "linked
+    # to **lower** disease activity". Ranked above the bare association cue so the direction is captured
+    # rather than flattened to `associated_with`; ranked below the `_risk` association cues above so a
+    # "risk of" object takes the risk variant. The direction word describes the object because the cue
+    # matches only in the text *between* the two endpoints.
+    _rule(
+        "rel_associated_with_reduced",
+        "associated_with_reduced",
+        r"\b(?:associat\w+ with|correlat\w+ with|linked to|related to|association between)\b.*\b"
+        r"(?:reduc\w*|lower\w*|low|decreas\w*|diminish\w*|declin\w*|lessen\w*|less|fewer|smaller)\b",
+        description="subject is associated with a reduced/lower level of object",
+    ),
+    _rule(
+        "rel_associated_with_increased",
+        "associated_with_increased",
+        r"\b(?:associat\w+ with|correlat\w+ with|linked to|related to|association between)\b.*\b"
+        r"(?:increas\w*|higher|high|elevat\w*|greater|rais\w*|more|larger)\b",
+        description="subject is associated with an increased/higher level of object",
     ),
     # "associated with" is the canonical, explicit relation connective — it outranks the generic
     # directional verbs below so that e.g. "associated with reduced disease activity during
@@ -114,7 +137,9 @@ RULES: tuple[RelationRule, ...] = (
     _rule(
         "rel_prevents",
         "prevents",
-        r"\bprevent\w*\b|\bprotect\w* against\b",
+        # "protect(s|ive|ion) against" with up to two intervening words, so "protective factor(s)
+        # against" and "protective effect against" are caught alongside plain "protects against".
+        r"\bprevent\w*\b|\bprotect\w*(?:\s+\w+){0,2}\s+against\b",
         description="subject prevents/protects against object",
     ),
     _rule(
@@ -226,6 +251,30 @@ _RISK_OVERRIDE: dict[str, str] = {
     "increases": "increases_risk",
 }
 
+# A *bare association* ("associate"/"correlate"/"link"/"relate") whose object carries a direction word
+# is promoted to the directional association predicate — the parse-binder counterpart of the flat
+# `rel_associated_with_reduced`/`rel_associated_with_increased` cues. Keyed by the object's direction.
+# Only ``associated_with`` is promoted: a directional verb ("reduced"/"increased") already carries its
+# own direction, so a direction modifier on its object is redundant and left alone. Deliberately
+# scoped to a **non-risk** object: "associated with a higher risk of X" stays the causal `increases_risk`
+# (reviewer-confirmed), so this override is not applied when the object is `risk` (see `rule_for_verb`).
+_ASSOC_DIRECTION_OVERRIDE: dict[str, str] = {
+    "reduced": "associated_with_reduced",
+    "increased": "associated_with_increased",
+}
+
+# An association over a *risk* object whose risk carries a direction word ("linked to a **lower risk**
+# of X", "associated with a **higher risk** of X") is read as the causal risk predicate — the same
+# reading the flat `rel_reduces_risk`/`rel_increases_risk` cues give and the mirror of the
+# reviewer-confirmed "higher risk → increases_risk". Without this the parse binder emitted a bare,
+# direction-less `associated_with` that inverted the message (a protective link read as a plain
+# association with the disease). Deliberately the causal predicate, *not* an association-with-risk
+# predicate — that distinction was left as an open product decision.
+_ASSOC_RISK_DIRECTION_OVERRIDE: dict[str, str] = {
+    "reduced": "reduces_risk",
+    "increased": "increases_risk",
+}
+
 _RULE_BY_PREDICATE: dict[str, RelationRule] = {r.predicate: r for r in RULES}
 
 
@@ -234,17 +283,33 @@ def rule_for_predicate(predicate: str) -> "RelationRule | None":
     return _RULE_BY_PREDICATE.get(predicate)
 
 
-def rule_for_verb(lemma: str, *, object_is_risk: bool = False) -> "RelationRule | None":
+def rule_for_verb(
+    lemma: str,
+    *,
+    object_is_risk: bool = False,
+    object_direction: "str | None" = None,
+) -> "RelationRule | None":
     """Map a predicate verb's ``lemma`` to its :class:`RelationRule`, or ``None`` if unmapped.
 
     ``object_is_risk`` promotes ``decreases``/``increases`` to the corresponding risk predicate,
     so *"reduced the risk of cancer"* is bound as ``reduces_risk`` exactly as the flat cue would.
+
+    ``object_direction`` (``"reduced"``/``"increased"``) promotes a *bare association* to a directional
+    predicate when the object carries a direction word. Over a **non-risk** object it becomes the
+    directional association (*"associated with **reduced** CRP"* → ``associated_with_reduced``); over a
+    **risk** object it becomes the causal risk predicate (*"linked to a **lower risk** of X"* →
+    ``reduces_risk``; *"…higher risk…"* → ``increases_risk``). A directional verb is left unchanged.
     """
     predicate = VERB_PREDICATE_MAP.get(lemma.lower())
     if predicate is None:
         return None
     if object_is_risk:
-        predicate = _RISK_OVERRIDE.get(predicate, predicate)
+        if predicate == "associated_with" and object_direction is not None:
+            predicate = _ASSOC_RISK_DIRECTION_OVERRIDE[object_direction]
+        else:
+            predicate = _RISK_OVERRIDE.get(predicate, predicate)
+    elif predicate == "associated_with" and object_direction is not None:
+        predicate = _ASSOC_DIRECTION_OVERRIDE.get(object_direction, predicate)
     return _RULE_BY_PREDICATE.get(predicate)
 
 

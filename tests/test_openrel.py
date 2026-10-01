@@ -55,7 +55,8 @@ class FakeDetector:
 
 
 def _document(pmid=PMID):
-    meta = DocumentMetadata(pmid=pmid, source_type="abstract", title=f"Paper {pmid}")
+    # Title names a keyword so the paper clears the topical barrier the /discover path enforces.
+    meta = DocumentMetadata(pmid=pmid, source_type="abstract", title=f"Dietary fiber and inflammation (paper {pmid})")
     return build_document(meta, [ParsedSection(title="Body", paragraphs=PARAGRAPHS)])
 
 
@@ -140,7 +141,7 @@ def test_service_serialization(tmp_path):
     )
     assert [p.pmid for p in resp.papers] == [PMID]
     paper = resp.papers[0]
-    assert paper.paper_title == f"Paper {PMID}"
+    assert paper.paper_title == f"Dietary fiber and inflammation (paper {PMID})"
     assert paper.paper_url == f"https://pubmed.ncbi.nlm.nih.gov/{PMID}/"
     assert [round(r.score, 3) for r in paper.relations] == [0.9, 0.7]
     assert paper.relations[0].text == "Dietary fiber reduces inflammation markers."

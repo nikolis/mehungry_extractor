@@ -27,8 +27,14 @@ There are two binders, chosen by ``use_model``:
   *"Vitamin D and calcium reduced the risk of cancer and osteoporosis"* into the four observations
   its 2×2 coordination implies. The *predicate* stays rule-based (:func:`.relations.rule_for_verb`),
   so negation/uncertainty and provenance are unchanged; only *argument binding* moves to the parse.
-  A parse-bound observation records ``binder:parse`` on ``context``; a sentence the parse cannot
-  handle (no mapped predicate/argument) falls back to the flat clause binder, so nothing is lost.
+  A parse-bound observation records ``binder:parse`` on ``context``. The flat clause binder is used
+  as a **fallback only for a sentence whose predicate the parse did not recognise** — a lexical
+  predicate (``no_association``/``no_effect``/…) or a verb outside the verb-predicate map. When the
+  parse *did* recognise a predicate but bound nothing because an argument did not resolve to a
+  concept, the fallback is **suppressed**: that is the honest signal that the true argument is a
+  non-entity (an abstract noun, an anaphor, a population), and the adjacency floor would only
+  re-introduce the mis-binding the parse declined to make. Such a relation stays dropped and
+  reportable rather than fabricated (Concept 3).
 """
 
 from __future__ import annotations
@@ -157,11 +163,26 @@ def extract(
         ordered = sorted(sent_mentions, key=lambda m: (m.start_char, m.end_char))
 
         made = 0
+        block_fallback = False
         if parse_on:
-            made = _parse_bind_sentence(document, sentence, ordered, observations, seen)
-        # Floor, or fallback for a sentence the parse yielded nothing for (never lose a relation
-        # the flat binder would have bound).
-        if made == 0:
+            made, block_fallback = _parse_bind_sentence(
+                document, sentence, ordered, observations, seen
+            )
+        # Fall back to the flat clause binder unless the parse positively determined that the
+        # relation's **subject is a non-entity** (``block_fallback``). That happens when a mapped
+        # predicate had an overt noun subject — or a control-resolved controller — that did not
+        # resolve to a concept: an abstract noun ("Nutritional care", "an imbalance"), a demonstrative
+        # anaphor ("This diet"), or a population. In that case the adjacency floor would only
+        # re-introduce the mis-binding the parse declined to make (grabbing whatever entity sits
+        # nearby as the subject), so the relation is kept *dropped and reportable* rather than
+        # fabricated (Concept 3: never assert a fact whose endpoint is not a known concept).
+        #
+        # The fallback still runs for a sentence whose predicate the parse did not recognise (a
+        # lexical predicate — ``no_association``/``no_effect``/… — or a verb outside
+        # :data:`.relations.VERB_PREDICATE_MAP`), and for a predicate whose subject is a pronoun or a
+        # control structure the parse could not resolve — there the flat adjacency heuristic is a
+        # reasonable last resort rather than a fabrication.
+        if made == 0 and not block_fallback:
             _flat_bind_sentence(document, sentence, ordered, observations, seen)
 
     observations.sort(
@@ -353,21 +374,36 @@ def _parse_bind_sentence(
     ordered: "list[EntityMention]",
     observations: list[Observation],
     seen: set[str],
-) -> int:
-    """Bind relations for one sentence from its dependency parse (Phase 10). Model path only.
+) -> "tuple[int, bool]":
+    """Bind relations for one sentence from its dependency parse (Phase 10 + Phase 4a). Model path.
 
-    For each predicate verb (the ROOT and its ``conj`` verbs — coordinated predicates sharing a
-    subject), subjects and objects are read off the verb's argument arcs and expanded across
-    coordination, prep-phrase conditions are diverted to the qualifier extractor, and the
-    subject×object cross-product is emitted. Returns the number of observations appended; ``0``
-    means the caller should fall back to the flat binder for this sentence.
+    For each predicate head (:meth:`.parse.SentenceParse.predicate_heads` — the ROOT, its ``conj``
+    verbs, and verbal predicates nested in subordinate clauses), subjects and objects are read off
+    the verb's argument arcs and expanded across coordination, an elided subject is resolved via its
+    controller, prep-phrase conditions are diverted to the qualifier extractor, and the
+    subject×object cross-product is emitted.
+
+    Returns ``(made, block_fallback)``: the number of observations appended, and whether the parse
+    positively determined that a mapped predicate's **subject is a non-entity** (an overt noun, or a
+    control-resolved controller, that did not resolve to a concept). The caller suppresses the flat
+    adjacency fallback only when ``block_fallback`` — so a fabricated subject is not substituted for
+    the relation the parse honestly declined. A predicate whose subject is a pronoun or an
+    unresolvable control structure does *not* block: the flat heuristic is left as a last resort.
     """
     from . import parse as _parse
 
     sp = _parse.SentenceParse(sentence, ordered)
     made = 0
-    for root in sp.roots():
+    block_fallback = False
+    for root in sp.predicate_heads():
         root_subjects = sp.subject_tokens(root)
+        # A participial / reduced-relative predicate ("consumption **associated** with reduced cancer")
+        # binds its antecedent noun as subject, but that antecedent is frequently a non-entity head
+        # whose real entity sits in a PP the strict subject resolver will not enter. Such a participle
+        # must therefore *not* trip ``block_fallback`` when it fails to resolve a subject — unlike a
+        # main-clause predicate, the flat adjacency binder remains a reasonable last resort for it
+        # (mirroring the pronoun-subject case). It still binds normally when its arguments do resolve.
+        is_participial = root.dep_.split(":")[0] in ("acl", "relcl")
         for pred in [root] + sp.conj_verbs(root):
             # A coordinated predicate that elides its subject ("reduced CRP but increased …")
             # inherits the ROOT's subject.
@@ -375,24 +411,97 @@ def _parse_bind_sentence(
             if pred.i != root.i and not subj_tokens:
                 subj_tokens = root_subjects
 
-            # Resolve objects, unwrapping the ``risk``-object special case to its ``of``-phrase
-            # endpoints and recording that the predicate is a risk predicate.
+            # Unwrap a measure/container-noun *subject* to the entities in its content genitive — the
+            # subject-side mirror of the object unwrap below ("**Intake of red meat** increased CRP"
+            # → red meat; "**consumption of vegetables** … associated with …" → vegetables). Without
+            # this the strict subject resolver (which never enters an ``of``-phrase) leaves such a
+            # subject unresolved and the relation is dropped. Falls back to the noun itself when it
+            # has no content genitive.
+            expanded_subj: list = []
+            for st in subj_tokens:
+                if st.lemma_.lower() in _parse.MEASURE_NOUNS:
+                    unwrapped = sp.measure_objects(st)
+                    expanded_subj.extend(unwrapped if unwrapped else [st])
+                else:
+                    expanded_subj.append(st)
+            subj_tokens = expanded_subj
+
+            # Resolve objects, unwrapping a measure/container noun to the entities in its content
+            # genitive (Phase 4b). ``risk`` additionally promotes the predicate (reduces_risk /
+            # increases_risk); other measure nouns ("intake of red meat and saturated fats") unwrap
+            # to the coordinated endpoints without changing the predicate, falling back to the noun
+            # itself if it has no content genitive.
+            # A direction word on the object ("associated with **reduced** CRP", "**lower** risk")
+            # promotes a bare association to its directional variant (:func:`.relations.rule_for_verb`).
+            # Read off the object noun *before* it is unwrapped, so "reduced consumption of X" and
+            # "reduced risk of X" are both caught; first direction found wins.
             object_is_risk = False
+            object_direction: Optional[str] = None
             obj_tokens: list = []
             for ot in sp.object_tokens(pred):
-                if ot.lemma_.lower() == "risk":
+                lemma = ot.lemma_.lower()
+                if lemma == "risk":
                     object_is_risk = True
-                    obj_tokens.extend(sp.risk_objects(ot))
+                    object_direction = object_direction or sp.direction_of(ot)
+                    obj_tokens.extend(sp.measure_objects(ot))
+                elif lemma in _parse.MEASURE_NOUNS:
+                    object_direction = object_direction or sp.direction_of(ot)
+                    unwrapped = sp.measure_objects(ot)
+                    obj_tokens.extend(unwrapped if unwrapped else [ot])
                 else:
+                    object_direction = object_direction or sp.direction_of(ot)
                     obj_tokens.append(ot)
 
-            rule = relations.rule_for_verb(pred.lemma_, object_is_risk=object_is_risk)
+            rule = relations.rule_for_verb(
+                pred.lemma_, object_is_risk=object_is_risk, object_direction=object_direction
+            )
             if rule is None:
                 continue  # not a mapped predicate verb — leave this predicate to the fallback
 
-            subjects = _dedup_keep_order([sp.mention_for_token(t) for t in subj_tokens])
+            subjects = _dedup_keep_order([sp.subject_mention_for_token(t) for t in subj_tokens])
+            if not subjects:
+                # The predicate has no *directly resolved* subject. Decide, from the subject's
+                # syntactic shape, between several outcomes (Phase 4a/4f):
+                #   • a gerund clausal subject ("Consuming … of kefir")  → the agent is inside the
+                #     clause: resolve the subject verb permissively (Phase 4f);
+                #   • an overt noun that did not resolve  → the true subject is a non-entity: block
+                #     the flat fallback so it cannot fabricate one from an adjacent entity (Fix 1);
+                #   • a pronoun ("they"/"it")             → an anaphor we cannot resolve reliably:
+                #     leave it to the flat adjacency fallback rather than block or mis-bind;
+                #   • an elided subject (control)         → resolve the controller from the governing
+                #     clause; failing that, share the sentence's gerund clausal subject (Phase 4f).
+                gerund_subjects = _dedup_keep_order(
+                    [sp.mention_for_token(t) for t in subj_tokens if t.pos_ in ("VERB", "AUX")]
+                )
+                if gerund_subjects:
+                    subjects = gerund_subjects
+                elif any(t.pos_ in ("NOUN", "PROPN") for t in subj_tokens):
+                    # An overt non-entity subject blocks the flat fallback — but only for a
+                    # main-clause predicate. A participle's antecedent may legitimately keep its real
+                    # entity in a PP we won't enter, so it defers to the fallback instead of blocking.
+                    if not is_participial:
+                        block_fallback = True
+                    continue
+                elif any(t.pos_ == "PRON" for t in subj_tokens):
+                    continue
+                else:
+                    ctrl_tokens = sp.controller_tokens(pred)
+                    subjects = _dedup_keep_order(
+                        [sp.subject_mention_for_token(t) for t in ctrl_tokens]
+                    )
+                    if not subjects:
+                        if ctrl_tokens and any(t.pos_ in ("NOUN", "PROPN") for t in ctrl_tokens):
+                            if not is_participial:
+                                block_fallback = True
+                            continue
+                        # Last resort: the sentence's gerund clausal subject, shared by predicates
+                        # that elide their own ("Consuming … helps regulate …, improves …").
+                        subjects = _dedup_keep_order(sp.clausal_subject_mentions())
+                        if not subjects:
+                            continue
+
             objects = _dedup_keep_order([sp.mention_for_token(t) for t in obj_tokens])
-            if not subjects or not objects:
+            if not objects:
                 continue
 
             # Prep-phrase conditions of this predicate → qualifiers, scoped to each condition
@@ -407,7 +516,7 @@ def _parse_bind_sentence(
                     if _emit_parse(observations, seen, document, sentence,
                                    subj, obj, rule, qualifiers, neg):
                         made += 1
-    return made
+    return made, block_fallback
 
 
 def _parse_qualifiers(

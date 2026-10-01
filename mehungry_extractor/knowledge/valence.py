@@ -24,7 +24,7 @@ from __future__ import annotations
 from typing import Optional
 
 # Bump when the tables/logic below change the produced clinical reading.
-CLINICAL_VALENCE_VERSION = "0.1.0"
+CLINICAL_VALENCE_VERSION = "0.2.0"
 
 # --- the axis -------------------------------------------------------------------------
 BENEFICIAL = "beneficial"
@@ -56,9 +56,17 @@ _UNDESIRABLE_CONCEPTS: frozenset[str] = frozenset({
 # Predicate groupings by how they act on the object.
 _CAUTION_PREDICATES = frozenset({"associated_with_adverse_event", "contraindicated"})
 _NULL_PREDICATES = frozenset({"no_effect", "no_association"})
-_LOWERING_PREDICATES = frozenset({"decreases", "reduces_risk", "prevents"})
+# A directional association reads on the benefit/harm axis exactly like the causal predicate of the
+# same direction — "associated with reduced CRP" leans beneficial just as "decreases CRP" does; its
+# weaker (non-causal) epistemic standing is carried by `certainty`, not by the valence (see the module
+# docstring). So the directional-association predicates join the lowering/raising groups.
+_LOWERING_PREDICATES = frozenset({
+    "decreases", "reduces_risk", "prevents", "associated_with_reduced",
+})
 # "achieves" promotes/attains its object (an outcome) — beneficial when that outcome is desirable.
-_RAISING_PREDICATES = frozenset({"increases", "increases_risk", "causes", "achieves"})
+_RAISING_PREDICATES = frozenset({
+    "increases", "increases_risk", "causes", "achieves", "associated_with_increased",
+})
 
 
 def object_desirability(object_concept_id: str, object_entity_type: Optional[str] = None) -> str:

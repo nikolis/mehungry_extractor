@@ -64,6 +64,7 @@ def _engine(args):
 
 def _stage_ingest(args) -> int:
     from .ingest import ingest_pmid
+    from .titlefilter import TitleFiltered
 
     pmids = _pmids_from_args(args)
     if not pmids:
@@ -78,6 +79,10 @@ def _stage_ingest(args) -> int:
             doc = ingest_pmid(
                 pmid, force=args.force, corpus=corpus, engine=engine, persist=not args.no_persist
             )
+        except TitleFiltered as skip:
+            # A deliberate topical exclusion, not a failure — leave rc untouched.
+            print(f"  pmid {pmid}: skipped (title filter): {skip.title!r}")
+            continue
         except Exception as exc:  # noqa: BLE001 — one failure must not abort the batch
             print(f"  pmid {pmid}: FAILED ({exc})", file=sys.stderr)
             rc = 1

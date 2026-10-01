@@ -35,15 +35,62 @@ _SUBJECT_DEPS = {"nsubj", "nsubjpass", "csubj", "csubjpass"}
 _OBJECT_DEPS = {"dobj", "obj", "dative", "attr", "oprd", "nmod", "obl", "pobj"}
 _PREP_PHRASE_DEPS = {"nmod", "obl", "pobj"}
 
+# Subordinate-clause arcs whose verbal head is *also* a predicate to bind from (Phase 4a). A
+# relation is frequently stated in a relative clause ("products **that increase** …"), an adverbial
+# clause ("…crucial, focusing on **preventing** …"), or a clausal complement ("research
+# recommending **reducing** …"); binding only the ROOT + its ``conj`` verbs leaves those invisible,
+# so the flat adjacency fallback takes over and mis-binds. Matched on the label's base (the model
+# emits ``acl:relcl``), so both ``acl`` and ``relcl`` conventions are covered.
+_SUB_CLAUSE_DEPS = {"advcl", "acl", "relcl", "ccomp", "xcomp", "pcomp"}
+
+# Relative pronouns whose real referent is the noun the relative clause modifies (its antecedent).
+_REL_PRONOUNS = {"that", "which", "who", "whom", "whose"}
+
+# Modifier arcs a *subject* resolver may descend to find an entity that modifies a non-entity head
+# noun ("sulfur-containing" under "products"). Deliberately excludes prepositional/clausal arcs
+# (nmod/obl/pobj/acl/appos): an entity buried in a restrictive PP under the subject head is not the
+# subject ("IBD" in "care in IBD patients"), and reaching it is how a subject gets fabricated.
+_SUBJECT_DESCENT_DEPS = {"amod", "compound", "conj", "nummod"}
+
 # Prepositions that introduce a *condition* the relation holds under (→ offered to the qualifier
 # extractor) rather than the relation's object. Deliberately excludes ``with``/``of``: those are
 # the tails of relation connectives ("associated **with** X", "risk **of** Y") where the noun is
 # the object, not a condition — mirroring :data:`.qualifiers._CONTEXT`'s trigger set.
 _CONDITION_PREPS = {"during", "in", "under", "among", "amongst", "throughout", "while"}
 
+# Prepositions that introduce a measure/container noun's *content* ("intake **of** red meat", "risk
+# **of** cancer") — the phrase whose entities are the real endpoints. Deliberately narrow: a locative
+# or condition phrase on the same noun ("concentration of H2S **in the intestine**") uses a different
+# preposition and is left for the qualifier extractor, not taken as an endpoint.
+_CONTENT_GENITIVE_PREPS = {"of", "for"}
+
+# Container/measure nouns whose grammatical object status stands in for the entities inside their
+# content genitive (Phase 4b). "reduce the intake of red meat and saturated fats" is a relation about
+# red meat and saturated fats, not about the abstract noun "intake"; the object is unwrapped to the
+# ``of``-phrase, coordination-expanded, exactly as the ``risk`` special case already does. ``risk``
+# is handled separately because it additionally *promotes* the predicate (decreases → reduces_risk).
+MEASURE_NOUNS = {
+    "intake", "consumption", "ingestion", "concentration", "level", "amount",
+    "abundance", "production", "quantity", "dose", "dosage", "number",
+}
+
 # spaCy part-of-speech tags a predicate token may carry (a verb, or an auxiliary standing in for
 # an elided verb).
 _VERBAL_POS = {"VERB", "AUX"}
+
+# Direction words an object noun may carry as an ``amod`` — the signal that a bare association is an
+# association *with a reduction* / *with an increase* ("associated with **reduced** CRP", "**lower**
+# risk"). Matched on the spaCy lemma, so inflected/participial forms collapse (reduced/reduces/reducing
+# → ``reduce``; lower/lowered → ``lower``/``low``). Feeds :meth:`SentenceParse.direction_of`, which the
+# parse binder turns into the directional association predicate via :func:`.relations.rule_for_verb`.
+_REDUCED_LEMMAS = {
+    "reduce", "reduced", "low", "lower", "decrease", "decreased", "diminish", "diminished",
+    "decline", "declined", "lessen", "less", "few", "fewer", "small", "smaller",
+}
+_INCREASED_LEMMAS = {
+    "increase", "increased", "high", "higher", "elevate", "elevated", "great", "greater",
+    "raise", "raised", "more", "large", "larger",
+}
 
 
 def available() -> bool:
@@ -118,16 +165,195 @@ class SentenceParse:
                     best, best_depth = cand, d
         return best
 
+    def subject_mention_for_token(self, tok) -> "Optional[EntityMention]":
+        """Resolve a **subject** token to a mention, descending only through *attributive* modifiers
+        (:data:`_SUBJECT_DESCENT_DEPS` — amod/compound/conj/nummod), never into a prepositional or
+        clausal phrase (Phase 4a).
+
+        This is the deliberately stricter sibling of :meth:`mention_for_token`. A subject head that
+        is not itself an entity should bind to an entity that *modifies* it ("sulfur-containing" in
+        "sulfur-containing products"), but must **not** reach into a restrictive PP under it: the
+        subject of "Nutritional care **in IBD patients**" is the non-entity "care", not the nested
+        "IBD", and the subject of "an imbalance **in the consumption of omega-3**" is "imbalance",
+        not "omega-3". Descending into those PPs is exactly how the binder used to fabricate a
+        subject from an adjacent entity; restricting the descent is what lets such a subject correctly
+        resolve to *nothing* (→ the relation is dropped, not mis-bound).
+
+        **Normalization gate on descent (drop-guard).** A descent-reached candidate is only accepted
+        when it **normalized** to a concept (``concept_id is not None``). The descent is an unguarded
+        recall heuristic — it recovers a real subject when the head noun is a measure/container and
+        the entity modifies it ("High **vegetable** intake lowered the risk…" → *vegetable*), but the
+        same descent otherwise adopts whatever modifier the parser attached to the head, including a
+        *false* entity that never resolved to a concept. That is how "early-life **diet** influences…
+        increased consumption of vegetables" fabricated *early-life* (a non-normalizing scispaCy
+        DISEASE false positive on the ``amod`` of *diet*) as the subject. Requiring the descended
+        mention to carry a concept keeps exactly the useful case (the modifier is a known concept, so
+        a claim can be built) and discards exactly the fabrication (the modifier is not a concept, so
+        no claim could ever be built anyway) — and, because an overt non-entity subject then resolves
+        to *nothing*, the caller's ``block_fallback`` path suppresses the flat adjacency binder rather
+        than letting it re-fabricate. The **exact-anchor** path (the token *is* the entity's head) is
+        never gated: an unnormalized head-anchored subject is still returned and retained as an
+        observation, unchanged. This gate is specific to the entity reached by *descent*."""
+        exact = self._anchor_to_mention.get(tok.i)
+        if exact is not None:
+            return exact
+        best: "Optional[EntityMention]" = None
+        best_depth = 1 << 30
+        stack = [tok]
+        while stack:
+            cur = stack.pop()
+            for c in cur.children:
+                if c.dep_ in _SUBJECT_DESCENT_DEPS:
+                    cand = self._anchor_to_mention.get(c.i)
+                    # Drop-guard: only a descended entity that normalized to a concept may stand in
+                    # for a non-entity subject head; a non-normalizing one is treated as absent, so
+                    # the subject resolves to nothing and the relation is dropped, not fabricated.
+                    if cand is not None and cand.concept_id is not None:
+                        d = _depth(c)
+                        if d < best_depth:
+                            best, best_depth = cand, d
+                    stack.append(c)
+        return best
+
     # --- predicate discovery ----------------------------------------------------------
 
     def roots(self) -> list:
-        """The sentence's ROOT tokens (usually one) that are verbal — the primary predicates."""
-        return [t for t in self.doc if t.dep_ == "ROOT" and t.pos_ in _VERBAL_POS]
+        """The sentence's predicate verbs to bind from — the verbal ROOT tokens (usually one).
+
+        When the syntactic ROOT is **non-verbal** (a copula-headed adjective or noun, e.g.
+        *"This finding is exciting, … their absence has been linked to IBD"* roots at the adjective
+        *exciting*), the real predicate verbs are coordinated onto it as ``conj`` children. Those are
+        surfaced here so a copula-rooted sentence is not invisible to the parse binder — otherwise
+        the binder silently produces nothing and the flat fallback (which cannot tell the true
+        grammatical subject from an adjacent entity) takes over. Only consulted when there is no
+        verbal ROOT, so a normal verb-rooted sentence is unaffected."""
+        verbal = [t for t in self.doc if t.dep_ == "ROOT" and t.pos_ in _VERBAL_POS]
+        if verbal:
+            return verbal
+        surfaced: list = []
+        for t in self.doc:
+            if t.dep_ == "ROOT" and t.pos_ not in _VERBAL_POS:
+                surfaced.extend(
+                    c for c in t.children if c.dep_ == "conj" and c.pos_ in _VERBAL_POS
+                )
+        return surfaced
 
     def conj_verbs(self, verb) -> list:
         """Verbal ``conj`` children of ``verb`` — coordinated predicates sharing its subject
         ("reduced CRP **but increased** bloating")."""
         return [c for c in verb.children if c.dep_ == "conj" and c.pos_ in _VERBAL_POS]
+
+    def predicate_heads(self) -> list:
+        """Every verbal predicate token to bind a relation from (Phase 4a).
+
+        Extends :meth:`roots` beyond the ROOT + its ``conj`` verbs to the verbal predicates nested
+        in subordinate clauses (:data:`_SUB_CLAUSE_DEPS` — relative/adverbial/complement clauses),
+        reached by descending through those arcs *and* through ``conj`` (so a subordinate clause of a
+        coordinated verb is still found). ``conj`` verbs themselves are **not** returned — the binder
+        pairs each returned head with its own ``conj_verbs`` and lets them inherit its subject, so
+        surfacing them here would drop that inheritance. Deterministically ordered: the verbal
+        ROOT(s) first, then subordinate predicates in token order.
+
+        **Participial / reduced-relative predicates** (``acl``/``relcl``) are surfaced even when they
+        attach to an *argument noun* the traversal never descends into. A relation is often stated in a
+        participle hanging off a noun — *"increased consumption of vegetables, **associated** with
+        reduced cancer"* (``associated`` is an ``acl`` of the noun *consumption*, which is only a
+        ``dobj``/``nmod`` of the clause verb). The ROOT-seeded walk above follows only subordinate and
+        ``conj`` arcs, so it steps over such nouns and misses their participle; a final scan adds every
+        remaining verbal ``acl``/``relcl`` predicate so the relation is bound *from structure* rather
+        than left to the flat fallback — which the non-entity-subject guard (:func:`.observations.extract`)
+        may have suppressed for the sentence. :func:`.relations.rule_for_verb` still filters unmapped
+        participles (e.g. *"risk of **developing** cancer"*), and a participle whose antecedent subject
+        and object do not resolve simply binds nothing (the binder does not let it block the fallback).
+
+        Discovering these predicates is what lets the guarded fallback (:func:`.observations.extract`)
+        recognise that a subordinate-clause predicate's argument did not resolve — and therefore
+        *suppress* the adjacency guess — instead of never seeing the predicate at all and falling
+        back to it.
+        """
+        heads: list = list(self.roots())  # verbal ROOT(s) + copula-conj verbs (seeded discovery)
+        seen: set[int] = {t.i for t in heads}
+
+        # Traverse from every ROOT and every seed head, following subordinate-clause and ``conj``
+        # arcs, adding the verbal predicates found under a subordinate-clause arc.
+        start = {t.i: t for t in [x for x in self.doc if x.dep_ == "ROOT"]}
+        for h in heads:
+            start.setdefault(h.i, h)
+        queue = list(start.values())
+        queued = set(start)
+        while queue:
+            cur = queue.pop(0)
+            for c in cur.children:
+                base = c.dep_.split(":")[0]
+                if base in _SUB_CLAUSE_DEPS and c.pos_ in _VERBAL_POS and c.i not in seen:
+                    seen.add(c.i)
+                    heads.append(c)
+                if (base in _SUB_CLAUSE_DEPS or base == "conj") and c.i not in queued:
+                    queued.add(c.i)
+                    queue.append(c)
+        # Final scan: participial / reduced-relative predicates on argument nouns the walk above steps
+        # over (see the docstring). Additive and deterministic — only verbal acl/relcl not already found.
+        for t in self.doc:
+            if t.dep_.split(":")[0] in ("acl", "relcl") and t.pos_ in _VERBAL_POS and t.i not in seen:
+                seen.add(t.i)
+                heads.append(t)
+        heads.sort(key=lambda t: (0 if t.dep_ == "ROOT" else 1, t.i))
+        return heads
+
+    def clausal_subject_mentions(self) -> "list[EntityMention]":
+        """Entity mentions inside the sentence's **gerund clausal subject** (Phase 4f).
+
+        A sentence can put its agent in a clausal subject — *"**Consuming** 400 mL **of kefir** …
+        helps regulate …, improves …"* — where the grammatical subject of the main predicates is the
+        gerund clause, not a plain noun. The agent entity ("kefir") sits *inside* that clause, so it
+        is found by a permissive subtree search of each ``csubj``/``csubjpass`` gerund (unlike an
+        ordinary NP subject, which is resolved restrictively). The result is offered to a predicate
+        that elides its own subject as a **shared last-resort** subject, so *"…, improves abdominal
+        pain …"* binds *kefir → improves → abdominal pain* instead of the flat binder's mis-paired
+        guess. Returns the mentions in token order; empty when the sentence has no such clause."""
+        out: "list[EntityMention]" = []
+        seen: set[str] = set()
+        for t in self.doc:
+            if t.dep_ in {"csubj", "csubjpass"} and t.pos_ in _VERBAL_POS:
+                m = self.mention_for_token(t)  # permissive: the agent is inside the clause
+                if m is not None and m.mention_id not in seen:
+                    seen.add(m.mention_id)
+                    out.append(m)
+        return out
+
+    def controller_tokens(self, verb) -> list:
+        """Controller of a subordinate predicate whose subject is elided (Phase 4a).
+
+        For *"require enteral nutrition … **to prevent** dehydration"* the subject of ``prevent`` is
+        not spelled out; its controller is an argument of the governing clause (object control here:
+        *enteral nutrition*; subject control elsewhere: *"Nutritional care … focusing on
+        **preventing** …"* → *Nutritional care*). Climbs the ``head`` chain (bounded) until a
+        governor exposes subject/object arguments and returns them, coordination-expanded. Empty when
+        no governing argument is found. The caller resolves these to entities and decides: a resolved
+        controller becomes the subject (recall); an *unresolved nominal* controller means the true
+        subject is a non-entity, so the relation is dropped rather than fabricated."""
+        node = verb
+        for _ in range(6):  # bounded climb, guards against cycles / runaway
+            gov = node.head
+            if gov.i == node.i:
+                break
+            cands: list = []
+            for c in gov.children:
+                if c.dep_ in _SUBJECT_DEPS and not self._is_relative_pronoun(c):
+                    cands.extend(self.coordinate(c))
+            for c in gov.children:
+                if c.dep_ in _OBJECT_DEPS and c.i != node.i:
+                    cands.extend(self.coordinate(c))
+            if cands:
+                return cands
+            node = gov
+        return []
+
+    def _is_relative_clause(self, verb) -> bool:
+        return verb.dep_.split(":")[0] in {"acl", "relcl"}
+
+    def _is_relative_pronoun(self, tok) -> bool:
+        return tok.tag_ in {"WDT", "WP", "WP$"} or tok.lemma_.lower() in _REL_PRONOUNS
 
     # --- argument navigation ----------------------------------------------------------
 
@@ -141,11 +367,29 @@ class SentenceParse:
 
     def subject_tokens(self, verb) -> list:
         """Subject argument tokens of ``verb`` (``nsubj``/``nsubjpass``), coordination-expanded.
-        Empty when the verb elides its subject (the caller supplies an inherited one)."""
+        Empty when the verb elides its subject (the caller supplies an inherited one).
+
+        In a relative clause the grammatical subject is the relative pronoun ("products **that**
+        increase X"); its real referent is the antecedent noun the clause modifies (``verb.head``),
+        so a relative-pronoun subject is resolved to that antecedent (Phase 4a). Without this a
+        relative-clause relation would bind no subject and be dropped.
+
+        A **reduced relative / participle** ("consumption **associated** with reduced cancer") spells
+        out no subject at all — the antecedent noun the participle modifies (``verb.head``) *is* the
+        subject. So when a relative/participial clause exposes no subject arc, the antecedent is used
+        directly, letting the participial predicate bind instead of being dropped for want of a
+        subject. (A resolved-nothing antecedent still binds nothing — the binder does not let a
+        participle whose subject is a non-entity suppress the flat fallback.)"""
+        rel = self._is_relative_clause(verb)
         out: list = []
         for c in verb.children:
             if c.dep_ in _SUBJECT_DEPS:
-                out.extend(self.coordinate(c))
+                if rel and self._is_relative_pronoun(c):
+                    out.append(verb.head)  # the antecedent, not the pronoun
+                else:
+                    out.extend(self.coordinate(c))
+        if not out and rel:
+            out.append(verb.head)  # reduced relative / participle: antecedent is the subject
         return out
 
     def condition_tokens(self, verb) -> list:
@@ -196,14 +440,39 @@ class SentenceParse:
                 out.extend(self.coordinate(c))
         return out
 
-    def risk_objects(self, obj_tok) -> list:
-        """For the ``risk``-object special case ("reduced the risk **of** cancer and osteoporosis"),
-        the real endpoints are the entities under ``risk``'s prepositional phrase, conj-expanded."""
+    def measure_objects(self, obj_tok) -> list:
+        """Endpoints inside a measure/container noun's **content genitive**, coordination-expanded.
+
+        Covers both the ``risk``-object special case ("reduced the **risk of** cancer and
+        osteoporosis") and the general measure nouns (:data:`MEASURE_NOUNS` — "reduce the **intake
+        of** red meat and saturated fats"). Only ``of``/``for`` phrases (:data:`_CONTENT_GENITIVE_PREPS`)
+        are taken; a locative/condition phrase on the same noun ("concentration of H2S **in the
+        intestine**") is intentionally excluded so it flows to the qualifier extractor rather than
+        being mistaken for a second endpoint (Phase 4b)."""
         out: list = []
         for c in obj_tok.children:
-            if c.dep_ in _PREP_PHRASE_DEPS:
+            if c.dep_ in _PREP_PHRASE_DEPS and self._prep_surface(c) in _CONTENT_GENITIVE_PREPS:
                 out.extend(self.coordinate(c))
         return out
+
+    def direction_of(self, obj_tok) -> "Optional[str]":
+        """The direction an object noun's ``amod`` expresses — ``"reduced"``/``"increased"``/``None``.
+
+        A bare association whose object is modified by a direction word ("associated with **reduced**
+        CRP", "**lower** risk") is a directional association; this reads that word off the object's
+        attributive-adjective children (matched on lemma, :data:`_REDUCED_LEMMAS`/:data:`_INCREASED_LEMMAS`).
+        First match in token order wins; a noun with no such modifier returns ``None`` (a plain
+        association). Used by the parse binder to promote the predicate via
+        :func:`.relations.rule_for_verb`."""
+        for c in obj_tok.children:
+            if c.dep_ != "amod":
+                continue
+            lemma = c.lemma_.lower()
+            if lemma in _REDUCED_LEMMAS:
+                return "reduced"
+            if lemma in _INCREASED_LEMMAS:
+                return "increased"
+        return None
 
     def has_neg(self, verb) -> bool:
         """True iff ``verb`` carries a negation arc ("did **not** reduce")."""

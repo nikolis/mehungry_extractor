@@ -31,8 +31,9 @@ PIPELINE_VERSION = "0.1.0"
 # segmentation ruleset and the population/dose/duration/route/severity qualifier cues; 0.7.0 adds
 # the A4 outcome-attainment relation rule (achieves/maintains/sustains); 0.8.0 adds the Phase 10
 # verb-lemma → predicate map used by the parse-based argument binder on the model path; 0.9.0 adds
-# the Phase 12 entity-modifier detectors (restrictive prep-phrase modifiers on entity heads).
-RULESET_VERSION = "0.9.0"
+# the Phase 12 entity-modifier detectors (restrictive prep-phrase modifiers on entity heads); 0.10.0
+# widens the prevents cue to "protect* <word>{0,2} against" (Phase 4c — "protective factor against").
+RULESET_VERSION = "0.10.0"
 
 # The extractor code version (mirrors the package version). 0.3.0 delivered Phases 3-5; 0.4.0
 # shipped the Phase 6 qualifier layer; 0.5.0 shipped the Phase 7 clause-scoped extraction engine;

@@ -25,7 +25,16 @@ BATCH = {
     "10000001": "Dietary fiber improved remission.",
     "10000002": "Dietary fiber improved remission.",
     "10000003": "Dietary fiber did not improve remission.",
-    "10000004": "Vitamin D improved bone density.",  # off-topic: no shared concepts
+    "10000004": "Vitamin D improved bone density.",  # off-topic concepts -> cohesion outlier
+}
+
+# Every paper's TITLE passes the topical barrier (each names a nutrition/diet keyword). The
+# outlier is an outlier by shared-CONCEPT overlap, not by title, so it too carries a diet title.
+TITLES = {
+    "10000001": "Dietary fiber and remission in Crohn disease",
+    "10000002": "Dietary fiber and remission in Crohn disease",
+    "10000003": "Dietary fiber and remission in ulcerative colitis",
+    "10000004": "Dietary vitamin D and bone density",
 }
 
 
@@ -35,7 +44,7 @@ def client(tmp_path):
     engine = get_engine(tmp_path / "db.sqlite")
     init_db(engine)
     for pmid, sentence in BATCH.items():
-        meta = DocumentMetadata(pmid=pmid, source_type="abstract", title=f"Paper {pmid}")
+        meta = DocumentMetadata(pmid=pmid, source_type="abstract", title=TITLES[pmid])
         doc = build_document(meta, [ParsedSection(title="Body", paragraphs=[sentence])])
         store.save_canonical(doc)
 
@@ -80,7 +89,7 @@ def test_analyze_flags_outlier_and_returns_per_paper_observations(client):
     by_pmid = {p["pmid"]: p for p in po}
 
     # Each entry carries the paper's title + public PubMed URL.
-    assert by_pmid["10000001"]["paper_title"] == "Paper 10000001"
+    assert by_pmid["10000001"]["paper_title"] == "Dietary fiber and remission in Crohn disease"
     assert by_pmid["10000001"]["paper_url"] == "https://pubmed.ncbi.nlm.nih.gov/10000001/"
 
     # The affirmative paper yields one fully-detailed, reconstructable observation.
@@ -115,6 +124,90 @@ def test_analyze_is_deterministic(client):
     assert a["paper_observations"] == b["paper_observations"]
     assert a["outliers"] == b["outliers"]
     assert a["topic"] == b["topic"]
+
+
+def test_observation_endpoint_exposes_restrictive_modifiers(tmp_path):
+    """An endpoint's restrictive modifier (Concept 19) reaches the response, and ``object_label``
+    renders the target back in — so "Dysbiosis" is served as "Dysbiosis of the gut microbiome",
+    not collapsed to the bare head."""
+    store = CorpusStore(tmp_path / "corpus")
+    engine = get_engine(tmp_path / "db.sqlite")
+    init_db(engine)
+    batch = {
+        "20000001": "IBD is strongly associated with dysbiosis of the gut microbiome.",
+        "20000002": "IBD is associated with dysbiosis of the gut microbiome.",
+    }
+    for pmid, sentence in batch.items():
+        # Title names a keyword so the paper clears the topical barrier (Concept 1's gate).
+        meta = DocumentMetadata(pmid=pmid, source_type="abstract", title=f"Dietary patterns and dysbiosis (paper {pmid})")
+        store.save_canonical(build_document(meta, [ParsedSection(title="Body", paragraphs=[sentence])]))
+
+    app.dependency_overrides[get_context] = lambda: {
+        "corpus": store, "engine": engine, "ingest": False,
+    }
+    try:
+        client = TestClient(app)
+        body = client.post(
+            "/analyze", json={"pmids": list(batch), "options": {"use_model": False}}
+        ).json()
+    finally:
+        app.dependency_overrides.clear()
+
+    po = {p["pmid"]: p for p in body["paper_observations"]}
+    o = po["20000001"]["observations_list"][0]
+    assert o["object_concept_id"] == "DIS:dysbiosis"
+    # The restrictive modifier survives serialization as structured data …
+    assert o["object_modifiers"] == [{
+        "relation": "localized_in",
+        "preposition": "of",
+        "value_concept_id": "BIOM:gut_microbiota",
+        "value_text": "gut microbiome",
+        "value_type": o["object_modifiers"][0]["value_type"],
+        "status": "normalized",
+    }]
+    # … and the composed label folds the target back into the collapsed display.
+    assert o["object_label"] == "Dysbiosis of gut microbiome"
+    assert o["subject_modifiers"] == [] and o["subject_label"] == "Inflammatory bowel disease"
+
+
+def test_analyze_excludes_cached_off_topic_title(tmp_path):
+    """A paper already in the corpus whose TITLE names no topical keyword is excluded from the
+    response — the barrier applies to cache hits, not just freshly-ingested papers."""
+    store = CorpusStore(tmp_path / "corpus")
+    engine = get_engine(tmp_path / "db.sqlite")
+    init_db(engine)
+    seeded = {
+        # on-topic title -> included
+        "30000001": ("Dietary fiber and remission", "Dietary fiber improved remission."),
+        # off-topic title -> must be excluded even though it is cached
+        "30000002": ("A study of cardiac stents", "Dietary fiber improved remission."),
+    }
+    for pmid, (title, sentence) in seeded.items():
+        meta = DocumentMetadata(pmid=pmid, source_type="abstract", title=title)
+        store.save_canonical(build_document(meta, [ParsedSection(title="Body", paragraphs=[sentence])]))
+
+    app.dependency_overrides[get_context] = lambda: {
+        "corpus": store, "engine": engine, "ingest": False,
+    }
+    try:
+        body = client_post(list(seeded))
+    finally:
+        app.dependency_overrides.clear()
+
+    # The off-topic-titled paper contributes NO results: absent from observations and inclusions.
+    assert [p["pmid"] for p in body["paper_observations"]] == ["30000001"]
+    assert "30000002" not in set(body["included_pmids"])
+    # It is still reported per-paper (honest bookkeeping), but only as an error — never a result.
+    status = {p["pmid"]: p["status"] for p in body["papers"]}
+    assert status["30000002"] == "error"
+    # … and its exclusion is surfaced honestly as a title-filter warning, not a crash.
+    assert any("excluded by title filter" in w and "30000002" in w for w in body["warnings"])
+
+
+def client_post(pmids):
+    return TestClient(app).post(
+        "/analyze", json={"pmids": pmids, "options": {"use_model": False}}
+    ).json()
 
 
 def test_empty_pmids_rejected(client):

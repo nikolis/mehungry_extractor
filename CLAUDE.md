@@ -29,3 +29,20 @@ If a change touches the REST API **and** anything conceptual, it is **not**
 excluded — update `docs/concepts.md`.
 
 When in doubt, update `docs/concepts.md`.
+
+## RULE 2 — Keep `docs/api.md` in sync with every REST API change (MANDATORY)
+
+**Before considering any task complete, you MUST update
+[`docs/api.md`](docs/api.md) to reflect any change to the REST API layer
+(the `mehungry_extractor/knowledge/api/` HTTP surface).**
+
+This applies to **every** REST API change — routes/endpoints, request and response
+shapes, field additions/removals/renames, serialization, status codes, error
+responses, etc. Updating `docs/api.md` is part of the change, not an optional
+follow-up. A REST API change is not "done" until `docs/api.md` has been brought
+back into agreement with it.
+
+This rule is independent of RULE 1: a REST-API-only change is excluded from the
+`docs/concepts.md` requirement but is **still** subject to this one. A change that
+touches both the REST API and a concept must update **both** `docs/api.md` (RULE 2)
+and `docs/concepts.md` (RULE 1).

@@ -143,6 +143,22 @@ class QualifierModel(BaseModel):
     value_text: Optional[str] = None
 
 
+class EntityModifierModel(BaseModel):
+    """A restrictive modifier on an endpoint head (Concept 19), serialized for display.
+
+    Recovers the target the head loses on its own: *"dysbiosis"* → ``localized_in`` *gut microbiome*.
+    It is a condition on the endpoint's *meaning*, not an assertion, so it carries no polarity. An
+    unresolved object is kept (``status == "unmatched"``) with its surface, never dropped.
+    """
+
+    relation: str  # localized_in | qualified_by | … (Concept 19)
+    preposition: str  # of | in | within — the phrase that introduced the modifier
+    value_concept_id: Optional[str] = None
+    value_text: str
+    value_type: Optional[str] = None
+    status: str  # normalized | unmatched
+
+
 class ConclusionModel(BaseModel):
     subject_concept_id: str
     subject_name: str
@@ -235,10 +251,17 @@ class ObservationDetail(BaseModel):
     subject_text: str
     subject_concept_id: Optional[str] = None
     subject_name: Optional[str] = None
+    # Concept 19 — restrictive modifiers on each endpoint head, and the endpoint rendered *with*
+    # them folded in (``object_label`` turns a bare "Dysbiosis" into "Dysbiosis of the gut
+    # microbiome"), so a reader sees the target the head resolves away on its own.
+    subject_modifiers: list[EntityModifierModel] = Field(default_factory=list)
+    subject_label: str = ""
     predicate: str
     object_text: str
     object_concept_id: Optional[str] = None
     object_name: Optional[str] = None
+    object_modifiers: list[EntityModifierModel] = Field(default_factory=list)
+    object_label: str = ""
     polarity: str  # positive | negative (negation flips the rule's base polarity)
     certainty: str  # asserted | hedged
     context: Optional[str] = None  # negation/uncertainty cue + clause marker, for audit

@@ -54,6 +54,7 @@ from ..query import (
     list_open_observations_for_document,
 )
 from ..run import build_run
+from ..titlefilter import TitleFiltered, title_matches
 from ..vocab import (
     COUNTRIES_VERSION,
     FOOD_SOURCES_VERSION,
@@ -65,6 +66,7 @@ from .models import (
     AnalyzeOptions,
     AnalyzeResponse,
     CoreConcept,
+    EntityModifierModel,
     ObservationDetail,
     ObservationEvidenceModel,
     OpenRelationDetail,
@@ -86,6 +88,35 @@ _PUBMED_URL = "https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
 def _paper_url(pmid: str) -> str:
     """The public PubMed URL for a (normalized, bare-numeric) PMID."""
     return _PUBMED_URL.format(pmid=pmid)
+
+
+def _modifier_models(mods: "list[dict]") -> "list[EntityModifierModel]":
+    """Serialize an endpoint's restrictive-modifier dicts (query layer) to API models (Concept 19)."""
+    return [
+        EntityModifierModel(
+            relation=m["relation"],
+            preposition=m["preposition"],
+            value_concept_id=m.get("value_concept_id"),
+            value_text=m["value_text"],
+            value_type=m.get("value_type"),
+            status=m["status"],
+        )
+        for m in mods
+    ]
+
+
+def _endpoint_label(display: str, mods: "list[dict]") -> str:
+    """Render an endpoint *with* its restrictive modifiers folded back in.
+
+    The endpoint's head resolves to a bare concept, so on its own "dysbiosis" loses the target the
+    sentence gave it. Re-appending each modifier's ``<preposition> <value_text>`` turns it back into
+    the phrase the source actually stated — "dysbiosis of the gut microbiome" — so the collapsed
+    display no longer drops the target (Concept 19).
+    """
+    parts = [display]
+    for m in mods:
+        parts.append(f"{m['preposition']} {m['value_text']}")
+    return " ".join(parts)
 
 _COHESION_METHOD = "normalized_concept_overlap"
 
@@ -230,6 +261,23 @@ class Acquisition:
     errors: dict[str, str]  # pmid -> error message for papers that couldn't be acquired.
 
 
+def _require_on_topic(corpus: CorpusStore, pmid: str) -> None:
+    """Enforce the topical title barrier on a paper that is already in the corpus.
+
+    ``ingest.ingest_pmid`` screens papers it fetches from the network, but a paper served from
+    **cache** never passes back through that gate. Re-checking the archived title here keeps every
+    API response free of off-topic papers, regardless of how/when they were cached. Raises
+    :class:`TitleFiltered` on a miss so callers report it as an exclusion, not a failure.
+
+    Reads the title from the canonical ``document.json`` — the one artifact guaranteed present
+    once the paper is in the corpus (its existence is the precondition for calling this), so the
+    barrier does not depend on ``metadata.json`` or a DB row being written yet.
+    """
+    title = corpus.read_canonical(pmid).metadata.title
+    if not title_matches(title):
+        raise TitleFiltered(pmid, title)
+
+
 def _acquire_documents(
     pmids: list[str],
     *,
@@ -278,7 +326,15 @@ def _acquire_documents(
                         f"{doc_id} not ingested and ingest is disabled; run "
                         f"`mehungry ingest --pmid {pmid}` first"
                     )
+            # Enforce the title barrier on EVERY paper, including cache hits that never passed
+            # back through ingest's gate — off-topic papers must not reach the response.
+            _require_on_topic(corpus, pmid)
             ready.append(pmid)  # text is in place -> Part 2 can extract this paper.
+        # TITLE FILTER: a deliberate topical exclusion, not a failure. Record it honestly with
+        # its own warning wording so it isn't confused with an acquisition/extraction error.
+        except TitleFiltered as skip:
+            errors[pmid] = f"TitleFiltered: {skip}"
+            warnings.append(f"{doc_id}: excluded by title filter ({skip.title!r}).")
         # EXCEPTION HANDLING: `exc` is the caught error object. type(exc).__name__ is its class
         # name (e.g. "FileNotFoundError"); {exc} is its message. We record it and keep going —
         # this is the "one failure never aborts the batch" guarantee. (The wording says
@@ -550,11 +606,15 @@ def _synthesize(
                 observation_id=o["observation_id"],
                 subject_text=o["subject_text"],
                 subject_concept_id=o["subject_concept_id"],
-                subject_name=obs_names.get(o["subject_concept_id"]) if o["subject_concept_id"] else None,
+                subject_name=(_subj_name := obs_names.get(o["subject_concept_id"]) if o["subject_concept_id"] else None),
+                subject_modifiers=_modifier_models(o["subject_modifiers"]),
+                subject_label=_endpoint_label(_subj_name or o["subject_text"], o["subject_modifiers"]),
                 predicate=o["predicate"],
                 object_text=o["object_text"],
                 object_concept_id=o["object_concept_id"],
-                object_name=obs_names.get(o["object_concept_id"]) if o["object_concept_id"] else None,
+                object_name=(_obj_name := obs_names.get(o["object_concept_id"]) if o["object_concept_id"] else None),
+                object_modifiers=_modifier_models(o["object_modifiers"]),
+                object_label=_endpoint_label(_obj_name or o["object_text"], o["object_modifiers"]),
                 polarity=o["polarity"],
                 certainty=o["certainty"],
                 context=o["context"],
@@ -765,6 +825,9 @@ def discover_relations_batch(
                         f"{doc_id} not ingested and ingest is disabled; run "
                         f"`mehungry ingest --pmid {pmid}` first"
                     )
+            # Same title barrier as /analyze: cache hits that never passed ingest's gate are
+            # screened here so off-topic papers stay out of the response.
+            _require_on_topic(corpus, pmid)
             if extract:
                 document, observations = discover_open_relations(
                     pmid, corpus=corpus, engine=engine, persist=True, detector=detector
@@ -785,6 +848,8 @@ def discover_relations_batch(
                     relations=_build_open_relations(engine, doc_id, obs_dicts),
                 )
             )
+        except TitleFiltered as skip:
+            warnings.append(f"{doc_id}: excluded by title filter ({skip.title!r}).")
         except DetectorUnavailableError as exc:
             warnings.append(
                 f"{doc_id}: open-relation detector unavailable ({exc}); install the optional "

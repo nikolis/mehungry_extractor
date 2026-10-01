@@ -159,6 +159,44 @@ def save_raw(self, pmid, files: dict[str, bytes], force: bool = False) -> dict[s
 - **Called by.** Both from `ingest.ingest_pmid`: `fetch` supplies the bytes, `save_raw` archives them. On a later run `corpus.has_raw(pmid)` short-circuits `ingest_pmid` into the offline `normalize_document` path, so the network is never touched twice.
 - **Returns.** `fetch` → a `RawSources` (raw bytes + acquisition provenance); `save_raw` → the checksum map, after writing `raw/` and `checksums.json`. `force=True` is the only sanctioned overwrite of the immutable layer.
 
+### The topical gate: title screening before archival
+
+**What.** Between *fetching* a paper and *archiving* it, the engine screens the paper by its
+**title**. Only a paper whose title names a nutrition/diet topic is allowed to proceed; an
+off-topic paper is dropped at the gate — nothing is written to the corpus, so it never reaches
+any downstream stage. The screen is a small fixed vocabulary (nutrition, diet, food, meal,
+protein, metabolic, lifestyle, plant-based, vegetarian, Body Mass Index, …); a title passes if it
+contains at least one keyword. Matching is **case-insensitive** and **whole-word plus regular
+plurals**, so `plant` matches "plant" / "plants" / "plant-based" but not "transplantation" or
+"plantar", and `diet` matches "diet" / "diets" while "dietary" is caught by its own keyword.
+
+**Why.** The corpus is a scarce, deliberately immutable resource, and every later stage costs
+work; the title is the cheapest, most reliable topical signal available *before* we commit any of
+that. Screening at the single network entry point means the "only relevant papers" policy is
+enforced where papers are born, so an off-topic paper is normally never even archived. Whole-word
+matching is a precision choice — a substring test would let "transplantation" or "implantation"
+masquerade as "plant"; allowing regular plurals is a recall choice, so common forms like
+"diets"/"foods"/"meals" are not lost.
+
+**Enforced again at the point of use.** Because a paper *can* enter the corpus by another path
+(ingested before the filter existed, or seeded directly), consumers that must guarantee on-topic
+results re-assert the barrier when they read. The REST API does exactly this: before a cached
+paper's results are returned it re-checks the archived title, so a paper that slipped into the
+corpus off-topic still cannot leak into a response. The keyword vocabulary is the single source of
+truth for both the ingest gate and this read-time check, so the two can never disagree.
+
+**Alternatives / extension points.**
+- The keyword list is the single source of truth (`titlefilter.TITLE_KEYWORDS`); widening or
+  narrowing the topical scope is a data edit there, not a code change.
+- Screening on the title (not the abstract or full text) is intentional: it is present for every
+  paper, it is cheap, and it decides admission *before* archival. A richer gate (abstract terms, a
+  classifier) could be added, but it would trade the current transparency and determinism.
+- A skipped paper raises `TitleFiltered`, which callers report as a deliberate *exclusion*, never
+  as an acquisition/extraction *failure* — the distinction matters for honest batch reporting.
+
+**In the code** — `knowledge/titlefilter.py` (the vocabulary + `title_matches`), applied in
+`ingest.ingest_pmid` right after the PubMed record is parsed and before `corpus.save_raw`.
+
 ---
 
 ## Concept 2 — The canonical document and the offset contract
@@ -510,21 +548,133 @@ adjacency:
 - An entity that is only an `amod`/`compound` modifier of the object noun (the "reduced disease"
   inside "activity") is bound as the object *via the noun that dominates it*, so a denser tag no
   longer fragments the pair.
+- A **measure/container noun** (`intake`, `consumption`, `concentration`, `level`, `abundance`, … —
+  and `risk`) is not itself the endpoint; the relation is about the entities inside its **content
+  genitive**. So "reduce the intake **of red meat and processed meat**" unwraps to *both* foods
+  (coordination-expanded), just as "risk **of** cancer and osteoporosis" already did (Phase 4b). Only
+  the `of`/`for` phrase is taken — a locative on the same noun ("concentration of H₂S **in the
+  intestine**") stays a qualifier, not a second endpoint. `risk` remains the one measure noun that
+  *also* promotes the predicate (`decreases`→`reduces_risk`); the others keep the predicate and only
+  widen the objects. This unwrap now runs on **both endpoints**: a measure-noun *subject* is unwrapped
+  the same way — *"**Intake of red meat** increased CRP"* binds *red meat → increases → CRP*. Without
+  it the strict subject resolver (which never enters an `of`-phrase, see below) would leave the
+  subject unresolved and drop the relation.
+- A **gerund clausal subject** names the agent *inside* the subject clause: *"**Consuming** 400 mL
+  **of kefir** … improves abdominal pain …"* has no plain noun subject, so the entity is recovered by
+  a permissive search of the `csubj` gerund and shared across the predicates it governs — binding
+  *kefir → improves → abdominal pain* rather than the flat binder's mis-paired guess (Phase 4f). This
+  is the one place subject resolution is *permissive* rather than restrictive, and it is deliberately
+  a **last resort** (tried only after a direct subject and a control resolution both fail), so it
+  cannot override the non-entity-subject drop that keeps a fabricated subject out of the record.
 
 This needs **no new dependency**: the first-class scispaCy model (Concept 6) already ships a
 `parser` in its pipeline, and `parse.py` wraps that same object. The **predicate stays rule-based** —
-a versioned verb-lemma → predicate map (`relations.VERB_PREDICATE_MAP`, with a `risk`-object special
-case that promotes `decreases`/`increases` to `reduces_risk`/`increases_risk`) that resolves back to
-the *same* `RelationRule` a flat cue would, so polarity/flip/`rule_id`/version — and therefore
-modality (Concept 8) and provenance — are identical whichever binder fired. Lexical, non-verb
+a versioned verb-lemma → predicate map (`relations.VERB_PREDICATE_MAP`) with two object-driven
+promotions: a `risk` object promotes `decreases`/`increases` to `reduces_risk`/`increases_risk`, and a
+**direction word on a non-risk object** promotes a *bare association* to a **directional association**
+(`associated_with_reduced`/`associated_with_increased`, see the directional-associations concept
+below). Every promotion resolves back to the *same* `RelationRule` a flat cue would, so
+polarity/flip/`rule_id`/version — and therefore modality (Concept 8) and provenance — are identical
+whichever binder fired. Lexical, non-verb
 predicates (`no_association`, `no_effect`, `contraindicated`, adverse-event) have no verb to map, so
 a sentence built on them yields no parse predicate and **falls back** to the flat binder.
+
+**The fallback is guarded, not automatic — precision over a fabricated guess.** The flat binder runs
+as a fallback *unless the parse positively determined that the relation's **subject is a
+non-entity***. That determination is what keeps a fabricated subject out of the record, and it rests
+on three cooperating pieces:
+
+- **Predicate discovery reaches into subordinate clauses.** Binding only the verbal ROOT and its
+  coordinated (`conj`) verbs leaves a relation stated in a relative clause (*"products **that
+  increase** …"*), an adverbial clause (*"…crucial, focusing on **preventing** …"*), or a clausal
+  complement (*"research recommending **reducing** …"*) invisible — and an invisible predicate is
+  exactly what used to hand the sentence to the adjacency floor. Discovery now also walks
+  `advcl`/`acl`/relative/`ccomp`/`xcomp`/`pcomp` arcs (and, when the ROOT is a copula-headed
+  adjective/noun, the verbal `conj` predicates hanging off it), so the predicate is *seen* and can be
+  reasoned about instead of defaulted on.
+- **Participial / reduced-relative predicates on argument nouns are surfaced too.** A relation is often
+  stated in a participle hanging off a *noun* the ROOT-seeded walk never descends into —
+  *"increased consumption of vegetables, **associated** with reduced cancer"*, where `associated` is an
+  `acl` of the noun *consumption* (itself only a `dobj`/`nmod` of the clause verb). A final scan adds
+  every remaining verbal `acl`/`relcl` predicate, and a reduced relative's **antecedent noun is its
+  subject** (it spells out none) — so the participle binds *vegetables → associated_with → cancer* from
+  structure. Crucially, a participle is **not** allowed to trip the non-entity-subject block below:
+  its antecedent is frequently a non-entity head keeping the real entity in a PP the strict resolver
+  won't enter (*"a **diet** rich **in fiber**, associated with …"*), so when a participle cannot
+  resolve its subject it **defers to the flat fallback** (like the pronoun case) rather than
+  suppressing it — recovering the relation instead of losing it. This is what made the reported
+  *early-life* sentence's *correct* relations reachable while its fabricated one stays dropped.
+- **The subject is resolved honestly, not by descent into a phrase.** A subject head that is not
+  itself an entity may bind to an entity that *attributively modifies* it (`amod`/`compound`/`conj`/
+  `nummod` — "High **vegetable** intake lowered the risk …", where the head noun *intake* is a
+  measure/container and *vegetable* is its modifier), but the resolver deliberately **refuses to
+  descend into a prepositional phrase** under the subject: the subject of *"Nutritional care **in IBD
+  patients**"* is the non-entity "care", not the nested "IBD", and the subject of *"an imbalance **in
+  the consumption of omega-3**"* is "imbalance", not "omega-3". Reaching into those PPs is precisely
+  how a subject used to be fabricated; refusing lets such a subject correctly resolve to *nothing*.
+- **Descent is gated on normalization — the modifier must be a real concept (drop-guard).** The
+  attributive descent above is an unguarded recall heuristic: it recovers the true subject when the
+  modifier is a known concept, but the *same* descent otherwise adopts whatever the parser hung on
+  the head noun, including a **false entity that never resolved**. That is how *"early-life **diet**
+  influences IBD risk, with … increased consumption of vegetables …"* fabricated *early-life →
+  increases → vegetables*: the parser misread *increased consumption* as a finite verb coordinated
+  with *influences* (so it inherited *diet*'s subject), *early-life* is a non-normalizing scispaCy
+  DISEASE false positive on the `amod` of *diet*, and the descent adopted it. The resolver therefore
+  accepts a **descended** subject only when it carries a `concept_id`; a non-normalizing one is
+  treated as *absent*. This keeps exactly the useful case (the modifier is a known concept, so a
+  claim can be built) and discards exactly the fabrication (the modifier is not a concept, so no claim
+  could ever be built) — and because the subject then resolves to nothing over an overt non-entity
+  head (*diet*), the non-entity-subject guard below suppresses the flat fallback too, so the relation
+  is dropped rather than re-fabricated. The gate applies **only to the entity reached by descent**:
+  when the subject head *is* the entity, an unnormalized head-anchored subject is still bound and
+  retained as an observation, unchanged.
+- **An elided subject** (control: *"require enteral nutrition … to prevent …"*) is resolved to its
+  controller from the governing clause, so the relation is still bound when the controller is a real
+  entity.
+- **The guard blocks only a non-entity subject.** When a discovered, mapped predicate has an overt
+  noun subject — or a control-resolved controller — that resolves to **no concept**, the flat
+  fallback is suppressed for that sentence: the true subject is a non-entity (an abstract noun, a
+  demonstrative anaphor "This diet", a population), and the floor would only re-introduce the
+  mis-binding the parse declined to make. The relation is kept **dropped and reportable** rather than
+  fabricated — the same discipline as Concept 3 (never assert a fact whose endpoint is not a known
+  concept). A predicate whose subject is a bare **pronoun** ("they"/"it") or an unresolvable control
+  structure does *not* block: reliable resolution there would need anaphora we do not have, so the
+  flat adjacency heuristic is left as a reasonable last resort rather than a fabrication.
+
+The net effect is a precision choice: a relation whose true subject the vocabulary cannot name is
+better *absent* than *invented*, while a relation stated in a subordinate clause with a resolvable
+subject is now *recovered* rather than lost.
+
+**Directional associations — an association carries the direction its object states.** A bare
+`associated_with` throws away real information when the object is modified by a direction word:
+*"vegetables associated with **reduced** CRP"* and *"sugary drinks associated with **increased**
+inflammation"* are opposite clinical signals, yet both would flatten to the same direction-less
+predicate — and the clinical valence (Concept 16), which reads benefit/harm from *(predicate, object)*,
+would then call *reduced CRP* **harmful** (CRP is an undesirable marker, and bare association leans by
+the object alone). So when an association's object carries an `amod` direction word, the predicate is
+promoted to `associated_with_reduced` or `associated_with_increased` — the association analogues of
+`decreases`/`increases`. They stay *associations*: the non-causal, weaker epistemic standing is carried
+by `certainty`, not by inventing a causal predicate; only the **direction** the sentence actually
+stated is recorded, which is exactly what valence needs to read *reduced CRP* as beneficial. The parse
+binder reads the direction off the object noun's `amod` (`parse.direction_of`); the flat binder has the
+matching higher-priority cues (`rel_associated_with_reduced`/`_increased`, ranked above bare
+`associated_with`). When the object is a **risk** noun the direction resolves instead to the *causal*
+risk predicate — *"linked to a **lower risk** of cardiovascular disease"* → `reduces_risk`, the mirror
+of the reviewer-confirmed *"…**higher risk**… → `increases_risk`"*. This matters: without it the parse
+binder emitted a bare, direction-less `associated_with` that read as a plain association *with* the
+disease — the exact **opposite** of the protective message — and the flat `reduces_risk` cue had a
+matching gap (`lower\w+` demanded a suffix, so bare "lower risk" silently fell through to
+`associated_with` while "higher risk" was caught); both cues are now symmetric. The choice of the
+*causal* risk predicate here (rather than a distinct association-with-*risk* predicate —
+`associated_with_reduced_risk`/`associated_with_increased_risk`, the aspiration recorded in the curated
+gold) is a deliberate product decision: keeping the reviewer-confirmed causal reading, not a mechanical
+one.
 
 The regex flat binder is kept verbatim as the deterministic, model-free **`use_model=False` floor**
 (byte-identical to pre-Phase-10). Non-determinism is confined to the model path, where it is
 acceptable because every bound argument still reconstructs from its mention's offsets; a parse-bound
 observation records `binder:parse` on `context` so a reader can see *how* it was bound, and a
-sentence the parse can't handle falls back rather than losing the relation. **A deliberate semantics
+sentence whose predicate the parse does not recognise falls back rather than losing the relation. **A deliberate semantics
 change rides along:** the motivating fixture is now read as `dietary_fiber —associated_with→ disease
 activity` *qualified by* `disease_state=remission`, not the flat binder's lucky `fiber → remission`
 object — so on the model path that sentence yields no normalized claim (the disease-activity object
@@ -552,6 +702,14 @@ RULES: tuple[RelationRule, ...] = (
           polarity=Polarity.NEGATIVE.value, flip=False, description="..."),
     _rule("rel_reduces_risk", "reduces_risk",
           r"\b(?:reduc\w+|lower\w+|decreas\w+) (?:the |a )?risk\b", description="..."),
+    # Directional associations rank ABOVE bare associated_with so "associated with reduced CRP"
+    # records the direction; a "risk" object is still caught by the causal risk cues above.
+    _rule("rel_associated_with_reduced", "associated_with_reduced",
+          r"\b(?:associat\w+ with|correlat\w+ with|linked to|...)\b.*\b(?:reduc\w*|lower\w*|...)\b",
+          description="..."),
+    _rule("rel_associated_with_increased", "associated_with_increased",
+          r"\b(?:associat\w+ with|correlat\w+ with|linked to|...)\b.*\b(?:increas\w*|higher|...)\b",
+          description="..."),
     _rule("rel_associated_with", "associated_with",
           r"\bassociat\w+ with\b|\bassociation between\b|...", description="..."),
     ... # causes, improves, worsens, increases, decreases — generic verbs come LAST
@@ -1014,7 +1172,7 @@ def clinical_direction(predicate, object_concept_id, object_entity_type=None) ->
     desirability = object_desirability(object_concept_id, object_entity_type)  # want more / less / neither
     if predicate == "improves": return BENEFICIAL
     if predicate == "worsens":  return HARMFUL
-    if predicate in _LOWERING_PREDICATES:      # decreases / reduces_risk / prevents
+    if predicate in _LOWERING_PREDICATES:      # decreases / reduces_risk / prevents / associated_with_reduced
         return BENEFICIAL if desirability == UNDESIRABLE else HARMFUL if desirability == DESIRABLE else NEUTRAL
     if predicate in _RAISING_PREDICATES:       # increases / increases_risk / causes / achieves
         return HARMFUL if desirability == UNDESIRABLE else BENEFICIAL if desirability == DESIRABLE else NEUTRAL

@@ -9,7 +9,9 @@ a requirement — local non-deterministic techniques are allowed as long as prov
 
 What it does with a batch:
 
-1. **Ingests** each PMID (fetches from PubMed/PMC and caches it, unless already cached).
+1. **Ingests** each PMID (fetches from PubMed/PMC and caches it, unless already cached). Ingestion
+   applies a **topical title filter**: a paper whose title names no nutrition/diet keyword is
+   excluded (see below), never cached, and never extracted.
 2. **Extracts** entities → observations → study/funding facts through the existing pipeline.
 3. **Detects off-topic outliers** deterministically (by shared-concept overlap) and **reports**
    them — they are flagged, but their observations are still returned, never silently dropped.
@@ -188,6 +190,8 @@ Each **observation** carries the relation plus every detail around it:
 | `subject_text`, `object_text` | `string` | The exact surface text of each endpoint. |
 | `subject_concept_id`, `object_concept_id` | `string`/`null` | Normalized concept ids; `null` when the mention didn't normalize (the observation is still returned). |
 | `subject_name`, `object_name` | `string`/`null` | Canonical names of the resolved concepts. |
+| `subject_modifiers`, `object_modifiers` | `object[]` | Restrictive modifiers on each endpoint head (Concept 19): `{ relation, preposition, value_concept_id, value_text, value_type, status }`. `relation` is `localized_in`/`qualified_by`/…; e.g. `dysbiosis` carries `{ relation: "localized_in", preposition: "of", value_text: "gut microbiome", … }`. Empty when the head has none. |
+| `subject_label`, `object_label` | `string` | The endpoint rendered *with* its modifiers folded back in — so a bare `Dysbiosis` is served as `Dysbiosis of gut microbiome` and the collapsed display keeps the target the head resolves away. Falls back to the plain name/surface when there are no modifiers. |
 | `predicate` | `string` | The relation the rule assigned (e.g. `improves`). |
 | `polarity` | `string` | `positive` or `negative` (negation flips the rule's base polarity). |
 | `certainty` | `string` | `asserted` or `hedged`. |
@@ -207,6 +211,15 @@ Note: a **single PMID failing to ingest/extract does not fail the request**. Tha
 back with `status: "error"` and an `error` message, and a matching entry appears in `warnings`;
 the rest of the batch is still analyzed.
 
+A paper **excluded by the topical title filter** (its title matches none of the nutrition/diet
+keywords) is handled the same way: it contributes **no** results — it is absent from
+`paper_observations` and `included_pmids` — while still being reported per-paper with
+`status: "error"`, an `error` of `TitleFiltered: …`, and a `warnings` note of the form
+`<doc_id>: excluded by title filter (<title>).`. The barrier is applied to **every** paper in the
+response, **including cache hits**: a paper already in the corpus is re-screened by its archived
+title before its results are returned, so an off-topic paper cannot leak through by having been
+cached earlier (e.g. ingested directly via the CLI before the filter existed).
+
 ---
 
 ### `POST /discover/relations`
@@ -220,6 +233,11 @@ highlighting, because none has been decided — the reviewable payload is just `
 records never enter claims/synthesis. Detection is a **model** feature; it requires the optional
 `[openrel]` extra (`uv pip install -e '.[openrel]'`). Papers where the detector is unavailable come
 back as a `warnings` note, not a failure.
+
+This endpoint applies the **same topical title barrier** as `/analyze`: a paper whose title names
+no nutrition/diet keyword is excluded from `papers` and reported as a `warnings` note
+(`<doc_id>: excluded by title filter (<title>).`) — enforced on cache hits too, not only on
+freshly-ingested papers.
 
 #### Request body
 

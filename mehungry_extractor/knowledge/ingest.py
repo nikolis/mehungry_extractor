@@ -21,6 +21,7 @@ from .db import get_engine, init_db, persist_document, session_scope
 from .ids import document_id, normalize_pmid
 from .pubmed import PubMedRecord
 from .run import build_run
+from .titlefilter import TitleFiltered, title_matches
 
 
 def assemble_document(
@@ -127,6 +128,10 @@ def ingest_pmid(
     raw = _acquire.fetch(pmid, timeout=timeout)
 
     rec_preview = pubmed.parse(raw.pubmed_xml) if raw.pubmed_xml else PubMedRecord()
+    # Topical gate: screen by title before archiving anything, so an off-topic paper never
+    # enters the immutable corpus (and thus never reaches any downstream stage).
+    if not title_matches(rec_preview.title):
+        raise TitleFiltered(pmid, rec_preview.title)
     files: dict[str, bytes] = {}
     if raw.pubmed_xml:
         files["pubmed.xml"] = raw.pubmed_xml
