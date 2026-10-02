@@ -556,6 +556,11 @@ def _parse_bind_sentence(
             if rule is None:
                 continue  # not a mapped predicate verb — leave this predicate to the fallback
 
+            # Condition prep-phrases inherited from a governing clause when this predicate's
+            # subject is control-resolved (B1). Populated only in the control branch below, so a
+            # predicate with its own overt subject never inherits a governor's condition.
+            inherited_conditions: list = []
+
             subjects = _dedup_keep_order([sp.subject_mention_for_token(t) for t in subj_tokens])
             if not subjects:
                 # A free-adjunct present participle ("induces dysbiosis, **decreasing** X") carries no
@@ -606,6 +611,11 @@ def _parse_bind_sentence(
                     subjects = _dedup_keep_order(
                         [sp.subject_mention_for_token(t) for t in ctrl_tokens]
                     )
+                    if subjects:
+                        # Subject came from the governing clause (control) — inherit that clause's
+                        # scoping conditions too ("…shown in patients with active disease to
+                        # reduce…"), which hang off the governor, not this controlled verb (B1).
+                        inherited_conditions = sp.controller_conditions(pred)
                     if not subjects:
                         if ctrl_tokens and any(t.pos_ in ("NOUN", "PROPN") for t in ctrl_tokens):
                             if not is_participial:
@@ -641,8 +651,12 @@ def _parse_bind_sentence(
                 continue
 
             # Prep-phrase conditions of this predicate → qualifiers, scoped to each condition
-            # phrase's own span (so a sibling predicate's condition does not bleed in).
-            qualifiers = _parse_qualifiers(document, sentence, sp, pred)
+            # phrase's own span (so a sibling predicate's condition does not bleed in). A
+            # control-resolved predicate additionally inherits the governing clause's conditions
+            # (B1), so "…shown in patients with active disease to reduce…" carries the condition.
+            qualifiers = _parse_qualifiers(
+                document, sentence, sp, pred, extra_condition_tokens=inherited_conditions
+            )
 
             neg = sp.has_neg(pred)
             for subj in subjects:
@@ -660,11 +674,24 @@ def _parse_qualifiers(
     sentence: "Sentence",
     sp: "object",
     pred,
+    extra_condition_tokens: "tuple | list" = (),
 ) -> "list[Qualifier]":
-    """Typed qualifiers from ``pred``'s prep-phrase condition modifiers ("during remission")."""
+    """Typed qualifiers from ``pred``'s prep-phrase condition modifiers ("during remission").
+
+    ``extra_condition_tokens`` are condition phrases inherited from a governing clause when
+    ``pred`` is subject-controlled (B1, :meth:`.parse.SentenceParse.controller_conditions`); they
+    are scanned alongside ``pred``'s own, deduplicated identically, so a governor's scoping
+    condition ("…shown in patients with active disease to reduce…") attaches to the controlled
+    relation rather than being lost on the non-emitting governing verb.
+    """
     quals: list[Qualifier] = []
-    for cond in sp.condition_tokens(pred):
+    cond_tokens = list(sp.condition_tokens(pred)) + list(extra_condition_tokens)
+    seen_spans: set[tuple[int, int]] = set()
+    for cond in cond_tokens:
         start, end = sp.token_span(cond)
+        if (start, end) in seen_spans:
+            continue
+        seen_spans.add((start, end))
         quals.extend(
             _qualifiers.extract(document, sentence, start_char=start, end_char=end)
         )

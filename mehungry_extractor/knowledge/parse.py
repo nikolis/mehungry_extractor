@@ -349,6 +349,35 @@ class SentenceParse:
             node = gov
         return []
 
+    def controller_conditions(self, verb) -> list:
+        """Condition prep-phrases on the governing clause of a subject-controlled predicate (B1).
+
+        When a predicate elides its subject and inherits it from a controller
+        (:meth:`controller_tokens`) — *"the Mediterranean diet has been shown **in patients with
+        active disease** to reduce disease activity"* — the condition scoping the governing
+        assertion scopes the controlled relation too, yet it hangs off the *governing* verb
+        (``shown``), not the controlled one (``reduce``). :meth:`condition_tokens` therefore finds
+        nothing on the controlled verb and the condition is lost. This climbs the *same* bounded
+        ``head`` chain :meth:`controller_tokens` uses and returns the condition tokens of the first
+        governor that exposes the controller's subject/object arguments, so the caller can attach
+        them as qualifiers on the controlled relation. Empty when no governing argument is found —
+        it mirrors the controller climb exactly, so conditions are inherited only along the same
+        path the subject was."""
+        node = verb
+        for _ in range(6):  # bounded climb, mirrors controller_tokens
+            gov = node.head
+            if gov.i == node.i:
+                break
+            has_subject = any(
+                c.dep_ in _SUBJECT_DEPS and not self._is_relative_pronoun(c)
+                for c in gov.children
+            )
+            has_object = any(c.dep_ in _OBJECT_DEPS and c.i != node.i for c in gov.children)
+            if has_subject or has_object:
+                return self.condition_tokens(gov)
+            node = gov
+        return []
+
     def _is_relative_clause(self, verb) -> bool:
         return verb.dep_.split(":")[0] in {"acl", "relcl"}
 

@@ -578,7 +578,15 @@ adjacency:
 - **Prepositional-phrase modifiers** introduced by a condition preposition (`during`/`in`/`under` —
   *not* the connective tails `with`/`of`) fall out as **qualifier conditions** (Concept 14), not
   objects. So "during remission" becomes a `disease_state` qualifier on the relation rather than its
-  object.
+  object. A condition is read not only off the predicate that emits the relation but off the
+  **governing clause of a control predicate**: in *"the Mediterranean diet has been shown **in
+  patients with active disease** to reduce disease activity"*, the relation is stated on the
+  controlled `reduce` (an `xcomp`) while the condition hangs off the governing `shown`. Just as the
+  controlled predicate **inherits its subject** from that governor (below), it inherits the
+  governor's conditions — climbed along the *same* bounded `head` chain the subject came from — so
+  the condition is attached to the relation rather than lost on the non-emitting governing verb.
+  This is deliberately scoped to the control case: a predicate with its own overt subject never
+  inherits a governor's condition.
 - An entity that is only an `amod`/`compound` modifier of the object noun (the "reduced disease"
   inside "activity") is bound as the object *via the noun that dominates it*, so a denser tag no
   longer fragments the pair.
@@ -709,10 +717,15 @@ The regex flat binder is kept verbatim as the deterministic, model-free **`use_m
 acceptable because every bound argument still reconstructs from its mention's offsets; a parse-bound
 observation records `binder:parse` on `context` so a reader can see *how* it was bound, and a
 sentence whose predicate the parse does not recognise falls back rather than losing the relation. **A deliberate semantics
-change rides along:** the motivating fixture is now read as `dietary_fiber —associated_with→ disease
-activity` *qualified by* `disease_state=remission`, not the flat binder's lucky `fiber → remission`
-object — so on the model path that sentence yields no normalized claim (the disease-activity object
-does not resolve), while the floor still binds the historical claim.
+change rides along:** the motivating fixture is read as `dietary_fiber —associated_with_reduced→ disease
+activity` *qualified by* `disease_state=remission`, not the flat binder's old lucky `fiber → remission`
+object. Once *disease activity* became a curated outcome concept (`OUT:disease_activity`; see
+Concept 5/6 — coverage as a data problem), **both** binders read this sentence the same correct way:
+the parse binds the disease-activity endpoint from structure, and the floor — with the true endpoint
+now a resolvable concept sitting between subject and the trailing `during remission` condition —
+pairs it too. The "lucky" `fiber → remission` object only ever arose because the real endpoint was
+not in the vocabulary, leaving `remission` as the nearest noun to grab; with the endpoint named, the
+adjacency artifact disappears and `remission` is correctly a condition, not the object.
 
 **Other alternatives / extension points.**
 - **Statistical or embedding-based relation extraction** would catch relations no hand-written
@@ -1105,6 +1118,16 @@ unrecognized cue is kept `unmatched` with its span, never dropped. Each qualifie
 into one contradictory claim about fiber. The qualifier is what keeps them distinct — and it does so
 by **widening the claim key** to include qualifiers, so conditional statements group separately.
 That's the whole point of the layer: same discipline (versioned regex cues, provenance), new slot.
+
+**Where the condition is read.** A condition cue is matched over the relation's span, but on the
+parse path "the relation's span" includes the **governing clause of a control predicate**, not just
+the verb that emits. When a controlled predicate inherits its subject from a governor (e.g. `reduce`
+under *"…has been shown **in patients with active disease** to reduce…"*), it inherits that
+governor's conditions along the same climb (see the parse binder under "Relations") — otherwise the
+condition, which hangs off the non-emitting governing verb, would be silently lost. The disease-state
+cue vocabulary also matches regular plurals of its heads (*"active **diseases**"* → `active disease`),
+mirroring the plural handling elsewhere, so a pluralized condition is neither missed nor left
+`unmatched` when its singular is in the vocabulary.
 
 **History — the retired `manifestation` type.** A descriptive relation's abstract object phrase
 (*"characterized by **alterations in the composition and function of** the gut microbiota"*) was once

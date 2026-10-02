@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "vocabulary": "mehungry_disease_states",
   "disease_states": [
     {
@@ -21,6 +21,7 @@
       "entity_type": "disease_state",
       "surface_forms": [
         "active disease",
+        "active diseases",
         "active inflammation",
         "clinically active",
         "active flare",

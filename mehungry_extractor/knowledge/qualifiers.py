@@ -128,7 +128,7 @@ def _unnormalized(_core: str) -> None:
 
 
 _ADJ = r"active|acute|clinical|chronic|inactive|severe|mild|moderate|quiescent"
-_HEAD = r"flare-ups?|flareups?|flares?|remission|relapse|quiescence|inflammation|disease"
+_HEAD = r"flare-ups?|flareups?|flares?|remission|relapse|quiescence|inflammation|diseases?"
 
 DISEASE_STATE_CONTEXT_RULE = "qual_disease_state_context"
 DISEASE_STATE_ADJECTIVE_RULE = "qual_disease_state_adjective"

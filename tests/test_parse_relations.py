@@ -65,6 +65,41 @@ def test_prep_phrase_condition_becomes_qualifier_not_object():
     assert "binder:parse" in (o.context or "")
 
 
+def test_controlled_predicate_inherits_governing_clause_condition():
+    """*"…, the Mediterranean diet has been shown **in patients with active diseases** to reduce
+    disease activity and markers of inflammation, such as fecal calprotectin and C-reactive
+    protein (CRP)."*
+
+    Three things the engine used to get wrong, now asserted together:
+
+    * **A1** — *disease activity* is a curated outcome concept, so it binds as a *normalized*
+      endpoint (``OUT:disease_activity``) instead of collapsing into the ``inflammation`` entity
+      buried deeper in the same object phrase.
+    * **B1** — ``reduce`` is a control (``xcomp``) predicate that inherits its subject from the
+      governing ``shown``; the condition *"in patients with active diseases"* hangs off that
+      governor, and is inherited onto every controlled relation rather than being lost.
+    * **B2** — the plural *"active diseases"* normalizes to ``DS:active_disease``.
+    """
+    doc, observations = _obs(
+        "Additionally, in patients with active diseases, the Mediterranean diet has been shown "
+        "to reduce disease activity and markers of inflammation, such as fecal calprotectin and "
+        "C-reactive protein (CRP)."
+    )
+    assert observations, "expected the controlled 'reduce' relation to bind"
+    # Every bound relation is Mediterranean diet → decreases → <endpoint>, under the inherited
+    # disease-state condition.
+    assert all(o.subject_concept_id == "INT:mediterranean_diet" for o in observations)
+    assert all(o.predicate == "decreases" for o in observations)
+    objects = {o.object_concept_id for o in observations}
+    # A1: the important clinical endpoint is captured as a normalized concept.
+    assert "OUT:disease_activity" in objects
+    # B1 + B2: the governing-clause condition is inherited and normalized on every relation.
+    for o in observations:
+        quals = {(q.qualifier_type, q.value_concept_id) for q in o.qualifiers}
+        assert ("disease_state", "DS:active_disease") in quals, o.qualifiers
+        assert "binder:parse" in (o.context or "")
+
+
 # --- coordination cross-product ------------------------------------------------------
 
 

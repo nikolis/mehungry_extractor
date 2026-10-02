@@ -162,11 +162,13 @@ def test_determinism_two_runs_identical():
 
 
 # These integration tests exercise persistence/query/audit machinery, which is binder-independent.
-# They run on the deterministic ``use_model=False`` floor: Phase 10's parse binder reads the
-# fixture's "…associated with reduced disease activity during remission" as an association to the
-# (unnormalized) disease-activity object with remission as a disease_state qualifier — a *more*
-# correct reading that yields no normalized claim for this sentence — whereas the flat floor still
-# binds the fiber→remission claim these tests assert against.
+# They run on the deterministic ``use_model=False`` floor over the fixture's
+# "…associated with reduced disease activity during remission". Now that *disease activity* is a
+# curated outcome concept (``OUT:disease_activity``), **both** binders read this sentence the same,
+# correct way: ``dietary_fiber —associated_with_reduced→ disease_activity`` qualified by
+# ``disease_state=remission``. (Before that vocabulary entry the floor could only pair the two
+# remaining mentions and produced the "lucky" ``fiber→remission`` object — the adjacency artifact
+# Concept 7 calls out; *remission* is correctly a condition here, not the endpoint.)
 def _seed(tmp_path, pubmed_xml, pmc_xml):
     store = CorpusStore(tmp_path)
     store.save_raw("12345678", {"pubmed.xml": pubmed_xml, "pmc.xml": pmc_xml})
@@ -181,9 +183,10 @@ def test_extract_persists_claims_and_find_claims(tmp_path, pubmed_xml, pmc_xml):
 
     claims = list_claims_for_document(engine, "12345678")
     assert claims
-    # The fixture's Results sentence links dietary fiber and remission.
+    # The fixture's Results sentence links dietary fiber to reduced disease activity (with
+    # remission as the condition it holds under — see the note above).
     hit = [c for c in claims if c["subject_concept_id"] == "NUTR:dietary_fiber"
-           and c["object_concept_id"] == "OUT:remission"]
+           and c["object_concept_id"] == "OUT:disease_activity"]
     assert hit, claims
 
     # find_claims filters deterministically and accepts id or canonical name.

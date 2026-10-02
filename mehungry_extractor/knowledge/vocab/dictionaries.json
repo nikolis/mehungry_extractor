@@ -1,5 +1,5 @@
 {
-  "version": "0.5.0",
+  "version": "0.5.1",
   "vocabulary": "mehungry_curated",
   "concepts": [
     {
@@ -1189,6 +1189,12 @@
       "canonical_name": "Glycemic control",
       "entity_type": "outcome",
       "surface_forms": ["glycemic control", "glycaemic control"]
+    },
+    {
+      "concept_id": "OUT:disease_activity",
+      "canonical_name": "Disease activity",
+      "entity_type": "outcome",
+      "surface_forms": ["disease activity", "disease activity index", "clinical disease activity", "inflammatory activity"]
     },
     {
       "concept_id": "INT:mediterranean_diet",
