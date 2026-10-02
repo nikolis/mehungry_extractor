@@ -413,6 +413,30 @@ vocabulary* (`knowledge/vocab/`; coverage as a data problem) and *adding a local
 resolver* that proposes matches the dictionary missed, each match kept only with its span and a
 recorded score. A truly ambiguous surface is still marked `ambiguous` rather than guessed.
 
+**The writable overlay — editing the recognisable-entity list at runtime.** Coverage is a data
+problem, so the vocabulary is editable *without* editing the checked-in file. The bundled
+`dictionaries.json` stays the pristine, version-controlled baseline; a separate **overlay** file
+(default `data/vocab_overlay.json`, beside the corpus/DB) records a user's edits and is **merged**
+into `load_concepts()`:
+- an overlay concept whose `concept_id` matches a built-in one **replaces** it (this is how a
+  built-in's surface forms are edited);
+- a `concept_id` not in the built-in set is a **net-new** concept;
+- an id in the overlay's `removed` list is **hidden** (a built-in can be masked without deleting it
+  from the baseline).
+
+The merge is the single source of truth for both the normalization index and the surface-form
+matcher regex, so an edit takes effect for the **next extraction** once those caches are
+invalidated (`entities.reload_vocabulary()`); papers already extracted are not reprocessed. Two
+rules keep this honest. First, the baseline is never mutated — remove/edit only ever write the
+overlay, so the reproducible core is always recoverable by deleting the overlay. Second, an edited
+vocabulary is **never silent**: `overlay_digest()` is a content hash of the overlay, and it is
+recorded in every `ExtractionRun`'s `ontology_versions` (as `mehungry_curated_overlay`) whenever the
+overlay is non-empty — so a result produced under a customized vocabulary is distinguishable from
+one produced against the pristine baseline, and the determinism story (Concept 4) still holds
+*relative to a stated vocabulary state*. This is the model behind the `/vocab` REST surface and the
+Observer UI's **Vocabulary** panel, which list every recognisable concept and let a user add, edit,
+or remove them.
+
 **In the code** — `knowledge/normalize.py`
 
 ```python
@@ -589,7 +613,19 @@ adjacency:
   inherits a governor's condition.
 - An entity that is only an `amod`/`compound` modifier of the object noun (the "reduced disease"
   inside "activity") is bound as the object *via the noun that dominates it*, so a denser tag no
-  longer fragments the pair.
+  longer fragments the pair. But that descent is **attributive-only** (`amod`/`compound`/`nummod`):
+  it must *not* reach across a coordinated sibling (`conj` — a separate object token, enumerated on
+  its own) or into a prepositional/appositive complement (`of …`, `such as …`) to grab a
+  *different* entity. When an object head is itself a non-entity and the only entity reachable lies
+  across such an arc — "reduce **symptom burden** and inflammation", where descending would bind the
+  coordinated *inflammation* to *burden* and silently lose *symptom burden* — the head-noun phrase is
+  kept verbatim as a **free-text (`unmatched`, no `concept_id`) object** instead of mis-binding. This
+  is the same honest discipline Phase 15 applies to a descriptive object (Concept 20) and that
+  Concept 3 demands everywhere: retain the span and its provenance, but form no concept-level claim
+  from a phrase the vocabulary cannot name, rather than fabricate a wrong one. It fires only to
+  *replace a would-be wrong binding*; an object head that dominates no entity at all stays unbound,
+  so it adds no free-text noise. (Naming the endpoint in the vocabulary — e.g. `disease activity` as
+  an outcome concept, Concept 5/6 — remains the way to turn such a phrase into a real claim.)
 - A **measure/container noun** (`intake`, `consumption`, `concentration`, `level`, `abundance`, … —
   and `risk`) is not itself the endpoint; the relation is about the entities inside its **content
   genitive**. So "reduce the intake **of red meat and processed meat**" unwraps to *both* foods
@@ -858,6 +894,14 @@ Crucially, claim-building is a **pure function of observations**: it introduces 
 only groups existing evidence. Observations that can't become claims (an unmatched endpoint) are
 *counted and reported* (`dropped`), never silently swallowed — the system tells you what it saw but
 couldn't concept-ify.
+
+**Which layer the batch surface returns.** The batch REST entry point (`/analyze`) returns the
+**claim** layer per paper — the concept-keyed, comparable-across-papers assertions, each still
+carrying the deduplicated union of its observations' source spans. That is the right default for a
+consumer asking "what does this paper assert?": it is already de-duplicated and concept-normalized,
+yet one step below cross-paper synthesis so each paper stays individually inspectable. The
+finer-grained observation layer is not lost — it is exposed per paper on the observe surface
+(`/observe/observations/{pmid}`) for anyone who needs the raw, never-dropped audit view.
 
 **Alternatives / extension points.** A single flat layer would be simpler but would force a choice
 between fidelity and comparability; splitting them keeps both. Extension: the claim key is exactly

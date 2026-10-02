@@ -37,6 +37,7 @@ from .. import (
 from .. import cohesion as _cohesion
 from .. import entities as _entities
 from .. import valence as _valence
+from .. import vocab as _vocab
 from ..corpus import CorpusStore
 from ..db import get_engine, init_db, session_scope
 from ..db.schema import (
@@ -49,8 +50,9 @@ from ..db.schema import (
 )
 from ..ids import document_id, normalize_pmid
 from ..query import (
+    list_claim_evidence_for_document,
+    list_claims_for_document,
     list_entities_for_document,
-    list_observations_for_document,
     list_open_observations_for_document,
 )
 from ..run import build_run
@@ -65,16 +67,16 @@ from ..vocab import (
 from .models import (
     AnalyzeOptions,
     AnalyzeResponse,
+    ClaimDetail,
+    ClaimEvidenceModel,
     CoreConcept,
     EntityModifierModel,
-    ObservationDetail,
-    ObservationEvidenceModel,
     OpenRelationDetail,
     OpenRelationEntityModel,
     OpenRelationEvidenceModel,
     OpenRelationResponse,
     OutlierReport,
-    PaperObservations,
+    PaperClaims,
     PaperOpenRelations,
     QualifierModel,
     PaperReport,
@@ -211,6 +213,11 @@ def _run_info(use_model: bool, *, extra_ontology: Optional[dict] = None) -> RunI
         "mehungry_countries": COUNTRIES_VERSION,
         "mehungry_food_sources": FOOD_SOURCES_VERSION,
     }
+    # When the entity vocabulary has been customized through the /vocab overlay, record its content
+    # digest so a result produced under edits is distinguishable from the pristine baseline.
+    overlay = _vocab.overlay_digest()
+    if overlay:
+        ontology["mehungry_curated_overlay"] = overlay
     model_available = _entities.model_available()
     if use_model and model_available:
         ontology[_entities._SCISPACY_MODEL] = _entities._model_version()
@@ -577,84 +584,71 @@ def _synthesize(
         min_core_papers=result.min_core_papers,
     )
 
-    # ---- PER-PAPER OBSERVATIONS --------------------------------------------------------
-    # The raw, un-synthesized layer: for each successfully-extracted paper (in request order),
-    # every rule-detected observation with all of its detail. Read the observation rows once per
-    # paper, then resolve the endpoint concept ids to canonical names in ONE batched lookup so we
-    # never issue an N+1 over the concept table.
-    obs_by_pmid: dict[str, list[dict]] = {}
-    obs_concept_ids: set[str] = set()
+    # ---- PER-PAPER CLAIMS --------------------------------------------------------------
+    # The normalized concept layer (Concept 9): for each successfully-extracted paper (in request
+    # order), every claim folded from its observations, with all of its detail. Claim rows already
+    # carry their canonical subject/object names, so no concept-name lookup is needed; each claim's
+    # evidence (the deduplicated union of its observations' spans) is read in ONE batched pass per
+    # paper via ``list_claim_evidence_for_document`` so we never issue an N+1 over ``find_evidence``.
+    paper_claims: list[PaperClaims] = []
     for pmid in requested:
         if pmid in errors:
-            continue  # a failed paper has no observations.
-        obs = list_observations_for_document(engine, doc_of_pmid[pmid])
-        obs_by_pmid[pmid] = obs
-        for o in obs:
-            if o["subject_concept_id"]:
-                obs_concept_ids.add(o["subject_concept_id"])
-            if o["object_concept_id"]:
-                obs_concept_ids.add(o["object_concept_id"])
-    obs_names = _concept_names(engine, sorted(obs_concept_ids))
-
-    paper_observations: list[PaperObservations] = []
-    for pmid in requested:
-        if pmid in errors:
-            continue
+            continue  # a failed paper has no claims.
         doc_id = doc_of_pmid[pmid]
+        evidence_by_claim = list_claim_evidence_for_document(engine, doc_id)
         details = [
-            ObservationDetail(
-                observation_id=o["observation_id"],
-                parent_observation_id=o.get("parent_observation_id"),
-                subject_text=o["subject_text"],
-                subject_concept_id=o["subject_concept_id"],
-                subject_name=(_subj_name := obs_names.get(o["subject_concept_id"]) if o["subject_concept_id"] else None),
-                subject_modifiers=_modifier_models(o["subject_modifiers"]),
-                subject_label=_endpoint_label(_subj_name or o["subject_text"], o["subject_modifiers"]),
-                predicate=o["predicate"],
-                object_text=o["object_text"],
-                object_concept_id=o["object_concept_id"],
-                object_name=(_obj_name := obs_names.get(o["object_concept_id"]) if o["object_concept_id"] else None),
-                object_modifiers=_modifier_models(o["object_modifiers"]),
-                object_label=_endpoint_label(_obj_name or o["object_text"], o["object_modifiers"]),
-                polarity=o["polarity"],
-                certainty=o["certainty"],
-                context=o["context"],
-                sentence_id=o["sentence_id"],
-                rule_id=o["rule_id"],
-                rule_version=o["rule_version"],
+            ClaimDetail(
+                claim_id=c["claim_id"],
+                parent_claim_id=c.get("parent_claim_id"),
+                subject_concept_id=c["subject_concept_id"],
+                subject_name=c["subject_name"],
+                subject_modifiers=_modifier_models(c["subject_modifiers"]),
+                subject_label=_endpoint_label(c["subject_name"] or c["subject_concept_id"], c["subject_modifiers"]),
+                predicate=c["predicate"],
+                object_concept_id=c["object_concept_id"],
+                object_name=c["object_name"],
+                object_modifiers=_modifier_models(c["object_modifiers"]),
+                object_label=_endpoint_label(c["object_name"] or c["object_concept_id"], c["object_modifiers"]),
+                polarity=c["polarity"],
+                certainty=c["certainty"],
+                context=c["context"],
                 qualifiers=[
                     QualifierModel(
                         qualifier_type=q["qualifier_type"],
                         value_concept_id=q.get("value_concept_id"),
                         value_text=q.get("value_text"),
                     )
-                    for q in o["qualifiers"]
+                    for q in c["qualifiers"]
                 ],
                 evidence=[
-                    ObservationEvidenceModel(
+                    ClaimEvidenceModel(
                         document_id=e.get("document_id", doc_id),
+                        claim_id=e.get("claim_id", c["claim_id"]),
                         section_id=e.get("section_id"),
                         paragraph_id=e.get("paragraph_id"),
                         sentence_id=e.get("sentence_id"),
                         start_char=e.get("start_char"),
                         end_char=e.get("end_char"),
                         quoted_text=e.get("quoted_text"),
+                        reconstructed_text=e.get("reconstructed_text"),
                         precision=e.get("precision", "SENTENCE"),
-                        extraction_rule=e.get("extraction_rule", o["rule_id"]),
-                        extraction_rule_version=e.get("extraction_rule_version", o["rule_version"]),
+                        extraction_rule=e.get("extraction_rule", ""),
+                        extraction_rule_version=e.get("extraction_rule_version", ""),
+                        extractor_version=e.get("extractor_version"),
                     )
-                    for e in o["evidence_refs"]
+                    for e in evidence_by_claim.get(c["claim_id"], [])
                 ],
             )
-            for o in obs_by_pmid.get(pmid, [])
+            for c in list_claims_for_document(engine, doc_id)
         ]
-        paper_observations.append(
-            PaperObservations(
+        paper_claims.append(
+            PaperClaims(
                 pmid=pmid,
                 document_id=doc_id,
                 paper_title=facts.get(doc_id, {}).get("title"),
                 paper_url=_paper_url(pmid),
-                observations_list=details,
+                source_type=facts.get(doc_id, {}).get("source_type"),
+                claims_list=details,
             )
         )
 
@@ -681,7 +675,7 @@ def _synthesize(
         papers=papers,  # per-paper reports (includes errors + outliers).
         topic=topic,  # the detected topic core, named.
         outliers=outliers,  # off-topic papers with reasons.
-        paper_observations=paper_observations,  # per-paper raw observations + provenance.
+        paper_claims=paper_claims,  # per-paper normalized claims + provenance.
         warnings=warnings,  # de-duplicated notes.
     )
 

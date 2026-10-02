@@ -72,6 +72,17 @@ def _index() -> dict[str, list[EntityConcept]]:
     return index
 
 
+def invalidate_caches() -> None:
+    """Drop the surface-form index / id map so they rebuild from the current vocabulary.
+
+    Called after the writable vocabulary overlay changes (see :func:`vocab.save_overlay`), so edits
+    take effect for subsequent normalization without restarting the process.
+    """
+    _index.cache_clear()
+    _by_id.cache_clear()
+    surface_forms.cache_clear()
+
+
 @functools.lru_cache(maxsize=1)
 def _by_id() -> dict[str, EntityConcept]:
     """concept_id → concept, for resolving a mention's link back to full concept attributes."""

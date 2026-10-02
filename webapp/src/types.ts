@@ -200,6 +200,24 @@ export interface StageRunResult {
   [k: string]: unknown;
 }
 
+// Entity vocabulary management (/vocab) — the list of recognisable concepts and its edits.
+export interface Concept {
+  concept_id: string;
+  canonical_name: string;
+  entity_type: string;
+  surface_forms: string[];
+}
+export interface ConceptRecord extends Concept {
+  origin: "builtin" | "overridden" | "custom";
+}
+export interface VocabResponse {
+  vocabulary: string;
+  version: string;
+  overlay_digest: string | null;
+  entity_types: string[];
+  concepts: ConceptRecord[];
+}
+
 // Sentence deconstruction (entities → observations sub-pipeline)
 export interface ParseToken {
   i: number;

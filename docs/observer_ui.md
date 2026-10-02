@@ -24,6 +24,9 @@ The app has two modes that share the same screens:
 - **Observe cached** — pick any already-processed paper from the corpus/DB and browse its persisted
   stage outputs without running anything.
 
+Most tabs are **per-paper**. Two are **global** (not tied to the selected PMID): **Batch synthesis**
+and **Vocabulary**.
+
 | UI tab | Pipeline stage(s) | Engine concept(s) | Source |
 |---|---|---|---|
 | **Canonical** | Acquisition → canonical document (one offset-addressable text) | 1, 2 | `query.get_document` / `corpus.read_canonical` |
@@ -34,6 +37,21 @@ The app has two modes that share the same screens:
 | **Facts & assessment** | Study / funding / affiliations / assessments | 10, 11 | read directly in `observe.get_facts` |
 | **Open relations** | Phase 11 relation-bearing spans (opt-in sandbox) | 18 | `query.list_open_observations_for_document` |
 | **Batch synthesis** | Cohesion + cross-paper synthesis | 12, 13, 16, 17 | `service.analyze_batch` + `synthesis.synthesize` |
+| **Vocabulary** | The recognisable-entity list + add/edit/remove | 5 (writable overlay) | `/vocab/*` → `api/vocab.py` → `vocab` overlay |
+
+### The Vocabulary tab (global, read **and** write)
+
+Unlike every other tab, this one **mutates** engine state rather than observing it. It lists every
+concept the entity recognizer can match — `concept_id`, `canonical_name`, `entity_type`,
+`surface_forms`, and an `origin` tag (`builtin` / `overridden` / `custom`) — with search and an
+entity-type filter. A form adds a new concept or edits an existing one's surface forms (PUT), and
+each row has **Edit** / **Remove** actions. A header badge shows whether the vocabulary is
+`pristine` or `customized · <overlay_digest>`.
+
+Edits persist to the writable overlay on top of the checked-in vocabulary and take effect for the
+**next extraction** (already-extracted papers are not reprocessed) — so a typical loop is *edit the
+vocabulary → re-run Analyze/Extract on a paper → see the new concept recognised in the Entities
+tab*. This is the concept behind it; see `docs/concepts.md` (Concept 5, "The writable overlay").
 
 ---
 
@@ -193,8 +211,8 @@ webapp/
   src/
     main.tsx            # React root
     styles.css          # all styling (hand-written; light/neutral theme)
-    types.ts            # TypeScript shapes for every /observe/* payload
-    api.ts              # typed fetch client over /observe/*
+    types.ts            # TypeScript shapes for every /observe/* and /vocab payload
+    api.ts              # typed fetch client over /observe/* and /vocab/*
     App.tsx             # shell: sidebar (PMID input, run controls, cached picker, run log) + tabs
     components/
       ui.tsx            # useAsync hook, AsyncView, Tag, Count
@@ -205,7 +223,8 @@ webapp/
       ClaimsPanel.tsx        # claims table + provenance drawer
       FactsPanel.tsx         # study/funding/affiliations/assessments
       OpenRelationsPanel.tsx # Phase 11 spans
-      BatchPanel.tsx         # cohesion + synthesis over many PMIDs
+      BatchPanel.tsx         # cohesion + synthesis over many PMIDs (global, not per-paper)
+      VocabPanel.tsx         # vocabulary management: list + add/edit/remove (global, read+write)
 ```
 
 Conventions:

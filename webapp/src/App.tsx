@@ -9,8 +9,18 @@ import { EntitiesPanel } from "./components/EntitiesPanel";
 import { FactsPanel } from "./components/FactsPanel";
 import { ObservationsPanel } from "./components/ObservationsPanel";
 import { OpenRelationsPanel } from "./components/OpenRelationsPanel";
+import { VocabPanel } from "./components/VocabPanel";
 
-type Tab = "canonical" | "entities" | "deconstruct" | "observations" | "claims" | "facts" | "openrel" | "batch";
+type Tab =
+  | "canonical"
+  | "entities"
+  | "deconstruct"
+  | "observations"
+  | "claims"
+  | "facts"
+  | "openrel"
+  | "batch"
+  | "vocab";
 const PAPER_TABS: { id: Tab; label: string }[] = [
   { id: "canonical", label: "Canonical" },
   { id: "entities", label: "Entities" },
@@ -189,11 +199,16 @@ export function App() {
           <button className={`batch-tab ${tab === "batch" ? "active" : ""}`} onClick={() => setTab("batch")}>
             Batch synthesis
           </button>
+          <button className={`batch-tab ${tab === "vocab" ? "active" : ""}`} onClick={() => setTab("vocab")}>
+            Vocabulary
+          </button>
         </nav>
 
         <section className="panel">
           {tab === "batch" ? (
             <BatchPanel initialPmids={activePmid ? [activePmid] : []} />
+          ) : tab === "vocab" ? (
+            <VocabPanel />
           ) : !activePmid ? (
             <div className="muted pad">
               Enter a PMID and run a stage, or pick a cached paper on the left.

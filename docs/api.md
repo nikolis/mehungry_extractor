@@ -1,9 +1,9 @@
 # Batch PMID Analysis API
 
 A small REST service that takes a batch of PubMed IDs (1–200, usually about one topic) and
-returns the **raw per-paper observations** extracted from them. It runs on top of the offline
-evidence engine (`mehungry_extractor/knowledge/`): **no online integrations** — every observation
-traces back to an exact source sentence and pipeline version. The engine is deterministic today (so
+returns the **per-paper claims** extracted from them — the normalized, concept-level layer. It runs
+on top of the offline evidence engine (`mehungry_extractor/knowledge/`): **no online integrations** —
+every claim traces back to an exact source sentence and pipeline version. The engine is deterministic today (so
 identical input + engine versions currently produce the same response), but determinism is no longer
 a requirement — local non-deterministic techniques are allowed as long as provenance is preserved.
 
@@ -12,14 +12,17 @@ What it does with a batch:
 1. **Ingests** each PMID (fetches from PubMed/PMC and caches it, unless already cached). Ingestion
    applies a **topical title filter**: a paper whose title names no nutrition/diet keyword is
    excluded (see below), never cached, and never extracted.
-2. **Extracts** entities → observations → study/funding facts through the existing pipeline.
+2. **Extracts** entities → observations → claims → study/funding facts through the existing pipeline.
 3. **Detects off-topic outliers** deterministically (by shared-concept overlap) and **reports**
-   them — they are flagged, but their observations are still returned, never silently dropped.
-4. **Returns**, per paper, every rule-detected observation with its full detail and source span.
+   them — they are flagged, but their claims are still returned, never silently dropped.
+4. **Returns**, per paper, every normalized claim with its full detail and source spans.
 
-> **Note:** `/analyze` returns the *observation* layer only. Cross-paper synthesis (`conclusions` /
-> `derived_conclusions` / `facts`) is computed by the engine but is not part of *its* response — it is
-> surfaced by the observation endpoint [`POST /observe/synthesize`](#observe-surface--inspect-the-output-of-every-pipeline-stage).
+> **Note:** `/analyze` returns the *claim* layer (the normalized concept layer). The finer-grained
+> *observation* layer beneath it is available per paper at
+> [`GET /observe/observations/{pmid}`](#observe-surface--inspect-the-output-of-every-pipeline-stage).
+> Cross-paper synthesis (`conclusions` / `derived_conclusions` / `facts`) is computed by the engine
+> but is not part of *this* response — it is surfaced by
+> [`POST /observe/synthesize`](#observe-surface--inspect-the-output-of-every-pipeline-stage).
 
 ---
 
@@ -96,7 +99,7 @@ entity recall; the engine works deterministically without it).
 
 ### `POST /analyze`
 
-Analyze a batch of PMIDs and return the per-paper observations.
+Analyze a batch of PMIDs and return the per-paper claims.
 
 #### Request body
 
@@ -135,7 +138,7 @@ Top-level shape:
 | `papers` | `object[]` | Per-paper outcome + facts (**every** requested paper, incl. outliers/errors). |
 | `topic` | `object` | The detected shared topic core + the detection settings used. |
 | `outliers` | `object[]` | Papers flagged as off-topic, with the reason. |
-| `paper_observations` | `object[]` | Per paper, the raw observations extracted from it (see below). |
+| `paper_claims` | `object[]` | Per paper, the normalized claims extracted from it (see below). |
 | `warnings` | `string[]` | Human-readable notes (abstract-only papers, empty topic core, failures, …). |
 
 **`run`**
@@ -171,7 +174,7 @@ model_available, ontology_versions
 **`outliers[]`**: `{ pmid, document_id, reason, cohesion_score, missing_core_concepts }`.
 `reason` is `off_topic` (below the threshold) or `no_extractable_concepts` (nothing to score).
 
-**`paper_observations[]`** — one entry per successfully-extracted paper (in request order;
+**`paper_claims[]`** — one entry per successfully-extracted paper (in request order;
 outliers are included, papers that failed to ingest/extract are omitted here but still reported
 under `papers` with `status: "error"`):
 
@@ -180,27 +183,28 @@ under `papers` with `status: "error"`):
 | `pmid`, `document_id` | `string` | Input PMID and its canonical document id. |
 | `paper_title` | `string`/`null` | The paper's title. |
 | `paper_url` | `string` | Public PubMed URL, `https://pubmed.ncbi.nlm.nih.gov/<pmid>/`. |
-| `observations_list` | `object[]` | Every rule-detected observation in the paper (may be empty). |
+| `source_type` | `string`/`null` | What text the claims were extracted from: `open_access` (full text), `abstract` (abstract only), or `none`. |
+| `claims_list` | `object[]` | Every normalized claim in the paper (may be empty). |
 
-Each **observation** carries the relation plus every detail around it:
+Each **claim** is the concept-level fold of the observations that agree on its canonical key, plus
+every detail around it. A claim only forms when **both** endpoints normalized to a concept, so
+unlike the observation layer there is no surface-text/unresolved-endpoint case here; the finer
+observation layer is available at [`GET /observe/observations/{pmid}`](#observe-surface--inspect-the-output-of-every-pipeline-stage).
 
 | Field | Type | Description |
 |---|---|---|
-| `observation_id` | `string` | Deterministic id (subject/object spans + predicate). |
-| `parent_observation_id` | `string`/`null` | **Hierarchical relations** — the observation this one is nested beneath (the relation whose *object* is this relation's *subject*, within the same sentence), or `null` for a top-level relation. E.g. `dysbiosis → characterized_by → "alterations in the composition and function of the gut microbiota"` points at `inflammation → causes → dysbiosis`. Not part of `observation_id`, so ids are stable across this addition. |
-| `subject_text`, `object_text` | `string` | The exact surface text of each endpoint. |
-| `subject_concept_id`, `object_concept_id` | `string`/`null` | Normalized concept ids; `null` when the mention didn't normalize (the observation is still returned). |
+| `claim_id` | `string` | Deterministic id (a hash of the canonical key: subject/object concept + predicate + polarity + certainty + qualifier signature). |
+| `parent_claim_id` | `string`/`null` | **Hierarchical relations** — the claim this one is nested beneath (the claim whose *object* concept is this claim's *subject*), or `null` for a top-level claim. Set only when unambiguous across the claim's observations. Not part of `claim_id`, so ids are stable across this addition. |
+| `subject_concept_id`, `object_concept_id` | `string` | The normalized concept ids of each endpoint (always present — a claim requires both). |
 | `subject_name`, `object_name` | `string`/`null` | Canonical names of the resolved concepts. |
-| `subject_modifiers`, `object_modifiers` | `object[]` | Restrictive modifiers on each endpoint head (Concept 19): `{ relation, preposition, value_concept_id, value_text, value_type, status }`. `relation` is `localized_in`/`qualified_by`/…; e.g. `dysbiosis` carries `{ relation: "localized_in", preposition: "of", value_text: "gut microbiome", … }`. Empty when the head has none. |
-| `subject_label`, `object_label` | `string` | The endpoint rendered *with* its modifiers folded back in — so a bare `Dysbiosis` is served as `Dysbiosis of gut microbiome` and the collapsed display keeps the target the head resolves away. Falls back to the plain name/surface when there are no modifiers. |
-| `predicate` | `string` | The relation the rule assigned (e.g. `improves`). Includes the descriptive, clinically-neutral predicates `characterized_by` and `has_decreased_abundance_of`/`has_increased_abundance_of` (a state's manifestation, not an active effect). A `characterized_by` object is the whole descriptor phrase verbatim (e.g. `"alterations in the composition and function of the gut microbiota"`), so its `object_concept_id` is `null` when that phrase is not a vocabulary concept. |
-| `polarity` | `string` | `positive` or `negative` (negation flips the rule's base polarity). |
+| `subject_modifiers`, `object_modifiers` | `object[]` | Restrictive modifiers on each endpoint head (Concept 19), carried from the observation: `{ relation, preposition, value_concept_id, value_text, value_type, status }`. `relation` is `localized_in`/`qualified_by`/…; e.g. `dysbiosis` carries `{ relation: "localized_in", preposition: "of", value_text: "gut microbiome", … }`. Empty when the head has none. |
+| `subject_label`, `object_label` | `string` | The endpoint rendered *with* its modifiers folded back in — so a bare `Dysbiosis` is served as `Dysbiosis of gut microbiome` and the collapsed display keeps the target the head resolves away. Falls back to the plain name when there are no modifiers. |
+| `predicate` | `string` | The relation (e.g. `improves`). Includes the descriptive, clinically-neutral predicates `characterized_by` and `has_decreased_abundance_of`/`has_increased_abundance_of` (a state's manifestation, not an active effect). |
+| `polarity` | `string` | `positive` or `negative` (negation flips the base polarity). |
 | `certainty` | `string` | `asserted` or `hedged`. |
 | `context` | `string`/`null` | Negation/uncertainty cue + clause marker, for audit. |
-| `sentence_id` | `string`/`null` | The sentence the observation was matched in. |
-| `rule_id`, `rule_version` | `string` | The relation rule that fired. |
 | `qualifiers` | `object[]` | Clause-scoped typed conditions: `{ qualifier_type, value_concept_id, value_text }` (e.g. a `disease_state`). |
-| `evidence` | `object[]` | Source span(s): `{ document_id, section_id, paragraph_id, sentence_id, start_char, end_char, quoted_text, precision, extraction_rule, extraction_rule_version }`. `quoted_text` is re-sliced from the canonical text, so it is a verbatim source span. |
+| `evidence` | `object[]` | Source span(s) — the deduplicated **union** of the claim's observations' refs: `{ document_id, claim_id, section_id, paragraph_id, sentence_id, start_char, end_char, quoted_text, reconstructed_text, precision, extraction_rule, extraction_rule_version, extractor_version }`. `reconstructed_text` is re-sliced from the canonical text, so it should equal `quoted_text` verbatim (a self-verifying span). |
 
 #### Error responses
 
@@ -214,7 +218,7 @@ the rest of the batch is still analyzed.
 
 A paper **excluded by the topical title filter** (its title matches none of the nutrition/diet
 keywords) is handled the same way: it contributes **no** results — it is absent from
-`paper_observations` and `included_pmids` — while still being reported per-paper with
+`paper_claims` and `included_pmids` — while still being reported per-paper with
 `status: "error"`, an `error` of `TitleFiltered: …`, and a `warnings` note of the form
 `<doc_id>: excluded by title filter (<title>).`. The barrier is applied to **every** paper in the
 response, **including cache hits**: a paper already in the corpus is re-screened by its archived
@@ -351,10 +355,71 @@ engine behavior and persists nothing.
 ### Web UI
 
 A single-page app under [`webapp/`](../webapp) (Vite + React + TypeScript) consumes these routes to
-let you walk a PMID through every stage, drill into a claim's provenance, and run batch synthesis.
-Build it (`cd webapp && npm install && npm run build`) and `mehungry-api` serves it at
-**`http://127.0.0.1:8000/app/`**; or run it in dev with `npm run dev` (proxying to the API on
-`:8000`). See [`webapp/README.md`](../webapp/README.md).
+let you walk a PMID through every stage, drill into a claim's provenance, run batch synthesis, and
+manage the entity vocabulary. Build it (`cd webapp && npm install && npm run build`) and
+`mehungry-api` serves it at **`http://127.0.0.1:8000/app/`**; or run it in dev with `npm run dev`
+(proxying to the API on `:8000`). See [`webapp/README.md`](../webapp/README.md).
+
+---
+
+## Vocabulary surface — the recognisable entities, and editing them
+
+The `/vocab/*` routes expose the **entity vocabulary**: every concept the entity recognizer *can*
+match, and the ability to **add, edit, or remove** them. Unlike `/observe/*` (read-only), the write
+routes mutate state — a **writable overlay** layered on top of the checked-in vocabulary (the
+bundled `dictionaries.json` is never modified). An edit takes effect for the **next extraction** in
+the same process; papers already extracted are not reprocessed. The overlay file defaults to
+`data/vocab_overlay.json` and is relocatable with the `MEHUNGRY_VOCAB_OVERLAY` env var.
+
+A **concept** is `{ concept_id, canonical_name, entity_type, surface_forms[] }`:
+
+| Field | Type | Description |
+|---|---|---|
+| `concept_id` | `string` | `PREFIX:slug` (e.g. `NUTR:zinc`). Unique; the identity of the concept. |
+| `canonical_name` | `string` | Display name. |
+| `entity_type` | `string` | e.g. `nutrient` / `food` / `outcome` / `disease`. |
+| `surface_forms` | `string[]` | The case-insensitive strings that match this concept (≥1; de-duplicated). |
+
+When returned from the list endpoint each concept also carries an **`origin`**: `builtin`
+(checked-in, unedited), `overridden` (checked-in but edited via the overlay), or `custom` (added by
+the user).
+
+### `GET /vocab/concepts`
+
+List the effective vocabulary — every concept the recognizer can match right now.
+
+**200 response** (`VocabResponse`)
+
+| Field | Type | Description |
+|---|---|---|
+| `vocabulary` | `string` | The vocabulary name (`mehungry_curated`). |
+| `version` | `string` | The checked-in `VOCAB_VERSION`. |
+| `overlay_digest` | `string`/`null` | Content hash of the overlay, or `null` when pristine (no edits). Mirrors the `mehungry_curated_overlay` value recorded in each run's `ontology_versions`. |
+| `entity_types` | `string[]` | Distinct entity types across the effective vocabulary (for a type picker). |
+| `concepts` | `object[]` | Every effective concept (fields above) + its `origin`. |
+
+### `POST /vocab/concepts`
+
+Add a new concept. Body is a concept object (no `origin`). Returns the full `VocabResponse`
+(`201`). `409` if `concept_id` already exists; `422` on a malformed id or empty `surface_forms`.
+
+### `PUT /vocab/concepts/{concept_id}`
+
+Replace an existing concept's fields — this is how you **edit its surface forms**. The path id is
+authoritative and must equal the body's `concept_id` (`422` otherwise). Returns the updated
+`VocabResponse`; `404` if the id is not an effective concept.
+
+### `DELETE /vocab/concepts/{concept_id}`
+
+Remove a concept: a **built-in** is hidden (added to the overlay's `removed`), a **custom** one is
+dropped from the overlay outright. Either way it stops being recognised on the next extraction.
+Returns the updated `VocabResponse`; `404` if the id is not an effective concept.
+
+> **Provenance:** editing the vocabulary is never silent. While the overlay is non-empty, every
+> `/analyze` (and `/discover`, `/observe/synthesize`) response's `run.ontology_versions` carries a
+> `mehungry_curated_overlay` digest, so a result produced under a customized vocabulary is
+> distinguishable from one against the pristine baseline. Deleting the overlay file restores the
+> checked-in vocabulary exactly.
 
 ---
 
@@ -363,7 +428,7 @@ Build it (`cd webapp && npm install && npm run build`) and `mehungry-api` serves
 Each paper contributes the set of **normalized concept ids** its text resolved to. The batch's
 **topic core** is the set of concepts shared by at least `max(2, ceil(core_fraction × N))` papers.
 A paper's `cohesion_score` is the fraction of that core it covers; if the score is below
-`outlier_threshold`, the paper is flagged `off_topic` (but its observations are still returned and
+`outlier_threshold`, the paper is flagged `off_topic` (but its claims are still returned and
 it is reported in full). A paper with no normalized concepts can't be scored and is reported as
 `no_extractable_concepts`. If the batch shares nothing at all, no paper is excluded and a
 `warnings` note explains why.

@@ -425,21 +425,34 @@ def _dedup_keep_order(mentions: "list[EntityMention]") -> "list[EntityMention]":
 # surface of a ``characterized_by`` relation. The value only needs to be stable for the id.
 _DESCRIPTOR_ENTITY_TYPE = "descriptor"
 _DESCRIPTIVE_OBJECT_RULE = "parse_descriptive_object"
+# A2: an effect-predicate object whose non-entity head noun would otherwise collapse into a
+# different-sub-phrase entity is kept as this free-text object instead (see :func:`_parse_bind_sentence`).
+_FREETEXT_OBJECT_RULE = "parse_freetext_object"
 
 
 def _descriptive_object_mention(
-    document: "Document", sentence: "Sentence", start: int, end: int
+    document: "Document",
+    sentence: "Sentence",
+    start: int,
+    end: int,
+    *,
+    extraction_rule: str = _DESCRIPTIVE_OBJECT_RULE,
 ) -> "EntityMention":
-    """A synthetic object mention spanning a descriptive relation's full head-noun phrase (Phase 15).
+    """A synthetic object mention carrying a free-text head-noun phrase verbatim (Phase 15 + A2).
 
-    The object of ``characterized_by`` is the *whole* descriptor — e.g. "alterations in the
-    composition and function of the gut microbiota" — not the deep entity the general object resolver
-    would descend to (*gut microbiota*). That phrase is not a vocabulary concept, so the mention
-    carries its surface verbatim with ``concept_id=None`` (``unmatched``), exactly like any endpoint
-    that did not normalize: the observation is retained with the correct object text, and the claim
-    layer forms no concept-level edge from it (a free-text descriptor is not a concept node, so there
-    is deliberately nothing to normalize). The id is span+type derived, so re-runs reproduce it, and
-    the mention is not added to the persisted entity set — it is only an argument carrier."""
+    Two callers, one mechanism. For ``characterized_by`` (Phase 15) the object is the *whole*
+    descriptor — "alterations in the composition and function of the gut microbiota" — not the deep
+    entity the general object resolver would descend to (*gut microbiota*). For an effect predicate
+    (A2) the object head is a non-entity noun ("disease activity") whose only reachable entity sits
+    across a coordinated sibling or in an ``of``/appositive complement, so descending would bind a
+    *different* entity; the head-noun phrase is kept instead. In both cases the phrase is not a
+    vocabulary concept, so the mention carries its surface with ``concept_id=None`` (``unmatched``),
+    exactly like any endpoint that did not normalize: the observation is retained with the correct
+    object text and provenance, and the claim layer forms no concept-level edge from it (a free-text
+    phrase is not a concept node, so there is deliberately nothing to normalize). ``extraction_rule``
+    distinguishes the two origins for audit (``parse_descriptive_object`` vs ``parse_freetext_object``).
+    The id is span+type derived, so re-runs reproduce it, and the mention is not added to the persisted
+    entity set — it is only an argument carrier."""
     from .entities import EntityMention, _mention_id
     from .normalize import NORMALIZATION_SOURCE, STATUS_UNMATCHED
 
@@ -460,7 +473,7 @@ def _descriptive_object_mention(
             start,
             end,
             sentence=sentence,
-            extraction_rule=_DESCRIPTIVE_OBJECT_RULE,
+            extraction_rule=extraction_rule,
             extraction_rule_version=_RULESET_VERSION,
         ),
     )
@@ -646,7 +659,25 @@ def _parse_bind_sentence(
                         objects.append(sp.mention_for_token(ot))
                 objects = _dedup_keep_order(objects)
             else:
-                objects = _dedup_keep_order([sp.mention_for_token(t) for t in obj_tokens])
+                # Resolve each object token with the strict, attributive-only resolver (A2). When it
+                # declines but the general resolver *would* have descended across a coordinated
+                # sibling or into an of/appositive phrase to a semantically different entity, keep the
+                # head-noun phrase as a free-text object rather than mis-binding that entity. A token
+                # that dominates no entity at all is left unbound (unchanged drop behaviour).
+                resolved: list = []
+                for ot in obj_tokens:
+                    m = sp.object_mention_for_token(ot)
+                    if m is not None:
+                        resolved.append(m)
+                    elif sp.mention_for_token(ot) is not None:
+                        span = sp.object_head_phrase_span(ot)
+                        resolved.append(
+                            _descriptive_object_mention(
+                                document, sentence, span[0], span[1],
+                                extraction_rule=_FREETEXT_OBJECT_RULE,
+                            )
+                        )
+                objects = _dedup_keep_order(resolved)
             if not objects:
                 continue
 

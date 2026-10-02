@@ -4,6 +4,7 @@
 import type {
   Canonical,
   Claim,
+  Concept,
   Deconstruction,
   DocumentSummary,
   Facts,
@@ -13,6 +14,7 @@ import type {
   Provenance,
   StageRunResult,
   SynthesizeResult,
+  VocabResponse,
 } from "./types";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -66,4 +68,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ pmids }),
     }),
+
+  // entity vocabulary management (/vocab) — list the recognisable concepts and edit them
+  vocab: () => request<VocabResponse>("/vocab/concepts"),
+  vocabAdd: (concept: Concept) =>
+    request<VocabResponse>("/vocab/concepts", { method: "POST", body: JSON.stringify(concept) }),
+  vocabReplace: (concept: Concept) =>
+    request<VocabResponse>(`/vocab/concepts/${encodeURIComponent(concept.concept_id)}`, {
+      method: "PUT",
+      body: JSON.stringify(concept),
+    }),
+  vocabRemove: (conceptId: string) =>
+    request<VocabResponse>(`/vocab/concepts/${encodeURIComponent(conceptId)}`, { method: "DELETE" }),
 };

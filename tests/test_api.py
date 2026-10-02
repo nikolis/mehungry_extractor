@@ -69,12 +69,12 @@ def test_health(client):
     assert r.json()["status"] == "ok"
 
 
-def test_analyze_flags_outlier_and_returns_per_paper_observations(client):
+def test_analyze_flags_outlier_and_returns_per_paper_claims(client):
     r = _analyze(client, list(BATCH))
     assert r.status_code == 200
     body = r.json()
 
-    # Synthesis output is no longer returned — only the raw per-paper observation layer.
+    # Synthesis output is no longer returned — only the normalized per-paper claim layer.
     assert "conclusions" not in body
     assert "derived_conclusions" not in body
     assert "facts" not in body
@@ -84,28 +84,32 @@ def test_analyze_flags_outlier_and_returns_per_paper_observations(client):
     assert set(body["included_pmids"]) == {"10000001", "10000002", "10000003"}
 
     # One per-paper entry for every successfully-extracted paper (outlier included), in request order.
-    po = body["paper_observations"]
-    assert [p["pmid"] for p in po] == ["10000001", "10000002", "10000003", "10000004"]
-    by_pmid = {p["pmid"]: p for p in po}
+    pc = body["paper_claims"]
+    assert [p["pmid"] for p in pc] == ["10000001", "10000002", "10000003", "10000004"]
+    by_pmid = {p["pmid"]: p for p in pc}
 
-    # Each entry carries the paper's title + public PubMed URL.
+    # Each entry carries the paper's title, public PubMed URL, and the text it was extracted from.
     assert by_pmid["10000001"]["paper_title"] == "Dietary fiber and remission in Crohn disease"
     assert by_pmid["10000001"]["paper_url"] == "https://pubmed.ncbi.nlm.nih.gov/10000001/"
+    assert by_pmid["10000001"]["source_type"] == "abstract"
 
-    # The affirmative paper yields one fully-detailed, reconstructable observation.
-    obs = by_pmid["10000001"]["observations_list"]
-    assert len(obs) == 1
-    o = obs[0]
-    assert o["subject_concept_id"] == "NUTR:dietary_fiber"
-    assert o["object_concept_id"] == "OUT:remission"
-    assert o["predicate"] == "improves"
-    assert o["polarity"] == "positive"
-    assert o["certainty"] == "asserted"
-    assert o["rule_id"] and o["rule_version"]
-    assert [e["quoted_text"] for e in o["evidence"]] == ["Dietary fiber improved remission."]
+    # The affirmative paper yields one fully-detailed, reconstructable claim.
+    claims = by_pmid["10000001"]["claims_list"]
+    assert len(claims) == 1
+    c = claims[0]
+    assert c["claim_id"]
+    assert c["subject_concept_id"] == "NUTR:dietary_fiber"
+    assert c["object_concept_id"] == "OUT:remission"
+    assert c["predicate"] == "improves"
+    assert c["polarity"] == "positive"
+    assert c["certainty"] == "asserted"
+    # A claim's evidence is the deduplicated union of its observations' spans, each re-sliced from
+    # the canonical text so it reconstructs verbatim.
+    assert [e["quoted_text"] for e in c["evidence"]] == ["Dietary fiber improved remission."]
+    assert c["evidence"][0]["reconstructed_text"] == "Dietary fiber improved remission."
 
     # The dissenting paper produces the same relation with flipped polarity (negation).
-    assert by_pmid["10000003"]["observations_list"][0]["polarity"] == "negative"
+    assert by_pmid["10000003"]["claims_list"][0]["polarity"] == "negative"
 
     # Reproducibility metadata is still present.
     assert body["run"]["pipeline_version"]
@@ -121,12 +125,12 @@ def test_analyze_flags_outlier_and_returns_per_paper_observations(client):
 def test_analyze_is_deterministic(client):
     a = _analyze(client, list(BATCH)).json()
     b = _analyze(client, list(BATCH)).json()
-    assert a["paper_observations"] == b["paper_observations"]
+    assert a["paper_claims"] == b["paper_claims"]
     assert a["outliers"] == b["outliers"]
     assert a["topic"] == b["topic"]
 
 
-def test_observation_endpoint_exposes_restrictive_modifiers(tmp_path):
+def test_analyze_claim_exposes_restrictive_modifiers(tmp_path):
     """An endpoint's restrictive modifier (Concept 19) reaches the response, and ``object_label``
     renders the target back in — so "Dysbiosis" is served as "Dysbiosis of the gut microbiome",
     not collapsed to the bare head."""
@@ -153,8 +157,8 @@ def test_observation_endpoint_exposes_restrictive_modifiers(tmp_path):
     finally:
         app.dependency_overrides.clear()
 
-    po = {p["pmid"]: p for p in body["paper_observations"]}
-    o = po["20000001"]["observations_list"][0]
+    pc = {p["pmid"]: p for p in body["paper_claims"]}
+    o = pc["20000001"]["claims_list"][0]
     assert o["object_concept_id"] == "DIS:dysbiosis"
     # The restrictive modifier survives serialization as structured data …
     assert o["object_modifiers"] == [{
@@ -194,8 +198,8 @@ def test_analyze_excludes_cached_off_topic_title(tmp_path):
     finally:
         app.dependency_overrides.clear()
 
-    # The off-topic-titled paper contributes NO results: absent from observations and inclusions.
-    assert [p["pmid"] for p in body["paper_observations"]] == ["30000001"]
+    # The off-topic-titled paper contributes NO results: absent from claims and inclusions.
+    assert [p["pmid"] for p in body["paper_claims"]] == ["30000001"]
     assert "30000002" not in set(body["included_pmids"])
     # It is still reported per-paper (honest bookkeeping), but only as an error — never a result.
     status = {p["pmid"]: p["status"] for p in body["papers"]}

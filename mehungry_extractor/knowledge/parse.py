@@ -52,6 +52,16 @@ _REL_PRONOUNS = {"that", "which", "who", "whom", "whose"}
 # subject ("IBD" in "care in IBD patients"), and reaching it is how a subject gets fabricated.
 _SUBJECT_DESCENT_DEPS = {"amod", "compound", "conj", "nummod"}
 
+# Modifier arcs an *object* resolver may descend through to find an entity that is only an
+# *attributive* modifier of a non-entity head noun (the "reduced disease" inside "activity", Phase
+# 10). Deliberately **excludes ``conj``** — a coordinated sibling is a *separate* object token,
+# already enumerated by :meth:`SentenceParse.object_tokens`, so descending across it to another
+# endpoint is never correct — and excludes all prepositional/appositive arcs (``nmod``/``obl``/
+# ``pobj``/``appos``): an entity in an ``of``/``such as`` phrase under the head is a different
+# sub-phrase, not this endpoint. When descent is blocked here but the general resolver *would* have
+# reached an entity, the caller keeps the head-noun phrase as a free-text object instead (A2).
+_OBJECT_DESCENT_DEPS = {"amod", "compound", "nummod"}
+
 # Prepositions that introduce a *condition* the relation holds under (→ offered to the qualifier
 # extractor) rather than the relation's object. Deliberately excludes ``with``/``of``: those are
 # the tails of relation connectives ("associated **with** X", "risk **of** Y") where the noun is
@@ -164,6 +174,58 @@ class SentenceParse:
                 if d < best_depth:
                     best, best_depth = cand, d
         return best
+
+    def object_mention_for_token(self, tok) -> "Optional[EntityMention]":
+        """Resolve an **object** token to a mention, descending only through *attributive* modifiers
+        (:data:`_OBJECT_DESCENT_DEPS` — amod/compound/nummod), never across a ``conj`` sibling or
+        into an ``of``/appositive sub-phrase (A2).
+
+        The object counterpart of :meth:`subject_mention_for_token`, and the stricter sibling of
+        :meth:`mention_for_token` (which searches the whole subtree). A non-entity object head should
+        bind to an entity that *modifies* it — "reduced **disease**" inside the head noun "activity"
+        (the Phase-10 denser-tag case) — but must **not** reach across a coordinated sibling (a
+        separate object token) or into a prepositional genitive / appositive (a different phrase) to
+        grab a semantically different entity. When this returns ``None`` yet :meth:`mention_for_token`
+        would have returned a mention, the caller knows the general resolver *would* have descended to
+        a wrong-sub-phrase entity, and substitutes the head-noun phrase as a free-text object instead
+        (:meth:`object_head_phrase_span`)."""
+        exact = self._anchor_to_mention.get(tok.i)
+        if exact is not None:
+            return exact
+        best: "Optional[EntityMention]" = None
+        best_depth = 1 << 30
+        stack = [tok]
+        while stack:
+            cur = stack.pop()
+            for c in cur.children:
+                if c.dep_ in _OBJECT_DESCENT_DEPS:
+                    cand = self._anchor_to_mention.get(c.i)
+                    if cand is not None:
+                        d = _depth(c)
+                        if d < best_depth:
+                            best, best_depth = cand, d
+                    stack.append(c)
+        return best
+
+    def object_head_phrase_span(self, tok) -> tuple[int, int]:
+        """Absolute ``(start_char, end_char)`` of ``tok``'s **head-noun phrase** — the token plus its
+        transitive *attributive* descendants (:data:`_OBJECT_DESCENT_DEPS`) only (A2).
+
+        Unlike :meth:`token_span` (the full subtree), this excludes coordinated siblings and
+        prepositional/appositive complements, so the ``activity`` head of "disease activity and
+        markers of inflammation" yields just "disease activity" — the free-text object surface kept
+        when :meth:`object_mention_for_token` declines to descend to a different-sub-phrase entity."""
+        keep = [tok]
+        stack = [tok]
+        while stack:
+            cur = stack.pop()
+            for c in cur.children:
+                if c.dep_ in _OBJECT_DESCENT_DEPS:
+                    keep.append(c)
+                    stack.append(c)
+        rel_start = min(t.idx for t in keep)
+        rel_end = max(t.idx + len(t.text) for t in keep)
+        return self.base + rel_start, self.base + rel_end
 
     def subject_mention_for_token(self, tok) -> "Optional[EntityMention]":
         """Resolve a **subject** token to a mention, descending only through *attributive* modifiers

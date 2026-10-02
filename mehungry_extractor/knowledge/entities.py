@@ -82,6 +82,22 @@ def _mention_id(document_id: str, start: int, end: int, entity_type: str) -> str
     return f"{document_id}_m{start:06d}_{end:06d}_{entity_type}"
 
 
+def reload_vocabulary() -> None:
+    """Rebuild every cache derived from the entity vocabulary after the overlay changes.
+
+    Clears the parsed overlay (:func:`vocab.reload_overlay`), the normalization index
+    (:func:`normalize.invalidate_caches`), and this module's surface-form matcher regex — so an
+    add/remove/edit through the ``/vocab`` API is recognised by the next extraction in the same
+    process, with no restart. The scispaCy model cache is vocabulary-independent and left intact.
+    """
+    from . import normalize as _normalize  # noqa: PLC0415  (avoid import cycle at module load)
+    from . import vocab as _vocab  # noqa: PLC0415
+
+    _vocab.reload_overlay()
+    _normalize.invalidate_caches()
+    _matcher.cache_clear()
+
+
 @functools.lru_cache(maxsize=1)
 def _matcher() -> Optional[re.Pattern]:
     """Case-insensitive, word-bounded alternation of every vocabulary surface form.

@@ -22,23 +22,26 @@ from .. import SYNTHESIS_VERSION
 from ..corpus import CorpusStore
 from ..db import get_engine, init_db
 from . import observe, service
+from . import vocab as vocab_api
 from .models import (
     AnalyzeRequest,
     AnalyzeResponse,
+    ConceptModel,
     DiscoverRequest,
     ObserveIngestRequest,
     ObserveStageRequest,
     ObserveSynthesizeRequest,
     OpenRelationResponse,
     PaperOpenRelations,
+    VocabResponse,
 )
 
 app = FastAPI(
     title="Mehungry deterministic evidence API",
     version=SYNTHESIS_VERSION,
     description="Batch PMID topic analysis over the deterministic, provenance-tracking evidence "
-    "engine. No LLM, no inference — it returns the raw per-paper observations, each tracing back "
-    "to a source span.",
+    "engine. No LLM, no inference — it returns the per-paper claims (the normalized concept "
+    "layer), each tracing back to a source span.",
 )
 
 
@@ -220,6 +223,53 @@ def observe_synthesize(
         engine=ctx["engine"],
         ingest=ctx["ingest"] and req.options.ingest,
     )
+
+
+# =====================================================================================
+# Vocabulary surface — the list of entities the recognizer CAN match, and its edits.
+#
+# Unlike /observe (read-only), these routes mutate the writable vocabulary overlay: add a concept,
+# edit its surface forms, or remove it. Each edit takes effect for subsequent extractions in the
+# same process. Reads are unauthenticated and cheap; writes persist to the overlay file.
+# =====================================================================================
+
+
+@app.get("/vocab/concepts", response_model=VocabResponse)
+def vocab_list() -> VocabResponse:
+    """Every concept the entity recognizer can match right now (built-ins + overlay edits)."""
+    return vocab_api.list_vocab()
+
+
+@app.post("/vocab/concepts", response_model=VocabResponse, status_code=201)
+def vocab_add(concept: ConceptModel) -> VocabResponse:
+    """Add a new concept to the vocabulary. ``409`` if the id already exists."""
+    try:
+        vocab_api.add_concept(concept)
+    except vocab_api.ConceptExistsError as exc:
+        raise HTTPException(status_code=409, detail=f"concept {exc} already exists") from exc
+    return vocab_api.list_vocab()
+
+
+@app.put("/vocab/concepts/{concept_id}", response_model=VocabResponse)
+def vocab_replace(concept_id: str, concept: ConceptModel) -> VocabResponse:
+    """Replace a concept's fields (e.g. edit its surface forms). ``404`` if it does not exist."""
+    try:
+        vocab_api.replace_concept(concept_id, concept)
+    except vocab_api.ConceptNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=f"no concept {exc}") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return vocab_api.list_vocab()
+
+
+@app.delete("/vocab/concepts/{concept_id}", response_model=VocabResponse)
+def vocab_remove(concept_id: str) -> VocabResponse:
+    """Remove a concept (hide a built-in, or drop a custom one). ``404`` if it does not exist."""
+    try:
+        vocab_api.remove_concept(concept_id)
+    except vocab_api.ConceptNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=f"no concept {exc!s}") from exc
+    return vocab_api.list_vocab()
 
 
 # Serve the built single-page app (webapp/dist) if it has been built. Guarded so the API still

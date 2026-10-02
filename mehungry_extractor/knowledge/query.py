@@ -309,6 +309,54 @@ def list_claims_for_document(engine: Engine, doc_or_pmid: str) -> list[dict]:
         ]
 
 
+def list_claim_evidence_for_document(engine: Engine, doc_or_pmid: str) -> dict[str, list[dict]]:
+    """claim_id → its evidence refs, for every claim in one document (batched; spec §15).
+
+    Same dict shape as :func:`find_evidence` (each span re-sliced from the canonical text as
+    ``reconstructed_text`` so the chain is self-verifying), but resolves a whole document's claims
+    in a single pass. The batch ``/analyze`` surface attaches evidence to each returned claim with
+    this, instead of calling :func:`find_evidence` once per claim (an N+1).
+    """
+    doc_id = doc_or_pmid if doc_or_pmid.startswith("pmid_") else document_id(doc_or_pmid)
+    index: dict[str, list[dict]] = {}
+    with session_scope(engine) as session:
+        drow = session.get(DocumentRow, doc_id)
+        text = drow.canonical_text if drow else ""
+        rows = (
+            session.query(ClaimEvidenceRow)
+            .filter(ClaimEvidenceRow.document_id == doc_id)
+            .order_by(
+                ClaimEvidenceRow.claim_id,
+                ClaimEvidenceRow.start_char,
+                ClaimEvidenceRow.sentence_id,
+                ClaimEvidenceRow.extraction_rule,
+            )
+            .all()
+        )
+        for r in rows:
+            reconstructed = None
+            if r.start_char is not None and r.end_char is not None:
+                reconstructed = text[r.start_char : r.end_char]
+            index.setdefault(r.claim_id, []).append(
+                {
+                    "claim_id": r.claim_id,
+                    "document_id": r.document_id,
+                    "section_id": r.section_id,
+                    "paragraph_id": r.paragraph_id,
+                    "sentence_id": r.sentence_id,
+                    "start_char": r.start_char,
+                    "end_char": r.end_char,
+                    "quoted_text": r.quoted_text,
+                    "reconstructed_text": reconstructed,
+                    "precision": r.precision,
+                    "extraction_rule": r.extraction_rule,
+                    "extraction_rule_version": r.extraction_rule_version,
+                    "extractor_version": r.extractor_version,
+                }
+            )
+    return index
+
+
 def _observation_qualifier_dict(r: ObservationQualifierRow) -> dict:
     return {
         "qualifier_type": r.qualifier_type,

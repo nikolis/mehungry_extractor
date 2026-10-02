@@ -100,6 +100,33 @@ def test_controlled_predicate_inherits_governing_clause_condition():
         assert "binder:parse" in (o.context or "")
 
 
+def test_non_entity_object_head_kept_as_freetext_not_collapsed_to_wrong_entity():
+    """A2 — *"A high-fiber diet reduced symptom burden and inflammation."*
+
+    ``symptom burden`` is a non-vocabulary object head coordinated with the real entity
+    ``inflammation``. The general object resolver would descend across the ``conj`` arc and bind
+    the semantically-different ``inflammation`` to the ``burden`` token, **losing** the real
+    endpoint. A2 instead keeps the head-noun phrase verbatim as a free-text (``unmatched``) object,
+    so *both* endpoints survive: ``symptom burden`` (no concept) and ``inflammation``, rather than
+    the single collapsed ``inflammation`` observation the binder produced before."""
+    doc = _doc("A high-fiber diet reduced symptom burden and inflammation.")
+    mentions = extract_entities(doc, use_model=True)
+    observations = extract_observations(doc, mentions, use_model=True)
+
+    assert all(o.subject_concept_id == "INT:high_fiber_diet" for o in observations)
+    assert all(o.predicate == "decreases" for o in observations)
+    objects = {o.object_text for o in observations}
+    assert "symptom burden" in objects, objects
+    assert "inflammation" in objects, objects
+
+    freetext = next(o for o in observations if o.object_text == "symptom burden")
+    # The endpoint is retained with its text + provenance but forms no concept-level claim …
+    assert freetext.object_concept_id is None
+    # … and it is genuinely synthetic — no entity mention named "symptom burden" was ever detected,
+    # proving it was kept by A2 rather than collapsed into the coordinated inflammation entity.
+    assert not any(m.surface_text == "symptom burden" for m in mentions)
+
+
 # --- coordination cross-product ------------------------------------------------------
 
 

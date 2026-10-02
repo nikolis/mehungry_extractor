@@ -1,0 +1,38 @@
+{
+  "concepts": [
+    {
+      "concept_id": "FOOD:leafy_green_vegetables",
+      "canonical_name": "Leafy green vegetables",
+      "entity_type": "food",
+      "surface_forms": [
+        "Leafy greens",
+        "leafy green vegetables"
+      ]
+    },
+    {
+      "concept_id": "FOOD:green_vegetables",
+      "canonical_name": "green vegetables",
+      "entity_type": "food",
+      "surface_forms": [
+        "green vegetables"
+      ]
+    },
+    {
+      "concept_id": "FOOD:stem_vegetables",
+      "canonical_name": "Stem vegetables",
+      "entity_type": "food",
+      "surface_forms": [
+        "Stem vegetables"
+      ]
+    },
+    {
+      "concept_id": "FOOD:leafy_vegetables",
+      "canonical_name": "leafy vegetables",
+      "entity_type": "food",
+      "surface_forms": [
+        "leafy vegetables"
+      ]
+    }
+  ],
+  "removed": []
+}

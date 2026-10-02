@@ -262,38 +262,47 @@ class BatchFactsModel(BaseModel):
     source_types: dict[str, int] = Field(default_factory=dict)
 
 
-# --- per-paper observations (the raw, un-synthesized layer) --------------------------
+# --- per-paper claims (the normalized concept layer) ---------------------------------
 
 
-class ObservationEvidenceModel(BaseModel):
-    """A sentence-level source span backing one observation (its provenance)."""
+class ClaimEvidenceModel(BaseModel):
+    """A source span backing one claim (its provenance; spec §15).
+
+    A claim's evidence is the deduplicated union of its observations' refs. Each span is re-sliced
+    from the canonical text as ``reconstructed_text`` so the chain is self-verifying — it should
+    equal ``quoted_text`` verbatim.
+    """
 
     document_id: str
+    claim_id: str
     section_id: Optional[str] = None
     paragraph_id: Optional[str] = None
     sentence_id: Optional[str] = None
     start_char: Optional[int] = None
     end_char: Optional[int] = None
     quoted_text: Optional[str] = None
+    reconstructed_text: Optional[str] = None
     precision: str
     extraction_rule: str
     extraction_rule_version: str
+    extractor_version: Optional[str] = None
 
 
-class ObservationDetail(BaseModel):
-    """One rule-detected relation observation with every detail around it.
+class ClaimDetail(BaseModel):
+    """One normalized, concept-level claim with every detail around it (spec §7, Concept 9).
 
-    This is the audit layer beneath claims: a single (subject, predicate, object) match kept
-    close to the text, with its modality (polarity/certainty), the clause-scoped conditions it
-    holds under (``qualifiers``), the rule that fired, and its source span(s).
+    A claim folds the observations that agree on ``(subject_concept, predicate, object_concept,
+    polarity, certainty)`` into one concept-keyed assertion — the comparable-across-papers layer.
+    Both endpoints are resolved concepts (a claim only forms when both normalized), it carries the
+    clause-scoped conditions it holds under (``qualifiers``), and its evidence is the deduplicated
+    union of its observations' source spans.
     """
 
-    observation_id: str
-    # Phase 13 (hierarchical relations) — the observation this one is nested beneath (its subject is
-    # that one's object), or null for a top-level relation.
-    parent_observation_id: Optional[str] = None
-    subject_text: str
-    subject_concept_id: Optional[str] = None
+    claim_id: str
+    # Phase 13 (hierarchical relations) — the claim this one is nested beneath (its subject is that
+    # one's object), or null for a top-level claim. Set only when unambiguous across observations.
+    parent_claim_id: Optional[str] = None
+    subject_concept_id: str
     subject_name: Optional[str] = None
     # Concept 19 — restrictive modifiers on each endpoint head, and the endpoint rendered *with*
     # them folded in (``object_label`` turns a bare "Dysbiosis" into "Dysbiosis of the gut
@@ -301,29 +310,26 @@ class ObservationDetail(BaseModel):
     subject_modifiers: list[EntityModifierModel] = Field(default_factory=list)
     subject_label: str = ""
     predicate: str
-    object_text: str
-    object_concept_id: Optional[str] = None
+    object_concept_id: str
     object_name: Optional[str] = None
     object_modifiers: list[EntityModifierModel] = Field(default_factory=list)
     object_label: str = ""
     polarity: str  # positive | negative (negation flips the rule's base polarity)
     certainty: str  # asserted | hedged
     context: Optional[str] = None  # negation/uncertainty cue + clause marker, for audit
-    sentence_id: Optional[str] = None
-    rule_id: str
-    rule_version: str
     qualifiers: list[QualifierModel] = Field(default_factory=list)
-    evidence: list[ObservationEvidenceModel] = Field(default_factory=list)
+    evidence: list[ClaimEvidenceModel] = Field(default_factory=list)
 
 
-class PaperObservations(BaseModel):
-    """A single paper and every observation extracted from it."""
+class PaperClaims(BaseModel):
+    """A single paper and every claim normalized from it."""
 
     pmid: str
     document_id: str
     paper_title: Optional[str] = None
     paper_url: Optional[str] = None
-    observations_list: list[ObservationDetail] = Field(default_factory=list)
+    source_type: Optional[str] = None  # open_access | abstract | none — what text the claims came from
+    claims_list: list[ClaimDetail] = Field(default_factory=list)
 
 
 class AnalyzeResponse(BaseModel):
@@ -333,7 +339,7 @@ class AnalyzeResponse(BaseModel):
     papers: list[PaperReport]
     topic: TopicInfo
     outliers: list[OutlierReport]
-    paper_observations: list[PaperObservations] = Field(default_factory=list)
+    paper_claims: list[PaperClaims] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
 
@@ -429,3 +435,56 @@ class OpenRelationResponse(BaseModel):
     run: RunInfo  # includes the detector name + version under ``ontology_versions``
     papers: list[PaperOpenRelations] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+
+
+# --- entity vocabulary management (the recognisable-entity list + its edits) ----------
+#
+# The ``/vocab`` surface lists every concept the entity recognizer *can* match and lets a user add,
+# edit, or remove them. Edits are stored in a writable overlay on top of the checked-in vocabulary
+# (see ``vocab.save_overlay``); each takes effect for subsequent extractions in the same process.
+
+_CONCEPT_ID_RE = r"^[A-Za-z][A-Za-z0-9]*:[A-Za-z0-9_]+$"
+
+
+class ConceptModel(BaseModel):
+    """One entity concept: its id, display name, type, and the surface forms that match it."""
+
+    concept_id: str = Field(..., pattern=_CONCEPT_ID_RE, description="PREFIX:slug, e.g. NUTR:zinc.")
+    canonical_name: str = Field(..., min_length=1)
+    entity_type: str = Field(..., min_length=1, description="e.g. nutrient / food / outcome / disease.")
+    surface_forms: list[str] = Field(..., min_length=1, description="Match strings (case-insensitive).")
+
+    @field_validator("surface_forms")
+    @classmethod
+    def _clean_surfaces(cls, value: list[str]) -> list[str]:
+        seen: set[str] = set()
+        out: list[str] = []
+        for raw in value:
+            s = (raw or "").strip()
+            key = s.casefold()
+            if s and key not in seen:
+                seen.add(key)
+                out.append(s)
+        if not out:
+            raise ValueError("at least one non-empty surface form is required")
+        return out
+
+
+class ConceptRecord(ConceptModel):
+    """A concept as returned by the list endpoint, tagged with where it came from.
+
+    ``origin`` is ``builtin`` (checked-in, unedited), ``overridden`` (checked-in but edited by the
+    overlay), or ``custom`` (added by the user, not in the checked-in vocabulary).
+    """
+
+    origin: str
+
+
+class VocabResponse(BaseModel):
+    """The effective entity vocabulary: every concept the recognizer can match right now."""
+
+    vocabulary: str
+    version: str  # the checked-in VOCAB_VERSION
+    overlay_digest: Optional[str] = None  # content hash of the overlay, null when pristine
+    entity_types: list[str] = Field(default_factory=list)
+    concepts: list[ConceptRecord] = Field(default_factory=list)
