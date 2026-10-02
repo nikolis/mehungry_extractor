@@ -138,6 +138,7 @@ What the pipeline calls "observations" is actually the *output* of a per-sentenc
   - `tokens` — the dependency parse: `i`, `text`, `lemma`, `pos`, `dep`, `head`, `start_char`.
   - `predicate_heads` — the ROOT + `conj` + subordinate verbs the binder considers, each with:
     - `verb` / `lemma` / `dep`, `negated`, `is_participial`;
+    - `nested` — true when this head nests under the relation whose object is its subject *(Concept 20)*;
     - `object_is_risk` and `object_direction` — the promotions (`risk` → `reduces_risk`/
       `increases_risk`; a direction word → `associated_with_reduced`/`_increased`);
     - `rule` — the selected `RelationRule` (`predicate`, `rule_id`, `version`) or `null`;
@@ -147,7 +148,12 @@ What the pipeline calls "observations" is actually the *output* of a per-sentenc
       dropped; flat fallback suppressed*, *verb not in predicate map → left to the flat fallback*.
   - `clausal_subjects` — entities recovered from a gerund clausal subject.
 - `observations` — the observations actually emitted for that sentence, each with its `context`
-  binder tag (`binder:parse`, or the cue text for the flat floor).
+  binder tag (`binder:parse`, or the cue text for the flat floor), its `parent_observation_id` —
+  the earlier same-sentence relation this one nests beneath, or `null` for a top-level relation
+  *(Concept 20)* — and its `qualifiers` (`{ qualifier_type, value_concept_id, value_text }`). A
+  descriptive `characterized_by` observation's `object_text` is the whole descriptor phrase
+  (e.g. *"alterations in the composition and function of the gut microbiota"*), with a `null`
+  `object_concept_id` when that phrase is not a vocabulary concept *(Concept 20)*.
 
 The envelope also carries `parse_available`, `sentence_count`, `deconstructed_count`,
 `entities_present`, `observations_present`.
@@ -158,6 +164,17 @@ The **Sentence deconstruction** tab renders each candidate sentence as a collaps
 mentions, clause segmentation, the predicate-head selection trace, a collapsible dependency-parse
 table, and the emitted observations. A filter switches between *sentences that produced
 observations*, *dropped* (bound nothing — the instructive cases), and *all candidates*.
+
+The emitted observations are shown as a **hierarchy** rather than a flat list: the UI rebuilds the
+parent→children tree from each observation's `parent_observation_id` and nests a relation beneath the
+one whose object is its subject *(Concept 20)*, with gutter lines and elbow connectors marking the
+levels, and a count of how many are nested under a parent. Where the same nesting decision is visible
+at the parse level, the predicate-head trace carries a `↳ nested` tag (from the head's `nested`
+flag). A top-level relation is simply an un-indented root. Any `qualifiers` on an observation render
+as small typed chips beneath its row. A descriptive `characterized_by` relation shows the whole
+descriptor phrase as its object (e.g. *"alterations in the composition and function of the gut
+microbiota"*) rather than the deep entity *gut microbiota* — so the row reads as the full
+characterization, not a misleading edge to the modifier noun.
 
 As a lighter companion, the **Observations** tab has a "How bound" column surfacing the persisted
 `context`.
@@ -178,7 +195,7 @@ webapp/
     styles.css          # all styling (hand-written; light/neutral theme)
     types.ts            # TypeScript shapes for every /observe/* payload
     api.ts              # typed fetch client over /observe/*
-    App.tsx             # shell: sidebar (PMID input, run controls, run log, cached picker) + tabs
+    App.tsx             # shell: sidebar (PMID input, run controls, cached picker, run log) + tabs
     components/
       ui.tsx            # useAsync hook, AsyncView, Tag, Count
       CanonicalPanel.tsx     # canonical text + inline entity-span highlighting

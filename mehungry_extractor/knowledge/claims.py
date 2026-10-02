@@ -36,6 +36,14 @@ class Claim(BaseModel):
     claim_id: str
     document_id: str
 
+    # Phase 13 (hierarchical relations) — the claim this one is nested beneath, lifted from its
+    # observations' ``parent_observation_id`` (the parent observation's owning claim). Set only when
+    # that parent claim is **unambiguous** across all of this claim's observations; left ``None``
+    # otherwise — and necessarily ``None`` when the parent relation formed no claim (e.g. its subject
+    # did not normalize), since claim-level nesting cannot point at a non-claim (Concept 3: never
+    # guess). The observation layer still records the finer-grained link regardless.
+    parent_claim_id: Optional[str] = None
+
     subject_concept_id: str
     subject_name: str
     predicate: str
@@ -220,6 +228,8 @@ def normalize(observations: "list[Observation]", *, concept_name=None) -> Normal
             )
         )
 
+    _link_parent_claims(claims, observations)
+
     claims.sort(
         key=lambda c: (
             c.subject_concept_id, c.predicate, c.object_concept_id, c.polarity, c.certainty,
@@ -229,3 +239,31 @@ def normalize(observations: "list[Observation]", *, concept_name=None) -> Normal
         )
     )
     return NormalizeResult(claims=claims, dropped=dropped)
+
+
+def _link_parent_claims(
+    claims: "list[Claim]", observations: "list[Observation]"
+) -> None:
+    """Lift the observation-level parent link (Phase 13) up to the claim layer.
+
+    A claim's parent is the claim its observations' ``parent_observation_id``s resolve to. Because a
+    claim folds several observations, the parent is set **only when it is unambiguous** — every
+    parent observation that formed a claim points at the *same* claim — and never to the claim
+    itself. When the observations disagree, or the parent relation formed no claim (its subject did
+    not normalize, so its observation was dropped), the link is left ``None`` rather than guessed."""
+    obs_by_id = {o.observation_id: o for o in observations}
+    claim_of_obs: dict[str, str] = {}
+    for c in claims:
+        for oid in c.observation_ids:
+            claim_of_obs[oid] = c.claim_id
+    for c in claims:
+        parents: set[str] = set()
+        for oid in c.observation_ids:
+            obs = obs_by_id.get(oid)
+            if obs is None or not obs.parent_observation_id:
+                continue
+            parent_claim = claim_of_obs.get(obs.parent_observation_id)
+            if parent_claim and parent_claim != c.claim_id:
+                parents.add(parent_claim)
+        if len(parents) == 1:
+            c.parent_claim_id = next(iter(parents))

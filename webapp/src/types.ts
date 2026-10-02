@@ -85,6 +85,8 @@ export interface EvidenceRef {
 export interface Observation {
   observation_id: string;
   sentence_id: string | null;
+  // Phase 13 — the observation this one is nested beneath (its subject is that one's object), or null.
+  parent_observation_id?: string | null;
   subject_text: string;
   subject_concept_id: string | null;
   subject_modifiers: Modifier[];
@@ -103,6 +105,8 @@ export interface Observation {
 
 export interface Claim {
   claim_id: string;
+  // Phase 13 — the claim this one is nested beneath, or null for a top-level claim.
+  parent_claim_id?: string | null;
   subject_concept_id: string;
   subject_name: string;
   predicate: string;
@@ -223,6 +227,8 @@ export interface PredicateHead {
   subjects: Array<ResolvedArg | null>;
   objects: Array<ResolvedArg | null>;
   conditions: string[];
+  // Phase 13 — true when this predicate nests under the relation whose object is its subject.
+  nested?: boolean;
   note: string;
 }
 export interface DeconClause {
@@ -241,6 +247,9 @@ export interface DeconSentence {
   clauses: DeconClause[];
   parse: { tokens: ParseToken[]; predicate_heads: PredicateHead[]; clausal_subjects: string[] } | null;
   observations: Array<{
+    observation_id: string;
+    // Phase 13 — the observation this one is nested beneath, or null if top-level.
+    parent_observation_id: string | null;
     subject_text: string;
     subject_concept_id: string | null;
     predicate: string;
@@ -250,6 +259,9 @@ export interface DeconSentence {
     certainty: string;
     context: string | null;
     rule_id: string;
+    // Clause-scoped typed conditions (e.g. a `disease_state`). A descriptive `characterized_by`
+    // relation carries the whole descriptor phrase in `object_text`, not a qualifier (Phase 15).
+    qualifiers: Qualifier[];
   }>;
 }
 export interface Deconstruction {

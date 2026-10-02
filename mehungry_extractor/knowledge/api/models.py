@@ -289,6 +289,9 @@ class ObservationDetail(BaseModel):
     """
 
     observation_id: str
+    # Phase 13 (hierarchical relations) — the observation this one is nested beneath (its subject is
+    # that one's object), or null for a top-level relation.
+    parent_observation_id: Optional[str] = None
     subject_text: str
     subject_concept_id: Optional[str] = None
     subject_name: Optional[str] = None

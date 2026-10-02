@@ -521,6 +521,34 @@ scans **consecutive mention pairs** and matches the cue in the text *between* th
 path binds arguments from the dependency parse (see "Two binders" below). Both share the same rule
 set and provenance.
 
+Most predicates assert an *effect* (`causes`, `decreases`, `reduces_risk`). A small **descriptive**
+family does the opposite — it says what the subject *is* or *manifests*, not what acts on it, so it is
+clinically neutral (Concept 16) and never flips on negation, and it most often appears in a
+subordinate clause that **nests** under the relation it elaborates (Concept 20):
+
+- `characterized_by` — *"dysbiosis characterized by alterations in the gut microbiota"* elaborates
+  what the subject is. Its object is the **whole descriptor phrase** hanging off the `by`-cue. When
+  that phrase is a bare entity (*"characterized by Firmicutes"*) the object is that entity. But when its
+  head noun is an abstract noun that merely *dominates* an entity (*"alterations in the composition and
+  function **of** the gut microbiota"*), the object is the **entire** head-noun phrase taken verbatim —
+  *not* the deep entity (*gut microbiota*) the general object resolver would otherwise descend to.
+  Binding the object to *gut microbiota* there would assert the wrong thing: the relation is about the
+  *alterations*, which *gut microbiota* only modifies. Such a free-text descriptor is not a vocabulary
+  concept, so it carries no `concept_id` — the observation keeps the correct object text, but no
+  concept-level claim forms from it (a descriptor is not a concept node; see Concept 3, never guess).
+- `has_decreased_abundance_of` / `has_increased_abundance_of` — a *state* "…, **decreasing**
+  Firmicutes" or "…, **increasing** Proteobacteria" does not act, it describes a compositional change
+  it manifests. On the parse path a free-adjunct directional participle over a state is **re-labelled**
+  from the active `decreases`/`increases` to the descriptive abundance predicate of the same
+  *direction* — the direction is recorded without asserting a per-taxon benefit/harm the engine cannot
+  know. Their model-free counterpart is a narrow flat cue requiring an explicit *abundance/level/
+  proportion of* noun, so a bare "reduced Firmicutes" stays the ordinary active `decreases`. Two parse-side rules let such subordinate relations bind their
+subject from structure rather than be dropped: a reduced relative / participle takes its antecedent
+noun as subject (already true for `acl`/`relcl`), and a **free-adjunct participle** on an `advcl` arc
+(*"induces dysbiosis, **decreasing** Firmicutes"* / *"…, **characterized** by …"*) takes the
+*governing clause's object* as its implicit subject — the manifestation reading, which also stops the
+generic controller fallback from fabricating the governing-subject reading.
+
 **Why ordered / first-match.** Specific cues must come before generic ones they'd otherwise be
 swallowed by: "no association" has to be tested before "associated with", and "reduces the risk of"
 before "reduces". Priority order is how the rule set encodes "more specific meaning wins". Because
@@ -540,7 +568,13 @@ adjacency:
   increased bloating" splits into two predicates *sharing the same subject*.
 - **Subjects/objects** are read off each verb's grammatical arcs (`nsubj`/`nsubjpass`,
   `dobj`/`nmod`/`obl`), each expanded across `conj`/`cc`, and the subject×object **cross-product**
-  is emitted — turning the vitamin-D/calcium sentence into its four correct observations.
+  is emitted — turning the vitamin-D/calcium sentence into its four correct observations. Object
+  coordination also recovers **apposition list-items**: in a comma list *"A, B, and C"* spaCy often
+  labels the *middle* element `appos` of A while only the last gets `conj` (so *"decreasing
+  Firmicutes, the Bifidobacterium genus, and Faecalibacterium prausnitzii"* would otherwise drop
+  Bifidobacterium). An `appos` child is treated as a list-item **only when its head already heads a
+  `conj`** — the list signal — so a lone apposition (*"CRP, a marker of inflammation"*) is never
+  mistaken for coordination. This is scoped to object binding; subject coordination stays strict.
 - **Prepositional-phrase modifiers** introduced by a condition preposition (`during`/`in`/`under` —
   *not* the connective tails `with`/`of`) fall out as **qualifier conditions** (Concept 14), not
   objects. So "during remission" becomes a `disease_state` qualifier on the relation rather than its
@@ -797,6 +831,12 @@ This distinction is subtle and central, so it gets its own section.
   keyed by concept ids. A claim can only form when **both** endpoints normalized. Its evidence is
   the deduplicated union of its observations' refs. The `claim_id` is a hash of that canonical key,
   so re-runs reproduce it.
+
+Both layers now also carry an **optional parent pointer** — `parent_observation_id` on the
+observation, `parent_claim_id` on the claim — recording that this relation is *nested beneath*
+another (its subject is that one's object). It is derived from the bound endpoints after folding, is
+never part of the id, and is left null whenever the parent is absent or ambiguous (Concept 20). It
+does not change what an observation or claim *is*, only how one relates to another.
 
 **Why two layers.** They answer different questions. The observation layer answers "what does *this
 sentence* literally say?" — maximally faithful, never dropped. The claim layer answers "what does
@@ -1066,8 +1106,18 @@ into one contradictory claim about fiber. The qualifier is what keeps them disti
 by **widening the claim key** to include qualifiers, so conditional statements group separately.
 That's the whole point of the layer: same discipline (versioned regex cues, provenance), new slot.
 
+**History — the retired `manifestation` type.** A descriptive relation's abstract object phrase
+(*"characterized by **alterations in the composition and function of** the gut microbiota"*) was once
+represented as a parse-derived `manifestation` qualifier: the object stayed the deep concept (*gut
+microbiota*) and the head-noun phrase rode along as a condition. That was the wrong slot — the
+relation is *about* the alterations, not the microbiota — so Phase 15 makes the whole phrase the
+object itself (see Concept 20 and the descriptive family under "Relations"). The free-text object
+simply carries no `concept_id`, which is honest: a descriptor is not a concept node, so no
+concept-level claim forms from it, rather than a wrong one. The `manifestation` qualifier type is gone.
+
 **Extension points.** More qualifier *types* — dose, population, duration — each a new vocabulary +
-cue set. Disease state is simply the first.
+cue set. Disease state is simply the first. (Qualifiers remain a regex-cue layer; the one-time
+parse-derived `manifestation` experiment has been folded back into the object slot it belongs in.)
 
 **In the code** — `knowledge/qualifiers.py`
 
@@ -1404,6 +1454,121 @@ def signature(modifiers) -> str:                           # folded into the cla
   polarity**, its own `EXACT_SPAN` ref over the connecting phrase, and `status=unmatched` (surface
   retained) when the object doesn't resolve. A mention with no modifier is simply absent, and a claim
   with no *key-bearing* modifier keeps its exact pre-A2 id.
+
+---
+
+### Concept 20 — Hierarchical relations: nesting a relation under its parent
+
+**What.** A relation is still one flat binary edge (Concept 7) with sentence provenance — but it may
+now carry a pointer to the relation it *elaborates*. The rule is purely structural: **a relation
+whose subject is another relation's object, within the same sentence, is nested beneath it.** From
+
+> *"inflammation induces dysbiosis characterized by alterations in the composition and function of
+> the gut microbiota, decreasing Firmicutes, the Bifidobacterium genus, and Faecalibacterium
+> prausnitzii"*
+
+the engine produces a little tree:
+
+```
+inflammation ─causes→ dysbiosis                                              (parent)
+  ├ dysbiosis ─characterized_by→ "alterations in the composition and         (reduced relative; whole
+  │                              function of the gut microbiota"              descriptor phrase is the object)
+  ├ dysbiosis ─has_decreased_abundance_of→ Firmicutes                        (participle adjunct ", decreasing …")
+  ├ dysbiosis ─has_decreased_abundance_of→ Bifidobacterium                   (the appos-split middle list-item)
+  └ dysbiosis ─has_decreased_abundance_of→ Faecalibacterium prausnitzii
+```
+
+Two small extraction additions make the children *reachable*, and one post-pass records the *link*:
+
+1. **A descriptive predicate, `characterized_by`** (Concept 7). "X characterized by Y" asserts no
+   effect on X — it says what X *is*. It is clinically `NEUTRAL` (Concept 16) and lexically negative
+   only in the trivial sense, so it never flips on negation. Its object is the phrase inside the
+   `by`-cue (an agent `nmod`, so the existing object resolver already finds it). When that phrase is a
+   bare entity the object is that entity; when its head noun is an abstract noun that merely dominates
+   an entity (*"alterations in the composition and function **of** the gut microbiota"*), the object
+   is the **whole head-noun phrase**, verbatim — not the deep entity (*gut microbiota*) the general
+   resolver would descend to, which would assert the wrong thing. That free-text object carries no
+   `concept_id` (Phase 15; it replaced an earlier design that kept the deep entity as the object plus a
+   `manifestation` qualifier — see Concept 14's history note).
+2. **A participle free-adjunct subject rule** (Concept 7). A `VBG`/`VBN` participle on an `advcl`
+   arc that spells out no subject — *"…, **decreasing** Firmicutes"*, *"…, **characterized** by …"* —
+   predicates over what the governing clause just introduced: its **object** (the dysbiosis), not its
+   subject (the inflammation). Resolving to the governing object is also what *prevents* the generic
+   controller fallback from fabricating the governing-subject reading (it would otherwise return both).
+   Because that subject is a *state* and not an agent, a directional `decreasing`/`increasing`
+   participle is **re-labelled** to the descriptive `has_decreased_abundance_of` /
+   `has_increased_abundance_of` predicate (Concept 7) — a manifestation of the state, not an effect it
+   exerts. Its coordinated object list binds every taxon, including the apposition-split middle one.
+3. **A parent-link post-pass** (`observations._link_parents`). After both binders have run, each
+   sentence's observations are ordered by span and each is linked to the earliest *earlier* one whose
+   object mention is this one's subject mention. Deriving the link from the bound endpoints — not from
+   the parse — means it serves **both binders**: on the model path the subordinate clauses resolve
+   their subjects to the shared governing object, so several children hang off one parent (a *tree*);
+   on the model-free floor adjacency resolves each subject to the previous object, so the same rule
+   degrades to a *chain*. It is **additive**: it never changes which observations are emitted, only
+   annotates them, and it is not part of the observation id, so ids stay stable.
+
+The link rides up to the claim layer too: a claim's `parent_claim_id` is lifted from its
+observations' parents, but **only when unambiguous** — when every parent observation that formed a
+claim points at the same claim. Otherwise it is left null; and it is *necessarily* null when the
+parent relation formed no claim at all (its subject never normalized, as *inflammation* does not
+above). That is the Concept 3 discipline again: claim-level nesting may point only at a real claim,
+never a guess, even though the finer-grained observation layer still records the link.
+
+**Why.** A flat list throws away a real part of the meaning: that the characterization and the
+bacterial decreases are *about the dysbiosis*, not three unrelated facts that happen to share a
+sentence. Nesting recovers that structure **without** abandoning the engine's spine — every node is
+still a binary, span-anchored, concept-normalized edge that stands on its own and folds into claims
+exactly as before. The hierarchy is *derived from* those edges, not a parallel representation that
+could drift from them. This is deliberately a different hierarchy from Concept 17's **planned
+concept-type** hierarchy (salmon → oily fish → fish): that one is about what concepts *are*; this one
+is about how *relations* in a sentence depend on one another.
+
+**Why keep the honest nulls.** The nested reading is only as good as the parse, and the participle
+rule is a genuine heuristic that can misfire on a non-manifestation adjunct. So the link is *always*
+optional: a relation with no resolvable parent is simply top-level, a claim whose parent is ambiguous
+or non-normalizing keeps a null parent, and nothing downstream (claims folding, synthesis) *requires*
+the hierarchy — it is metadata a reader can trust precisely because it is never fabricated.
+
+**Alternatives / extension points.**
+- The parent rule links on `object mention == subject mention`. A richer version could use the parse's
+  subordination type to distinguish *elaboration* (`characterized_by`) from *consequence*
+  (`decreasing`) and label the edge accordingly, rather than leaving both as a bare parent pointer.
+- `characterized_by` was the first *descriptive* predicate; the `has_decreased_abundance_of` /
+  `has_increased_abundance_of` manifestations now join the same clinically-neutral family.
+  `defined_as`/`comprises`/`consists_of` would extend it further, each a new cue + verb-map entry.
+- The abundance manifestations are deliberately neutral because the engine does not know whether a
+  given taxon is beneficial or harmful. A per-taxon desirability vocabulary (like
+  `valence._DESIRABLE_CONCEPTS`) could later let *"decreased Firmicutes"* read as harmful and
+  *"increased Proteobacteria"* as harmful without changing the predicate.
+- Synthesis (Concept 13) currently treats every claim independently; the parent link is additive
+  metadata it could later use to roll a condition's sub-effects up under the condition.
+
+**In the code** — `knowledge/observations.py` (`_link_parents`, and the participle re-label +
+descriptive-object step `_descriptive_object_mention` in `_parse_bind_sentence`), `knowledge/claims.py`
+(`_link_parent_claims`), `knowledge/parse.py` (`participle_subject_tokens`, `_coordinate_list` for
+apposition list-items, `descriptive_object_span` for the whole descriptor phrase), `knowledge/relations.py`
+(the `characterized_by` rule + `characterize` verb-map entry; the `has_decreased_abundance_of` /
+`has_increased_abundance_of` rules + `abundance_manifestation_for`), and the gut-taxa concepts in
+`knowledge/vocab/dictionaries.json`.
+
+```python
+# observations._link_parents — derive the nesting from the bound endpoints (both binders).
+for idx, child in enumerate(ordered):            # ordered by (subject span, object span, predicate)
+    for parent in ordered[:idx]:                 # only an EARLIER one ⇒ acyclic
+        if parent.object_mention_id == child.subject_mention_id:
+            child.parent_observation_id = parent.observation_id
+            break
+```
+
+- **Parameters.** `_link_parents(observations, mentions)` — the sentence's observations plus the
+  mentions (for endpoint spans); `participle_subject_tokens(verb)` — a candidate predicate token.
+- **Called by.** `observations.extract` (once, after both binders) and `claims.normalize` (which then
+  lifts the link to `parent_claim_id`). The participle rule is consulted by `observations._parse_bind_sentence`
+  before the generic subject cascade, and mirrored in the `/observe/deconstruct` trace.
+- **Returns.** Nothing — both linkers mutate in place, setting `parent_observation_id` /
+  `parent_claim_id` (persisted to the additive `observations.parent_observation_id` /
+  `claims.parent_claim_id` columns, and surfaced on the REST observation/claim payloads).
 
 ---
 

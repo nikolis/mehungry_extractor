@@ -392,6 +392,42 @@ class SentenceParse:
             out.append(verb.head)  # reduced relative / participle: antecedent is the subject
         return out
 
+    def participle_subject_tokens(self, verb) -> list:
+        """Implicit subject of a free-adjunct **participle** (``advcl`` + ``VBG``/``VBN``), or ``[]``.
+
+        A result/manifestation participle attached to a clause spells out no subject of its own, yet
+        it predicates over what the governing clause just introduced — its **object**, not its subject:
+
+        * present participle (``VBG``): *"inflammation induces dysbiosis, **decreasing** Firmicutes …"*
+          → *dysbiosis* decreases Firmicutes;
+        * past participle (``VBN``): *"inflammation induces dysbiosis, **characterized** by alterations
+          …"* → *dysbiosis* is characterized by those alterations.
+
+        In both the implicit subject is the **governing verb's object** (here *dysbiosis*), falling
+        back to the governing verb's subject only when that clause is intransitive (so a true
+        subject-controlled adjunct — *"When **treated** with X, patients improved"* — still resolves).
+        This is what lets *"…, decreasing/characterized …"* bind to *dysbiosis* and nest beneath
+        *inflammation → causes → dysbiosis* (see the hierarchical-relations concept), rather than
+        being dropped for want of a subject **or** mis-bound to the governing *subject* by the generic
+        controller fallback (which, for *"induces dysbiosis, characterized …"*, would otherwise return
+        both *inflammation* and *dysbiosis* and fabricate the *inflammation* reading).
+
+        Deliberately narrow so it cannot fabricate subjects elsewhere: it fires **only** for a ``VBG``/
+        ``VBN`` participle on an ``advcl`` arc that exposes **no** overt subject of its own
+        (:meth:`subject_tokens` already handles ``acl``/``relcl`` antecedents and overt subjects). A
+        finite adverbial clause ("…, while it reduces X") carries its own subject and is left
+        untouched. Like the ``acl``/``relcl`` antecedent case, an unresolved result is simply no
+        subject — it never suppresses the flat fallback."""
+        if verb.dep_.split(":")[0] != "advcl" or verb.tag_ not in ("VBG", "VBN"):
+            return []
+        if any(c.dep_ in _SUBJECT_DEPS for c in verb.children):
+            return []
+        head = verb.head
+        objs = self.object_tokens(head)
+        if objs:
+            return objs
+        return self.subject_tokens(head)
+
     def condition_tokens(self, verb) -> list:
         """Prepositional-phrase modifiers of ``verb`` that read as *conditions* ("during
         remission", "in children") rather than objects — offered to the qualifier extractor."""
@@ -437,7 +473,26 @@ class SentenceParse:
         out: list = []
         for c in verb.children:
             if c.dep_ in _OBJECT_DEPS and c.i not in conditions:
-                out.extend(self.coordinate(c))
+                out.extend(self._coordinate_list(c))
+        return out
+
+    def _coordinate_list(self, tok) -> list:
+        """:meth:`coordinate` plus apposition **list items**.
+
+        spaCy frequently labels the *middle* element of a comma list "A, B, and C" as ``appos`` of A
+        while only the final element gets ``conj`` (e.g. "decreasing Firmicutes, the Bifidobacterium
+        genus, and Faecalibacterium prausnitzii" parses *genus* as ``appos`` of *Firmicutes*). Plain
+        :meth:`coordinate` follows only ``conj`` and so drops B. When ``tok`` already heads a ``conj``
+        it *is* a coordinated list, so its ``appos`` children are list items too and are expanded
+        alongside the conjuncts. The ``conj`` gate keeps a lone apposition ("CRP, **a marker of
+        inflammation**") from being mistaken for coordination — only an object that is demonstrably a
+        list reaches into its appositives. Scoped to object binding (:meth:`object_tokens`); subject
+        coordination stays strict."""
+        out = self.coordinate(tok)
+        if any(c.dep_ == "conj" for c in tok.children):
+            for c in tok.children:
+                if c.dep_ == "appos":
+                    out.extend(self.coordinate(c))
         return out
 
     def measure_objects(self, obj_tok) -> list:
@@ -454,6 +509,32 @@ class SentenceParse:
             if c.dep_ in _PREP_PHRASE_DEPS and self._prep_surface(c) in _CONTENT_GENITIVE_PREPS:
                 out.extend(self.coordinate(c))
         return out
+
+    def descriptive_object_span(self, obj_tok) -> "Optional[tuple[int, int]]":
+        """Absolute span of a descriptive object's *whole head-noun phrase*, or ``None`` (Phase 15).
+
+        A descriptive relation's object is the entire phrase hanging off the cue, not the deep entity
+        buried inside it — "characterized by **alterations in the composition and function of the gut
+        microbiota**" is *about* the alterations, and *gut microbiota* is merely a modifier the
+        general object resolver would wrongly descend to. When ``obj_tok`` is **not** an entity anchor
+        yet dominates one (so an entity-seeking descent would skip past the true head noun), this
+        returns the full span of ``obj_tok``'s subtree — the phrase from the head noun *alterations …*
+        to the end of the clause — which :mod:`.observations` makes the relation's object verbatim.
+        Returns ``None`` when ``obj_tok`` is itself the entity (no deeper descriptor to preserve — the
+        entity *is* the object) or dominates none."""
+        if obj_tok.i in self._anchor_to_mention:
+            return None
+        if self.mention_for_token(obj_tok) is None:
+            return None
+        # Exclude the leading preposition (the ``case``/``mark`` child, e.g. the "by" of "by
+        # alterations …") so the recorded phrase starts at the head noun. Internal case markers
+        # ("of"/"in") lie between the boundary tokens, so dropping them does not move the span.
+        toks = [t for t in obj_tok.subtree if t.dep_ not in ("case", "mark")]
+        if not toks:
+            return None
+        rel_start = min(t.idx for t in toks)
+        rel_end = max(t.idx + len(t.text) for t in toks)
+        return self.base + rel_start, self.base + rel_end
 
     def direction_of(self, obj_tok) -> "Optional[str]":
         """The direction an object noun's ``amod`` expresses — ``"reduced"``/``"increased"``/``None``.

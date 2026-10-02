@@ -210,6 +210,8 @@ def _claim_dict(
     return {
         "claim_id": c.claim_id,
         "document_id": c.document_id,
+        # Phase 13 — the claim this one is nested beneath, or null for a top-level claim.
+        "parent_claim_id": c.parent_claim_id,
         "subject_concept_id": c.subject_concept_id,
         "subject_name": c.subject_name,
         "predicate": c.predicate,
@@ -403,6 +405,8 @@ def list_observations_for_document(engine: Engine, doc_or_pmid: str) -> list[dic
                 "observation_id": o.observation_id,
                 "document_id": o.document_id,
                 "sentence_id": o.sentence_id,
+                # Phase 13 — the observation this one is nested beneath, or null if top-level.
+                "parent_observation_id": o.parent_observation_id,
                 "subject_mention_id": o.subject_mention_id,
                 "subject_text": o.subject_text,
                 "subject_concept_id": o.subject_concept_id,
@@ -669,6 +673,7 @@ def explain_claim(engine: Engine, claim_id: str) -> Optional[dict]:
         observations = [
             {"observation_id": o.observation_id, "predicate": o.predicate, "polarity": o.polarity,
              "certainty": o.certainty, "context": o.context, "rule_id": o.rule_id,
+             "parent_observation_id": o.parent_observation_id,
              "sentence_id": o.sentence_id, "subject_text": o.subject_text, "object_text": o.object_text}
             for o in session.query(ObservationRow)
             .filter(ObservationRow.observation_id.in_(list(claim.observation_ids or [])))

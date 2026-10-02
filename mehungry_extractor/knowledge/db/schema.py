@@ -443,6 +443,9 @@ class ObservationRow(Base):
     observation_id: Mapped[str] = mapped_column(String, primary_key=True)
     document_id: Mapped[str] = mapped_column(String, ForeignKey("documents.document_id"), index=True)
     sentence_id: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
+    # Phase 13 — the observation this one is nested beneath (its subject is that one's object), or
+    # NULL for a top-level relation. Additive; not part of the id, so existing rows are unaffected.
+    parent_observation_id: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
     subject_mention_id: Mapped[str] = mapped_column(String)
     subject_text: Mapped[str] = mapped_column(Text)
     subject_concept_id: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
@@ -466,6 +469,9 @@ class ClaimRow(Base):
 
     claim_id: Mapped[str] = mapped_column(String, primary_key=True)
     document_id: Mapped[str] = mapped_column(String, ForeignKey("documents.document_id"), index=True)
+    # Phase 13 — the claim this one is nested beneath (unambiguously lifted from its observations'
+    # parents), or NULL. Additive; not part of the id.
+    parent_claim_id: Mapped[Optional[str]] = mapped_column(String, nullable=True, index=True)
     subject_concept_id: Mapped[str] = mapped_column(String, index=True)
     subject_name: Mapped[str] = mapped_column(Text)
     predicate: Mapped[str] = mapped_column(String, index=True)
@@ -820,6 +826,7 @@ def persist_relations(
                 observation_id=o.observation_id,
                 document_id=o.document_id,
                 sentence_id=o.sentence_id,
+                parent_observation_id=o.parent_observation_id,
                 subject_mention_id=o.subject_mention_id,
                 subject_text=o.subject_text,
                 subject_concept_id=o.subject_concept_id,
@@ -843,6 +850,7 @@ def persist_relations(
             ClaimRow(
                 claim_id=c.claim_id,
                 document_id=c.document_id,
+                parent_claim_id=c.parent_claim_id,
                 subject_concept_id=c.subject_concept_id,
                 subject_name=c.subject_name,
                 predicate=c.predicate,

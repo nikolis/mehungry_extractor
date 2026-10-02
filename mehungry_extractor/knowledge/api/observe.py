@@ -456,11 +456,46 @@ def _predicate_trace(sp, document, sentence) -> list[dict]:
                 pred.lemma_, object_is_risk=object_is_risk, object_direction=object_direction
             )
             subjects = [sp.subject_mention_for_token(t) for t in subj_tokens]
-            objects = [sp.mention_for_token(t) for t in obj_tokens]
             subj_resolved = [s for s in subjects if s is not None]
-            obj_resolved = [o for o in objects if o is not None]
+            # Mirror the binder's Phase-13 participle fallback: a free-adjunct present participle
+            # ("induces dysbiosis, **decreasing** X") takes the governing clause's object as its
+            # implicit subject, nesting the relation beneath its parent.
+            participle_subject = False
+            if not subj_resolved:
+                part_tokens = sp.participle_subject_tokens(pred)
+                if part_tokens:
+                    participle_subject = True
+                    subjects = [sp.subject_mention_for_token(t) for t in part_tokens]
+                    subj_resolved = [s for s in subjects if s is not None]
+                    # Mirror the binder's Phase-14 re-label: a directional participle over a *state*
+                    # becomes the descriptive abundance-manifestation predicate of the same direction.
+                    if subj_resolved and rule is not None:
+                        relabelled = _relations.abundance_manifestation_for(rule.predicate)
+                        if relabelled is not None:
+                            rule = relabelled
+            # Mirror the binder's Phase-15 descriptive-object rule: a ``characterized_by`` object is
+            # the whole head-noun phrase verbatim ("alterations in the composition and function of the
+            # gut microbiota"), not the deep entity the general resolver would descend to.
+            if rule is not None and rule.predicate == "characterized_by":
+                object_briefs: list = []
+                for t in sp.object_tokens(pred):
+                    span = sp.descriptive_object_span(t)
+                    if span is not None:
+                        object_briefs.append(
+                            {
+                                "surface": document.text[span[0]:span[1]],
+                                "concept_id": None,
+                                "status": "unmatched",
+                            }
+                        )
+                    else:
+                        object_briefs.append(_resolved_brief(sp.mention_for_token(t)))
+            else:
+                object_briefs = [_resolved_brief(sp.mention_for_token(t)) for t in obj_tokens]
+            obj_resolved = [o for o in object_briefs if o is not None]
             conditions = [document.text[slice(*sp.token_span(c))] for c in sp.condition_tokens(pred)]
 
+            nested = participle_subject or pred.dep_.split(":")[0] in ("acl", "relcl")
             if rule is None:
                 note = f"verb '{pred.lemma_}' is not in the predicate map → left to the flat fallback"
             elif not subj_resolved and any(t.pos_ in ("NOUN", "PROPN") for t in subj_tokens):
@@ -473,6 +508,8 @@ def _predicate_trace(sp, document, sentence) -> list[dict]:
                 note = "no object resolved → relation dropped"
             else:
                 note = f"bound {len(subj_resolved)}×{len(obj_resolved)} (subject × object)"
+                if nested:
+                    note += " — nested under the relation whose object is this subject"
 
             traces.append(
                 {
@@ -487,8 +524,9 @@ def _predicate_trace(sp, document, sentence) -> list[dict]:
                     if rule is None
                     else {"predicate": rule.predicate, "rule_id": rule.rule_id, "version": rule.version},
                     "subjects": [_resolved_brief(s) for s in subjects],
-                    "objects": [_resolved_brief(o) for o in objects],
+                    "objects": object_briefs,
                     "conditions": conditions,
+                    "nested": nested,
                     "note": note,
                 }
             )
@@ -543,6 +581,9 @@ def _deconstruct_sentence(document, sentence, mentions, observations, parse_on) 
         "parse": parse_block,
         "observations": [
             {
+                "observation_id": o["observation_id"],
+                # Phase 13 — the observation this one is nested beneath, or null if top-level.
+                "parent_observation_id": o.get("parent_observation_id"),
                 "subject_text": o["subject_text"],
                 "subject_concept_id": o["subject_concept_id"],
                 "predicate": o["predicate"],
@@ -552,6 +593,8 @@ def _deconstruct_sentence(document, sentence, mentions, observations, parse_on) 
                 "certainty": o["certainty"],
                 "context": o["context"],
                 "rule_id": o["rule_id"],
+                # Clause-scoped typed conditions on the relation (e.g. a ``disease_state``).
+                "qualifiers": o.get("qualifiers", []),
             }
             for o in observations
         ],

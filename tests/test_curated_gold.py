@@ -22,14 +22,18 @@ def test_curated_gold_baseline_no_regression():
     result = evaluate(use_model=True)
     d = result.to_dict()
     c = d["counts"]
-    # Snapshot 2026-09-30 after Phases 4a–4c + 4f (4a: widened predicate discovery + control/antecedent
-    # subject resolution + restrictive subject resolver + non-entity-subject fallback guard; 4b:
-    # measure-noun object unwrapping; 4c: "protective … against" cue; 4f: gerund clausal subject):
-    # correct 9 / field_error 0 / missed 4 / spurious 0; achievable_correct 5 of 8, precision 1.0.
-    # The 4 misses are recall ceilings: an out-of-vocab subject (#1), an unmapped verb "regulate"
-    # (kefir→gut microbiota), and #6 whose grammatical subject is "the metabolites", not "fiber".
-    # One-sided: never fewer correct, never more spurious.
-    assert c["correct"] >= 9, d["details"]
+    # Snapshot 2026-10-01 after Phases 4a–4c + 4f, Phase 13 (hierarchical relations) and Phase 15
+    # (descriptive-object binding). #c2 contributes the reviewer-confirmed relation
+    # `dysbiosis -characterized_by-> "alterations in the composition and function of the gut
+    # microbiota"`, nested beneath `inflammation -causes-> dysbiosis`: the past-participle rule binds
+    # the governing *object* (dysbiosis), so the controller fallback no longer fabricates the
+    # `inflammation` subject, and the descriptive object is the WHOLE phrase, not the deep entity.
+    # That phrase is a free-text descriptor (out of vocabulary), so the relation is `correct` (it
+    # aligns and all labels agree) but no longer `achievable` recall — hence correct stays 10 while
+    # achievable_correct is 5 of 8. The remaining misses are recall ceilings: an out-of-vocab subject
+    # (#1), an unmapped verb "regulate" (kefir→gut microbiota), and #6 whose grammatical subject is
+    # "the metabolites", not "fiber". One-sided: never fewer correct, never more spurious.
+    assert c["correct"] >= 10, d["details"]
     assert c["spurious"] <= 0, d["details"]
     assert c["achievable_correct"] >= 5, d["details"]
     assert d["precision_strict"] >= 0.99, d["details"]

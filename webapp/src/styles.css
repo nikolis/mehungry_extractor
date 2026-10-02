@@ -154,6 +154,38 @@ tr.clickable:hover td { background: #f8fafc; }
 .phead-args { margin: 6px 0 2px; display: flex; flex-direction: column; gap: 3px; }
 .phead-args .k, .phead-note .k { display: inline-block; min-width: 38px; color: var(--muted); text-transform: uppercase; font-size: 10px; }
 .phead-note { margin-top: 4px; }
+
+/* observation hierarchy (Concept 20): a relation nests under the one whose object is its subject */
+.obs-tree, .obs-children { list-style: none; margin: 0; padding: 0; }
+.obs-node { position: relative; }
+.obs-row { padding: 3px 0; }
+.obs-tree > .obs-node > .obs-row { border-left: 3px solid var(--accent); padding-left: 8px; }
+.obs-children {
+  margin-left: 7px;
+  padding-left: 13px;
+  border-left: 2px solid var(--line);
+}
+/* typed conditions on a relation (incl. the descriptive `manifestation` phrase) */
+.obs-quals { margin: 2px 0 1px; display: flex; flex-wrap: wrap; gap: 4px; }
+.qual-chip {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  background: #f6f8fb; border: 1px solid var(--line); border-radius: 6px;
+  padding: 1px 7px; font-size: 11px; color: var(--ink);
+}
+.qual-chip .qual-type {
+  text-transform: uppercase; letter-spacing: .03em; font-size: 9px; color: var(--muted);
+}
+
+/* elbow connector from the gutter line to each nested row */
+.obs-children > .obs-node > .obs-row::before {
+  content: "";
+  position: absolute;
+  left: -13px;
+  top: 12px;
+  width: 11px;
+  border-top: 2px solid var(--line);
+}
+
 .deptree { margin: 10px 0; }
 .deptree summary { cursor: pointer; color: var(--accent); font-size: 12px; }
 .deptree .table-scroll { margin-top: 6px; max-height: 320px; overflow-y: auto; }

@@ -187,12 +187,13 @@ Each **observation** carries the relation plus every detail around it:
 | Field | Type | Description |
 |---|---|---|
 | `observation_id` | `string` | Deterministic id (subject/object spans + predicate). |
+| `parent_observation_id` | `string`/`null` | **Hierarchical relations** — the observation this one is nested beneath (the relation whose *object* is this relation's *subject*, within the same sentence), or `null` for a top-level relation. E.g. `dysbiosis → characterized_by → "alterations in the composition and function of the gut microbiota"` points at `inflammation → causes → dysbiosis`. Not part of `observation_id`, so ids are stable across this addition. |
 | `subject_text`, `object_text` | `string` | The exact surface text of each endpoint. |
 | `subject_concept_id`, `object_concept_id` | `string`/`null` | Normalized concept ids; `null` when the mention didn't normalize (the observation is still returned). |
 | `subject_name`, `object_name` | `string`/`null` | Canonical names of the resolved concepts. |
 | `subject_modifiers`, `object_modifiers` | `object[]` | Restrictive modifiers on each endpoint head (Concept 19): `{ relation, preposition, value_concept_id, value_text, value_type, status }`. `relation` is `localized_in`/`qualified_by`/…; e.g. `dysbiosis` carries `{ relation: "localized_in", preposition: "of", value_text: "gut microbiome", … }`. Empty when the head has none. |
 | `subject_label`, `object_label` | `string` | The endpoint rendered *with* its modifiers folded back in — so a bare `Dysbiosis` is served as `Dysbiosis of gut microbiome` and the collapsed display keeps the target the head resolves away. Falls back to the plain name/surface when there are no modifiers. |
-| `predicate` | `string` | The relation the rule assigned (e.g. `improves`). |
+| `predicate` | `string` | The relation the rule assigned (e.g. `improves`). Includes the descriptive, clinically-neutral predicates `characterized_by` and `has_decreased_abundance_of`/`has_increased_abundance_of` (a state's manifestation, not an active effect). A `characterized_by` object is the whole descriptor phrase verbatim (e.g. `"alterations in the composition and function of the gut microbiota"`), so its `object_concept_id` is `null` when that phrase is not a vocabulary concept. |
 | `polarity` | `string` | `positive` or `negative` (negation flips the rule's base polarity). |
 | `certainty` | `string` | `asserted` or `hedged`. |
 | `context` | `string`/`null` | Negation/uncertainty cue + clause marker, for audit. |
@@ -307,8 +308,8 @@ title-filter discipline as `/analyze`.
 | `GET /observe/documents` | Every ingested paper (`document_id`, `pmid`, `title`, `source_type`, …) — the paper picker. |
 | `GET /observe/document/{pmid}` | The **canonical document**: the single offset-addressable `text`, its `sections`/`paragraphs`/`sentences` (with absolute char offsets), `metadata`, and a `summary` (section/sentence/char counts). `404` if the paper was never ingested. |
 | `GET /observe/entities/{pmid}` | **Entity mentions**: each with `surface_text`, `entity_type`, `concept_id`, `status` (normalized/ambiguous/unmatched), `start_char`/`end_char`, and restrictive `modifiers`. |
-| `GET /observe/observations/{pmid}` | **Observations** (audit layer): subject/predicate/object, `polarity`/`certainty`, `qualifiers`, the `rule_id`/`rule_version` that fired, and inline `evidence_refs`. |
-| `GET /observe/claims/{pmid}` | **Claims** (concept layer): grouped `(subject, predicate, object, polarity, certainty)` with `qualifiers`. |
+| `GET /observe/observations/{pmid}` | **Observations** (audit layer): subject/predicate/object, `polarity`/`certainty`, `qualifiers`, the `rule_id`/`rule_version` that fired, inline `evidence_refs`, and `parent_observation_id` (the observation this one is nested beneath — hierarchical relations — or `null`). |
+| `GET /observe/claims/{pmid}` | **Claims** (concept layer): grouped `(subject, predicate, object, polarity, certainty)` with `qualifiers`, plus `parent_claim_id` (the claim this one is nested beneath, or `null` — set only when unambiguous across the claim's observations). |
 | `GET /observe/facts/{pmid}` | **Paper facts**: `study_characteristics`, `funding`, `affiliations` (authors + institutions), and `assessments`. |
 | `GET /observe/open-relations/{pmid}` | The opt-in **Phase 11** relation-bearing spans (most-confident first). Empty list if none were discovered. |
 | `GET /observe/provenance/claim/{claim_id}` | The **full provenance block** for one claim (`explain_claim`): claim → `evidence` refs (each with `quoted_text` and a `reconstructed_text` re-sliced from the canonical text) → `document` → `run` → `study`/`funding`/`assessments`/`observations`. `404` for an unknown claim id. |
@@ -323,9 +324,16 @@ and, for every candidate sentence (≥2 mentions, or one that produced an observ
 - `parse` — the dependency parse `tokens` (`text`, `lemma`, `pos`, `dep`, `head`), the discovered
   `predicate_heads`, and any `clausal_subjects`. Each predicate head records the verb/lemma, the
   selected `rule` (predicate + `rule_id`/`version`) or `null`, the `object_is_risk`/`object_direction`
-  promotions, `negated`, the resolved `subjects`/`objects` (or `unresolved`), condition phrases, and a
-  plain-language `note` explaining the binding outcome (bound / dropped / deferred to the flat binder).
-- `observations` — the observations actually emitted for that sentence (with their `context` binder tag).
+  promotions, `negated`, the resolved `subjects`/`objects` (or `unresolved`), condition phrases, a
+  `nested` flag (true when the predicate nests under the relation whose object is its subject — e.g. a
+  participial `characterized by …` / `…, decreasing …` adjunct), and a plain-language `note` explaining
+  the binding outcome (bound / nested / dropped / deferred to the flat binder).
+- `observations` — the observations actually emitted for that sentence, each with its `observation_id`,
+  `context` binder tag, `parent_observation_id` (the observation it nests beneath, or `null`), and
+  `qualifiers` (`{ qualifier_type, value_concept_id, value_text }[]`). A `characterized_by`
+  observation's `object_text` is the whole descriptor phrase (e.g. `"alterations in the composition and
+  function of the gut microbiota"`), with a `null` `object_concept_id` when that phrase is not a
+  vocabulary concept; the parse `predicate_heads` trace shows the same phrase as the resolved object.
 
 Response envelope also carries `parse_available`, `sentence_count`, and `deconstructed_count`. It
 mirrors the real parse binder (`observations._parse_bind_sentence`) over a fresh parse — it changes no

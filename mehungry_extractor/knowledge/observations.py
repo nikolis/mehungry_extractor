@@ -43,6 +43,7 @@ from typing import TYPE_CHECKING, Optional
 
 from pydantic import BaseModel
 
+from . import RULESET_VERSION as _RULESET_VERSION
 from . import clauses as _clauses
 from . import qualifiers as _qualifiers
 from .modifiers import EntityModifier
@@ -63,6 +64,14 @@ class Observation(BaseModel):
     observation_id: str
     document_id: str
     sentence_id: Optional[str] = None
+
+    # Phase 13 (hierarchical relations) — the observation this one is nested beneath: the relation
+    # whose *object* is this relation's *subject*, within the same sentence ("inflammation causes
+    # **dysbiosis**" is the parent of "**dysbiosis** characterized by …" / "**dysbiosis** decreases
+    # …"). ``None`` for a top-level relation. Derived post-hoc from the bound endpoints
+    # (:func:`_link_parents`), so it is additive — it never changes which observations are emitted —
+    # and it is *not* part of :func:`_observation_id`, so ids stay stable across this change.
+    parent_observation_id: Optional[str] = None
 
     subject_mention_id: str
     subject_text: str
@@ -185,10 +194,52 @@ def extract(
         if made == 0 and not block_fallback:
             _flat_bind_sentence(document, sentence, ordered, observations, seen)
 
+    _link_parents(observations, mentions)
     observations.sort(
         key=lambda o: (o.subject_mention_id, o.object_mention_id, o.predicate)
     )
     return observations
+
+
+def _link_parents(
+    observations: list[Observation], mentions: "list[EntityMention]"
+) -> None:
+    """Set ``parent_observation_id`` on each observation that elaborates another's object (Phase 13).
+
+    A relation whose **subject** is another relation's **object** — within the same sentence — is a
+    *child* of that relation: the nested, hierarchical reading ("inflammation causes dysbiosis" is
+    the parent of "dysbiosis characterized by …" and "dysbiosis decreases …"). The link is derived
+    purely from the bound endpoints, so it serves **both binders**: on the parse path a subordinate
+    clause resolves its subject to the governing clause's object, so several children share one
+    parent (a *tree*); on the flat floor adjacency resolves each subject to the previous object, so
+    the same rule yields a *chain*. It is additive — it never changes which observations are emitted,
+    only annotates them.
+
+    Deterministic and acyclic: within a sentence, observations are ordered by (subject span, object
+    span, predicate) and each is linked to the *earliest strictly-earlier* observation whose object
+    mention is this one's subject mention. Linking only to an earlier observation in that fixed order
+    makes a cycle impossible (A↔B can never both point at each other)."""
+    start_of = {m.mention_id: m.start_char for m in mentions}
+    by_sentence: dict[Optional[str], list[Observation]] = {}
+    for o in observations:
+        by_sentence.setdefault(o.sentence_id, []).append(o)
+    for sent_obs in by_sentence.values():
+        ordered = sorted(
+            sent_obs,
+            key=lambda o: (
+                start_of.get(o.subject_mention_id, -1),
+                start_of.get(o.object_mention_id, -1),
+                o.predicate,
+            ),
+        )
+        for idx, child in enumerate(ordered):
+            for parent in ordered[:idx]:
+                if (
+                    parent.object_mention_id == child.subject_mention_id
+                    and parent.observation_id != child.observation_id
+                ):
+                    child.parent_observation_id = parent.observation_id
+                    break
 
 
 def _flat_bind_sentence(
@@ -368,6 +419,53 @@ def _dedup_keep_order(mentions: "list[EntityMention]") -> "list[EntityMention]":
     return out
 
 
+# The entity type stamped on a synthetic descriptive-object mention (below). The phrase it carries
+# is a free-text descriptor, not a dictionary entity, so this type never maps to a vocabulary and
+# the mention is never added to the persisted entity set — it exists only to carry the object
+# surface of a ``characterized_by`` relation. The value only needs to be stable for the id.
+_DESCRIPTOR_ENTITY_TYPE = "descriptor"
+_DESCRIPTIVE_OBJECT_RULE = "parse_descriptive_object"
+
+
+def _descriptive_object_mention(
+    document: "Document", sentence: "Sentence", start: int, end: int
+) -> "EntityMention":
+    """A synthetic object mention spanning a descriptive relation's full head-noun phrase (Phase 15).
+
+    The object of ``characterized_by`` is the *whole* descriptor — e.g. "alterations in the
+    composition and function of the gut microbiota" — not the deep entity the general object resolver
+    would descend to (*gut microbiota*). That phrase is not a vocabulary concept, so the mention
+    carries its surface verbatim with ``concept_id=None`` (``unmatched``), exactly like any endpoint
+    that did not normalize: the observation is retained with the correct object text, and the claim
+    layer forms no concept-level edge from it (a free-text descriptor is not a concept node, so there
+    is deliberately nothing to normalize). The id is span+type derived, so re-runs reproduce it, and
+    the mention is not added to the persisted entity set — it is only an argument carrier."""
+    from .entities import EntityMention, _mention_id
+    from .normalize import NORMALIZATION_SOURCE, STATUS_UNMATCHED
+
+    return EntityMention(
+        mention_id=_mention_id(document.document_id, start, end, _DESCRIPTOR_ENTITY_TYPE),
+        document_id=document.document_id,
+        sentence_id=sentence.sentence_id,
+        surface_text=document.text[start:end],
+        normalized_text=None,
+        concept_id=None,
+        entity_type=_DESCRIPTOR_ENTITY_TYPE,
+        start_char=start,
+        end_char=end,
+        normalization_source=NORMALIZATION_SOURCE,
+        status=STATUS_UNMATCHED,
+        evidence_ref=EvidenceRef.for_span(
+            document,
+            start,
+            end,
+            sentence=sentence,
+            extraction_rule=_DESCRIPTIVE_OBJECT_RULE,
+            extraction_rule_version=_RULESET_VERSION,
+        ),
+    )
+
+
 def _parse_bind_sentence(
     document: "Document",
     sentence: "Sentence",
@@ -460,6 +558,25 @@ def _parse_bind_sentence(
 
             subjects = _dedup_keep_order([sp.subject_mention_for_token(t) for t in subj_tokens])
             if not subjects:
+                # A free-adjunct present participle ("induces dysbiosis, **decreasing** X") carries no
+                # subject of its own; its implicit subject is the governing clause's object (Phase 13).
+                # Resolve that before the generic cascade so "decreasing X" binds `dysbiosis → X` and
+                # nests under the parent, instead of being deferred to the flat fallback.
+                part_tokens = sp.participle_subject_tokens(pred)
+                if part_tokens:
+                    subjects = _dedup_keep_order(
+                        [sp.subject_mention_for_token(t) for t in part_tokens]
+                    )
+                    if subjects:
+                        # A directional effect participle over a *state* ("dysbiosis, **decreasing**
+                        # Firmicutes") describes a compositional change the state manifests, not an
+                        # effect it exerts — re-label it to the descriptive abundance-manifestation
+                        # predicate of the same direction (Phase 14). Any non-directional predicate
+                        # is left exactly as the verb map produced it.
+                        manifestation_rule = relations.abundance_manifestation_for(rule.predicate)
+                        if manifestation_rule is not None:
+                            rule = manifestation_rule
+            if not subjects:
                 # The predicate has no *directly resolved* subject. Decide, from the subject's
                 # syntactic shape, between several outcomes (Phase 4a/4f):
                 #   • a gerund clausal subject ("Consuming … of kefir")  → the agent is inside the
@@ -500,7 +617,26 @@ def _parse_bind_sentence(
                         if not subjects:
                             continue
 
-            objects = _dedup_keep_order([sp.mention_for_token(t) for t in obj_tokens])
+            # Descriptive-relation object (Phase 15). A ``characterized_by`` object is the **whole**
+            # descriptor phrase, not the deep entity the general resolver would descend to:
+            # "characterized by **alterations in the composition and function of the gut microbiota**"
+            # is *about* the alterations — binding the object to *gut microbiota* asserts the wrong
+            # thing. So when the object head noun is not itself an entity but dominates one (the
+            # descent case), the full head-noun phrase is taken verbatim as the object. A descriptive
+            # object that *is* an entity ("characterized by inflammation") keeps the normal resolution.
+            if rule.predicate == "characterized_by":
+                objects = []
+                for ot in sp.object_tokens(pred):
+                    span = sp.descriptive_object_span(ot)
+                    if span is not None:
+                        objects.append(
+                            _descriptive_object_mention(document, sentence, span[0], span[1])
+                        )
+                    else:
+                        objects.append(sp.mention_for_token(ot))
+                objects = _dedup_keep_order(objects)
+            else:
+                objects = _dedup_keep_order([sp.mention_for_token(t) for t in obj_tokens])
             if not objects:
                 continue
 

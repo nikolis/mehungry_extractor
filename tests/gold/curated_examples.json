@@ -142,6 +142,15 @@
           "certainty": "asserted",
           "failure_mode": "vocab_gap",
           "note": "Regression guard (reviewer-confirmed correct). 'induces' -> causes."
+        },
+        {
+          "subject": {"text": "dysbiosis", "concept_id": "DIS:dysbiosis", "in_vocab": true},
+          "predicate": "characterized_by",
+          "object": {"text": "alterations in the composition and function of the gut microbiota", "concept_id": null, "in_vocab": false},
+          "polarity": "neutral",
+          "certainty": "asserted",
+          "failure_mode": "vocab_gap",
+          "note": "Phase 15 (reviewer-confirmed correct). The reduced relative 'characterized by ...' is a descriptive child of the 'induces' relation: its implicit subject is the governing object (dysbiosis) and its object is the WHOLE descriptor phrase 'alterations in the composition and function of the gut microbiota' - not the deep entity 'gut microbiota', which would assert the wrong thing. The phrase is a free-text descriptor (no concept id), so it is scorable for precision but out-of-vocab for achievable recall. Nests beneath inflammation->causes->dysbiosis."
         }
       ]
     },

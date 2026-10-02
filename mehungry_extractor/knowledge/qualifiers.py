@@ -296,7 +296,7 @@ def signature(qualifiers: "list[Qualifier]") -> str:
 
 def registry() -> list[dict]:
     """The qualifier cue rules, for the ``extraction_rules`` table (mirrors :func:`..relations.registry`)."""
-    return [
+    cue_rules = [
         {
             "rule_id": rule.rule_id,
             "version": RULESET_VERSION,
@@ -305,3 +305,4 @@ def registry() -> list[dict]:
         }
         for rule in _RULES
     ]
+    return cue_rules

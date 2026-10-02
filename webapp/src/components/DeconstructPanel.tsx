@@ -29,6 +29,7 @@ function PredicateHeads({ heads }: { heads: PredicateHead[] }) {
               <Tag kind="unmatched">no rule</Tag>
             )}
             {h.negated && <Tag kind="pol-negative">negated</Tag>}
+            {h.nested && <Tag kind="normalized">↳ nested</Tag>}
             {h.object_is_risk && <Tag kind="type">risk→promoted</Tag>}
             {h.object_direction && <Tag kind="type">dir: {h.object_direction}</Tag>}
             {h.is_participial && <Tag>participial</Tag>}
@@ -96,6 +97,94 @@ function DepTree({ tokens }: { tokens: ParseToken[] }) {
   );
 }
 
+type DeconObservation = DeconSentence["observations"][number];
+
+function ObsRow({ o }: { o: DeconObservation }) {
+  return (
+    <div className="obs-row small">
+      <b>{o.subject_text}</b> <Tag kind="pred">{o.predicate}</Tag> <b>{o.object_text}</b>{" "}
+      <Tag kind={`pol-${o.polarity}`}>{o.polarity}</Tag> <span className="muted">{o.certainty}</span>
+      {o.context && <span className="muted"> · {o.context}</span>}
+      {o.qualifiers?.length > 0 && (
+        <div className="obs-quals">
+          {o.qualifiers.map((q, i) => (
+            <span key={i} className="qual-chip" title={q.qualifier_type}>
+              <span className="qual-type">{q.qualifier_type}</span>
+              {q.value_concept_id ?? q.value_text}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ObsNode({
+  node,
+  childrenOf,
+}: {
+  node: DeconObservation;
+  childrenOf: Map<string, DeconObservation[]>;
+}) {
+  const kids = childrenOf.get(node.observation_id) ?? [];
+  return (
+    <li className="obs-node">
+      <ObsRow o={node} />
+      {kids.length > 0 && (
+        <ul className="obs-children">
+          {kids.map((k) => (
+            <ObsNode key={k.observation_id} node={k} childrenOf={childrenOf} />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+// Rebuild the parent→children tree from the flat `parent_observation_id` pointers the engine
+// emits (Concept 20). Roots are observations with no parent — or whose parent is not in this
+// sentence (defensive) — rendered in document order; the rest nest beneath their parent.
+function ObservationTree({ observations }: { observations: DeconObservation[] }) {
+  const { roots, childrenOf, nestedCount } = useMemo(() => {
+    const ids = new Set(observations.map((o) => o.observation_id));
+    const childrenOf = new Map<string, DeconObservation[]>();
+    const roots: DeconObservation[] = [];
+    let nestedCount = 0;
+    for (const o of observations) {
+      const pid = o.parent_observation_id;
+      if (pid && ids.has(pid)) {
+        const arr = childrenOf.get(pid) ?? [];
+        arr.push(o);
+        childrenOf.set(pid, arr);
+        nestedCount += 1;
+      } else {
+        roots.push(o);
+      }
+    }
+    return { roots, childrenOf, nestedCount };
+  }, [observations]);
+
+  return (
+    <div className="decon-sub">
+      <div className="decon-label">
+        Observations emitted
+        {nestedCount > 0 && (
+          <span className="muted"> · {nestedCount} nested under a parent relation</span>
+        )}
+      </div>
+      {observations.length ? (
+        <ul className="obs-tree">
+          {roots.map((r) => (
+            <ObsNode key={r.observation_id} node={r} childrenOf={childrenOf} />
+          ))}
+        </ul>
+      ) : (
+        <span className="muted small">None — no (subject, predicate, object) bound for this sentence.</span>
+      )}
+    </div>
+  );
+}
+
 function SentenceCard({ s }: { s: DeconSentence }) {
   const [open, setOpen] = useState(false);
   const dropped = (s.parse?.predicate_heads ?? []).some((h) => h.note.includes("dropped"));
@@ -146,20 +235,7 @@ function SentenceCard({ s }: { s: DeconSentence }) {
             <div className="muted small">Parse unavailable (scispaCy model not loaded) — only the flat binder path applies.</div>
           )}
 
-          <div className="decon-sub">
-            <div className="decon-label">Observations emitted</div>
-            {s.observations.length ? (
-              s.observations.map((o, i) => (
-                <div key={i} className="small">
-                  <b>{o.subject_text}</b> <Tag kind="pred">{o.predicate}</Tag> <b>{o.object_text}</b>{" "}
-                  <Tag kind={`pol-${o.polarity}`}>{o.polarity}</Tag> {o.certainty}
-                  {o.context && <span className="muted"> · {o.context}</span>}
-                </div>
-              ))
-            ) : (
-              <span className="muted small">None — no (subject, predicate, object) bound for this sentence.</span>
-            )}
-          </div>
+          <ObservationTree observations={s.observations} />
         </div>
       )}
     </div>

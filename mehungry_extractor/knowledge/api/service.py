@@ -604,6 +604,7 @@ def _synthesize(
         details = [
             ObservationDetail(
                 observation_id=o["observation_id"],
+                parent_observation_id=o.get("parent_observation_id"),
                 subject_text=o["subject_text"],
                 subject_concept_id=o["subject_concept_id"],
                 subject_name=(_subj_name := obs_names.get(o["subject_concept_id"]) if o["subject_concept_id"] else None),

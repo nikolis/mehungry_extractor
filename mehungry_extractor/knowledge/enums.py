@@ -52,4 +52,18 @@ PREDICATES = (
     "no_association",
     "contraindicated",
     "associated_with_adverse_event",
+    # Descriptive / definitional relation (Phase 13 — hierarchical relations). "X characterized by Y"
+    # does not assert benefit/harm; it elaborates what a condition *is*. It most often appears in a
+    # subordinate clause modifying the parent relation's object (so it is typically nested beneath it,
+    # see the hierarchical-relations concept), and is read as clinically NEUTRAL by `valence`.
+    "characterized_by",
+    # Descriptive *abundance-manifestation* relations (the same descriptive family as
+    # ``characterized_by``). A free-adjunct participle on a *state* — "dysbiosis, **decreasing**
+    # Firmicutes … and **increasing** Proteobacteria" — does not describe an agent acting, it
+    # describes a compositional change that is part of the state's manifestation. So the active
+    # ``decreases``/``increases`` reading is replaced, in that construction only, by a descriptive
+    # predicate that records the *direction* of the abundance change without asserting benefit/harm
+    # (the per-taxon valence the engine does not know). Clinically NEUTRAL, never flipped by negation.
+    "has_decreased_abundance_of",
+    "has_increased_abundance_of",
 )

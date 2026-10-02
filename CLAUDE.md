@@ -46,3 +46,20 @@ This rule is independent of RULE 1: a REST-API-only change is excluded from the
 `docs/concepts.md` requirement but is **still** subject to this one. A change that
 touches both the REST API and a concept must update **both** `docs/api.md` (RULE 2)
 and `docs/concepts.md` (RULE 1).
+
+## RULE 3 — Keep `docs/observer_ui.md` in sync with every UI change (MANDATORY)
+
+**Before considering any task complete, you MUST update
+[`docs/observer_ui.md`](docs/observer_ui.md) to reflect any change to the Stage
+Observer web app (the `webapp/` frontend).**
+
+This applies to **every** UI change — panels/tabs, how a stage's output is rendered,
+components, frontend structure, build/run steps, conventions, etc. Updating
+`docs/observer_ui.md` is part of the change, not an optional follow-up. A UI change
+is not "done" until `docs/observer_ui.md` has been brought back into agreement with it.
+
+This rule is independent of RULES 1 and 2. A change that touches the UI **and** the
+REST API must update **both** `docs/observer_ui.md` (RULE 3) and `docs/api.md`
+(RULE 2); a change that also touches a concept must update `docs/concepts.md` (RULE 1)
+as well. A UI-only change (no concept, pipeline, data model, or REST API effect) is
+excluded from RULES 1 and 2 but is **still** subject to this one.

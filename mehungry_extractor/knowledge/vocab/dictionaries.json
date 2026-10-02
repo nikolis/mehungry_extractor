@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "vocabulary": "mehungry_curated",
   "concepts": [
     {
@@ -1123,6 +1123,24 @@
       "canonical_name": "Gut microbiota",
       "entity_type": "biomarker",
       "surface_forms": ["gut microbiota", "gut microbiome", "intestinal microbiota"]
+    },
+    {
+      "concept_id": "BIOM:firmicutes",
+      "canonical_name": "Firmicutes",
+      "entity_type": "biomarker",
+      "surface_forms": ["Firmicutes"]
+    },
+    {
+      "concept_id": "BIOM:bifidobacterium",
+      "canonical_name": "Bifidobacterium",
+      "entity_type": "biomarker",
+      "surface_forms": ["Bifidobacterium", "Bifidobacterium genus", "Bifidobacteria", "bifidobacteria"]
+    },
+    {
+      "concept_id": "BIOM:faecalibacterium_prausnitzii",
+      "canonical_name": "Faecalibacterium prausnitzii",
+      "entity_type": "biomarker",
+      "surface_forms": ["Faecalibacterium prausnitzii", "F. prausnitzii", "Faecalibacterium"]
     },
     {
       "concept_id": "OUT:mucosal_healing",

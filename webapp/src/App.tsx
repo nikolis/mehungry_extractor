@@ -138,17 +138,6 @@ export function App() {
           <p className="muted small">Ingest hits the network once; Analyze &amp; Extract are offline.</p>
         </div>
 
-        {log.length > 0 && (
-          <div className="log">
-            <h3>Run log</h3>
-            {log.map((e, i) => (
-              <div key={i} className={`log-row ${e.ok ? "ok" : "bad"}`}>
-                <b>{e.stage}</b> {e.detail}
-              </div>
-            ))}
-          </div>
-        )}
-
         <div className="picker">
           <h3>
             Cached papers <span className="count">{docs.length}</span>
@@ -172,6 +161,17 @@ export function App() {
             ))}
           </ul>
         </div>
+
+        {log.length > 0 && (
+          <div className="log">
+            <h3>Run log</h3>
+            {log.map((e, i) => (
+              <div key={i} className={`log-row ${e.ok ? "ok" : "bad"}`}>
+                <b>{e.stage}</b> {e.detail}
+              </div>
+            ))}
+          </div>
+        )}
       </aside>
 
       <main className="content">

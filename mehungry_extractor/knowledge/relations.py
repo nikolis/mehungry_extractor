@@ -134,6 +134,21 @@ RULES: tuple[RelationRule, ...] = (
         r"\bassociat\w+ with\b|\bassociation between\b|\bcorrelat\w+ with\b|\blinked to\b|\brelated to\b",
         description="subject is associated with object",
     ),
+    # Descriptive / definitional relation (Phase 13). "dysbiosis **characterized by** alterations in
+    # the gut microbiota" elaborates what the subject *is* rather than asserting an effect on it. Its
+    # cue is lexically unique (no other rule matches "characterized by"), so its priority among the
+    # others is immaterial for first-match; placed here beside the descriptive connectives. Neutral
+    # polarity and ``flip=False`` — "not characterized by" is still a (neutral) description, never an
+    # effect to invert. On the model path this is the verb-map entry ``characterize`` (see below); the
+    # flat cue is its model-free counterpart.
+    _rule(
+        "rel_characterized_by",
+        "characterized_by",
+        r"\bcharacteri[sz]\w* by\b",
+        polarity=Polarity.NEUTRAL.value,
+        flip=False,
+        description="subject is characterized/defined by object (a descriptive relation)",
+    ),
     _rule(
         "rel_prevents",
         "prevents",
@@ -168,6 +183,33 @@ RULES: tuple[RelationRule, ...] = (
         "worsens",
         r"\bworsen\w+\b|\baggravat\w+\b|\bexacerbat\w+\b",
         description="subject worsens object",
+    ),
+    # Descriptive abundance-manifestation relations (Phase 14). A *state* "decreasing/increasing" a
+    # taxon is a compositional change it manifests, not an effect it exerts — read descriptively, in
+    # the same clinically-NEUTRAL, never-flipped family as ``characterized_by``. These are placed
+    # *before* the bare ``rel_increases``/``rel_decreases`` so an explicit "decreased/increased
+    # **abundance of** X" is read as the descriptive manifestation on both binders, rather than the
+    # generic directional effect. The parse binder additionally re-labels a free-adjunct participle
+    # ("dysbiosis, decreasing X") to these predicates via :func:`abundance_manifestation_for`; the
+    # cue below is their model-free counterpart, deliberately narrow (it requires an explicit
+    # abundance/level/proportion noun so it cannot swallow an ordinary "reduced X").
+    _rule(
+        "rel_has_decreased_abundance_of",
+        "has_decreased_abundance_of",
+        r"\b(?:decreas\w+|reduc\w+|lower\w+|diminish\w+|depleti\w+|loss)\b"
+        r"(?:\s+\w+){0,3}?\s+(?:abundance|level|levels|proportion|number|population)s?\s+(?:of|in)\b",
+        polarity=Polarity.NEUTRAL.value,
+        flip=False,
+        description="subject manifests a decreased abundance/level of object (descriptive)",
+    ),
+    _rule(
+        "rel_has_increased_abundance_of",
+        "has_increased_abundance_of",
+        r"\b(?:increas\w+|rais\w+|elevat\w+|higher|expansi\w+|overgrow\w+|bloom)\b"
+        r"(?:\s+\w+){0,3}?\s+(?:abundance|level|levels|proportion|number|population)s?\s+(?:of|in)\b",
+        polarity=Polarity.NEUTRAL.value,
+        flip=False,
+        description="subject manifests an increased abundance/level of object (descriptive)",
     ),
     _rule(
         "rel_increases",
@@ -240,6 +282,12 @@ VERB_PREDICATE_MAP: dict[str, str] = {
     "attain": "achieves",
     "maintain": "achieves",
     "sustain": "achieves",
+    # Descriptive relation (Phase 13). A participial "characterized by" clause ("dysbiosis
+    # characterized by alterations …") is a reduced relative (``acl``) whose antecedent noun is the
+    # subject and whose object sits in the ``by``-phrase (an ``nmod``, not a condition preposition, so
+    # :meth:`.parse.SentenceParse.object_tokens` already picks it up). Maps to the same
+    # ``rel_characterized_by`` rule as the flat cue.
+    "characterize": "characterized_by",
 }
 
 # When the verb's grammatical object head is the noun *risk* ("reduced the **risk** of cancer"),
@@ -277,10 +325,29 @@ _ASSOC_RISK_DIRECTION_OVERRIDE: dict[str, str] = {
 
 _RULE_BY_PREDICATE: dict[str, RelationRule] = {r.predicate: r for r in RULES}
 
+# A directional effect verb, when it is a free-adjunct participle over a *state* (Phase 14), is
+# re-read as the descriptive abundance-manifestation predicate of the same direction. Keyed by the
+# base directional predicate the verb map produced; any other predicate is left unchanged.
+_ABUNDANCE_MANIFESTATION: dict[str, str] = {
+    "decreases": "has_decreased_abundance_of",
+    "increases": "has_increased_abundance_of",
+}
+
 
 def rule_for_predicate(predicate: str) -> "RelationRule | None":
     """The :class:`RelationRule` carrying ``predicate`` (its polarity/flip/id/version)."""
     return _RULE_BY_PREDICATE.get(predicate)
+
+
+def abundance_manifestation_for(predicate: str) -> "RelationRule | None":
+    """The descriptive abundance-manifestation rule for a directional ``predicate`` (Phase 14).
+
+    Maps ``decreases``/``increases`` to the ``has_decreased_abundance_of``/
+    ``has_increased_abundance_of`` rule used when the predicate is a free-adjunct participle over a
+    *state* (see :mod:`.observations`). Returns ``None`` for any other predicate, so the caller
+    only re-labels the two directional effects and leaves everything else as the verb map produced."""
+    mapped = _ABUNDANCE_MANIFESTATION.get(predicate)
+    return _RULE_BY_PREDICATE.get(mapped) if mapped is not None else None
 
 
 def rule_for_verb(
