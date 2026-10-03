@@ -82,6 +82,7 @@ def get_canonical(
         "sentences": sum(1 for _ in document.iter_sentences()),
         "chars": len(document.text),
         "source_type": document.source_type,
+        "segmenter": document.segmenter,
     }
     data["paper_url"] = _PUBMED_URL.format(pmid=normalize_pmid(pmid))
     return data

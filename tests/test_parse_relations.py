@@ -155,6 +155,47 @@ def test_subject_and_object_coordination_expands_to_cross_product():
             assert doc.text[ref.start_char:ref.end_char] == ref.quoted_text
 
 
+# --- specificational copula: subject identified with a concrete entity list ----------
+
+
+def test_specificational_copula_binds_list_members_not_generic_head():
+    """*"The major vegetables reported to ameliorate symptoms were stem vegetables, pumpkins,
+    lettuce, tomatoes, carrots, capsicum, and spinach."*
+
+    A specificational copula identifies the generic subject *vegetables* with the concrete list on
+    the other side of *were*; the controlled *ameliorate* (an ``xcomp`` inheriting its subject from
+    the governing *reported*) is asserted of **each listed** vegetable, not the vague superordinate.
+    The binder substitutes the list members for the generic head, so each member binds and the bare
+    ``FOOD:vegetables`` edge does not appear."""
+    doc, observations = _obs(
+        "The major vegetables reported to ameliorate symptoms were stem vegetables, pumpkins, "
+        "lettuce, tomatoes, carrots, capsicum, and spinach."
+    )
+    assert observations, "expected the listed vegetables to bind as subjects"
+    assert all(o.predicate == "improves" for o in observations)
+    assert all(o.object_concept_id == "OUT:symptoms" for o in observations)
+    subjects = {o.subject_concept_id for o in observations}
+    assert subjects == {
+        "FOOD:stem_vegetables", "FOOD:pumpkin", "FOOD:lettuce", "FOOD:tomato",
+        "FOOD:carrot", "FOOD:capsicum", "FOOD:spinach",
+    }
+    # The vague superordinate is replaced by the list, not emitted alongside it.
+    assert "FOOD:vegetables" not in subjects
+    assert all("binder:parse" in (o.context or "") for o in observations)
+
+
+def test_predicational_copula_leaves_generic_subject_untouched():
+    """A *predicational* copula ("… has been shown to reduce …", no entity-list identification) is
+    not a specification — the control-inherited subject stays the resolved head, unchanged. Guards the
+    specificational-copula expansion against firing on ordinary control sentences."""
+    doc, observations = _obs(
+        "The Mediterranean diet has been shown to reduce disease activity."
+    )
+    assert _triples(observations) == [
+        ("INT:mediterranean_diet", "decreases", "OUT:disease_activity"),
+    ]
+
+
 # --- contrastive coordination with a shared subject ----------------------------------
 
 

@@ -108,11 +108,6 @@ def available() -> bool:
     return _entities.model_available()
 
 
-def _nlp():
-    """The cached scispaCy pipeline (``tok2vec … parser ner``) already loaded by :mod:`.entities`."""
-    return _entities._nlp()
-
-
 def _depth(tok) -> int:
     """Number of ``head`` hops from ``tok`` to its sentence root (guards against cycles)."""
     depth = 0
@@ -134,7 +129,9 @@ class SentenceParse:
 
     def __init__(self, sentence: "Sentence", mentions: "list[EntityMention]") -> None:
         self.base = sentence.start_char
-        self.doc = _nlp()(sentence.text)
+        # Reuse the Doc the entity stage already computed for this sentence text (same scispaCy
+        # pipeline), so the model runs once per sentence instead of once per stage.
+        self.doc = _entities.analyze(sentence.text)
         self.mentions = mentions
         self._anchor_to_mention: dict[int, "EntityMention"] = self._map_mentions()
 
@@ -482,6 +479,44 @@ class SentenceParse:
         if not out and rel:
             out.append(verb.head)  # reduced relative / participle: antecedent is the subject
         return out
+
+    def copular_identity_tokens(self, subj_tok) -> list:
+        """The predicate-nominal set a subject noun is *identified with* by a specificational copula,
+        coordination-expanded — or ``[]`` when the subject is not in such an identification.
+
+        A **specificational copula** equates a subject NP with a (usually listed) predicate nominal
+        that *names its members*: *"The major vegetables reported to ameliorate symptoms **were** stem
+        vegetables, pumpkins, lettuce, tomatoes, carrots, capsicum, and spinach."* The subject
+        *vegetables* is a variable whose value is the list; a predicate that binds *vegetables* as its
+        subject (here the controlled *ameliorate*) is really asserted of each list member, so the
+        binder substitutes these tokens for the generic head
+        (:func:`.observations._expand_copular_subject_tokens`).
+
+        Two parse shapes are recognised (scispaCy emits both for *"X were A, B, and C"*):
+
+        * **predicate-nominal head** — the subject's ``head`` *is* the predicate nominal, carrying the
+          copula as a ``cop`` child (*"The vegetables **were** tomatoes and carrots"* roots at
+          *tomatoes*, whose ``nsubj`` is *vegetables*); the identity set is that head's coordination.
+        * **coordinated onto a verb** — when the subject heads a verb (a reduced relative, *"foods
+          **reported** to reduce …"*), the specificational predicate nominal attaches as a ``conj`` of
+          that verb and carries the ``cop`` there (*"…were **tomatoes**, carrots"*); the identity set
+          is that ``conj``'s coordination.
+
+        Returns ``[]`` for an ordinary (predicational) copula — *"The diet **was** effective"* —
+        because the complement is an adjective, not an entity list; the caller's mention-resolution
+        guard then leaves the generic subject untouched, so only genuine entity-list specifications are
+        expanded."""
+        head = subj_tok.head
+        if head.i == subj_tok.i:
+            return []
+        # Shape 1: the subject's head is itself the copular predicate nominal.
+        if any(c.dep_ == "cop" for c in head.children):
+            return self.coordinate(head)
+        # Shape 2: the head is a verb and the predicate nominal is a ``conj`` of it bearing the copula.
+        for c in head.children:
+            if c.dep_ == "conj" and any(g.dep_ == "cop" for g in c.children):
+                return self.coordinate(c)
+        return []
 
     def participle_subject_tokens(self, verb) -> list:
         """Implicit subject of a free-adjunct **participle** (``advcl`` + ``VBG``/``VBN``), or ``[]``.

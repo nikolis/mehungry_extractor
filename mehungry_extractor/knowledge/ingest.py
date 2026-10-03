@@ -1,9 +1,11 @@
 """Phase-1 ingestion orchestration: acquire → archive → canonical → persist.
 
 ``ingest_pmid`` is the network entry point; ``normalize_document`` rebuilds the canonical
-representation from *cached raw only* (offline) and is byte-reproducible. Both share
-``assemble_document`` so the raw→canonical transform is identical regardless of whether the
-bytes came from the network or the corpus.
+representation from *cached raw only* (offline). Both share ``assemble_document`` so the
+raw→canonical transform is identical regardless of whether the bytes came from the network or the
+corpus — for a given ``use_model`` and scispaCy model version, since the default (model-based)
+sentence segmenter's boundaries depend on the model. ``use_model=False`` uses the model-free
+``pysbd`` floor and is byte-reproducible without any model.
 """
 
 from __future__ import annotations
@@ -30,8 +32,14 @@ def assemble_document(
     pmc_xml: Optional[bytes],
     pmcid: Optional[str] = None,
     checksums: Optional[dict[str, str]] = None,
+    *,
+    use_model: bool = True,
 ) -> tuple[Document, PubMedRecord]:
-    """Transform raw bytes into a canonical :class:`Document`. Deterministic, no network."""
+    """Transform raw bytes into a canonical :class:`Document`. No network.
+
+    ``use_model`` picks the sentence segmenter (see :func:`canonical.build_document`): the scispaCy
+    parser's boundaries by default, the ``pysbd`` rule floor when ``False`` or the model is absent.
+    """
     rec = pubmed.parse(pubmed_xml) if pubmed_xml else PubMedRecord()
 
     body_sections = jats.parse(pmc_xml) if pmc_xml else []
@@ -62,7 +70,7 @@ def assemble_document(
         publication_types=rec.publication_types,
         source_type=source_type,
     )
-    document = build_document(metadata, sections, checksums or {})
+    document = build_document(metadata, sections, checksums or {}, use_model=use_model)
     return document, rec
 
 
@@ -116,14 +124,19 @@ def ingest_pmid(
     engine: Optional[Engine] = None,
     persist: bool = True,
     timeout: int = 30,
+    use_model: bool = True,
 ) -> Document:
-    """Acquire (or reuse cached) raw sources, archive them, build + persist the canonical doc."""
+    """Acquire (or reuse cached) raw sources, archive them, build + persist the canonical doc.
+
+    ``use_model`` is threaded to the segmenter (see :func:`assemble_document`)."""
     pmid = normalize_pmid(pmid)
     corpus = corpus or CorpusStore()
 
     if corpus.has_raw(pmid) and not force:
         # Idempotent: reuse the immutable archive instead of re-fetching.
-        return normalize_document(pmid, corpus=corpus, engine=engine, persist=persist)
+        return normalize_document(
+            pmid, corpus=corpus, engine=engine, persist=persist, use_model=use_model
+        )
 
     raw = _acquire.fetch(pmid, timeout=timeout)
 
@@ -144,7 +157,8 @@ def ingest_pmid(
     checksums = corpus.save_raw(pmid, files, force=force)
 
     document, rec = assemble_document(
-        pmid, raw.pubmed_xml, raw.pmc_xml, pmcid=raw.pmcid, checksums=checksums
+        pmid, raw.pubmed_xml, raw.pmc_xml, pmcid=raw.pmcid, checksums=checksums,
+        use_model=use_model,
     )
     corpus.save_metadata(pmid, _metadata_dict(document, rec, raw, checksums))
     corpus.save_canonical(document)
@@ -159,8 +173,11 @@ def normalize_document(
     corpus: Optional[CorpusStore] = None,
     engine: Optional[Engine] = None,
     persist: bool = True,
+    use_model: bool = True,
 ) -> Document:
-    """Rebuild the canonical document from cached raw only — offline, byte-reproducible."""
+    """Rebuild the canonical document from cached raw only — offline.
+
+    ``use_model`` is threaded to the segmenter (see :func:`assemble_document`)."""
     pmid = normalize_pmid(pmid)
     corpus = corpus or CorpusStore()
     if not corpus.has_raw(pmid):
@@ -181,7 +198,7 @@ def normalize_document(
     prior_meta = corpus.read_metadata(pmid)
     pmcid = prior_meta.get("pmcid")
     document, rec = assemble_document(
-        pmid, pubmed_xml, pmc_xml, pmcid=pmcid, checksums=checksums
+        pmid, pubmed_xml, pmc_xml, pmcid=pmcid, checksums=checksums, use_model=use_model
     )
     corpus.save_metadata(pmid, _metadata_dict(document, rec, prior_meta, checksums))
     corpus.save_canonical(document)

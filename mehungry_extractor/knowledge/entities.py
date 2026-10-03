@@ -150,6 +150,20 @@ def model_available() -> bool:
         return False
 
 
+@functools.lru_cache(maxsize=512)
+def analyze(text: str):
+    """Run the scispaCy pipeline once for ``text`` and cache the resulting ``Doc``.
+
+    Both the NER read (:func:`_scispacy_spans`) and the parse layer
+    (:class:`mehungry_extractor.knowledge.parse.SentenceParse`) consume the *same* ``Doc`` per
+    sentence, so the model (tok2vec → parser → ner) runs **once** per sentence text rather than
+    once in each stage. The cache is bounded and keyed by the sentence text; a document's
+    sentences comfortably fit, and sentences from older documents are evicted as new ones arrive.
+    Consumers treat the ``Doc`` as read-only.
+    """
+    return _nlp()(text)
+
+
 def _scispacy_spans(text: str) -> list[tuple[int, int, str]]:
     """``(start, end, entity_type)`` for Chemical/Disease spans in ``text``.
 
@@ -158,7 +172,7 @@ def _scispacy_spans(text: str) -> list[tuple[int, int, str]]:
     """
     if not text:
         return []
-    doc = _nlp()(text)
+    doc = analyze(text)
     out = []
     for ent in doc.ents:
         etype = _SCISPACY_LABELS.get(ent.label_)

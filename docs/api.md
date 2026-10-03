@@ -310,7 +310,7 @@ title-filter discipline as `/analyze`.
 | Method & path | Returns |
 |---|---|
 | `GET /observe/documents` | Every ingested paper (`document_id`, `pmid`, `title`, `source_type`, …) — the paper picker. |
-| `GET /observe/document/{pmid}` | The **canonical document**: the single offset-addressable `text`, its `sections`/`paragraphs`/`sentences` (with absolute char offsets), `metadata`, and a `summary` (section/sentence/char counts). `404` if the paper was never ingested. |
+| `GET /observe/document/{pmid}` | The **canonical document**: the single offset-addressable `text`, its `sections`/`paragraphs`/`sentences` (with absolute char offsets), `metadata`, the `segmenter` that produced the sentence boundaries (`scispacy-parser` or `pysbd`), and a `summary` (section/sentence/char counts, `source_type`, and `segmenter`). `404` if the paper was never ingested. |
 | `GET /observe/entities/{pmid}` | **Entity mentions**: each with `surface_text`, `entity_type`, `concept_id`, `status` (normalized/ambiguous/unmatched), `start_char`/`end_char`, and restrictive `modifiers`. |
 | `GET /observe/observations/{pmid}` | **Observations** (audit layer): subject/predicate/object, `polarity`/`certainty`, `qualifiers`, the `rule_id`/`rule_version` that fired, inline `evidence_refs`, and `parent_observation_id` (the observation this one is nested beneath — hierarchical relations — or `null`). |
 | `GET /observe/claims/{pmid}` | **Claims** (concept layer): grouped `(subject, predicate, object, polarity, certainty)` with `qualifiers`, plus `parent_claim_id` (the claim this one is nested beneath, or `null` — set only when unambiguous across the claim's observations). |

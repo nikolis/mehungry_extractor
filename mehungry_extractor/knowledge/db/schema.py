@@ -70,6 +70,9 @@ class DocumentRow(Base):
     pipeline_version: Mapped[str] = mapped_column(String)
     canonical_text: Mapped[str] = mapped_column(Text)
     checksums: Mapped[dict] = mapped_column(JSON, default=dict)
+    # Segmenter that produced the sentence boundaries ("scispacy-parser" or "pysbd"). Defaulted so
+    # rows written before this column existed load as the rule floor.
+    segmenter: Mapped[str] = mapped_column(String, default="pysbd")
     run_id: Mapped[str] = mapped_column(String, ForeignKey("extraction_runs.run_id"))
 
 
@@ -235,6 +238,7 @@ def persist_document(session: Session, document: Document, run: ExtractionRun) -
             pipeline_version=document.pipeline_version,
             canonical_text=document.text,
             checksums=document.checksums,
+            segmenter=document.segmenter,
             run_id=run.run_id,
         )
     )
@@ -1240,4 +1244,5 @@ def load_document(session: Session, document_id: str) -> Optional[Document]:
             source_type=row.source_type,
         ),
         checksums=dict(row.checksums or {}),
+        segmenter=row.segmenter or "pysbd",
     )

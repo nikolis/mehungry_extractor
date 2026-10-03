@@ -7,6 +7,9 @@ requires-python = ">=3.10"
 dependencies = [
     "requests>=2.31",
     "pydantic>=2.6",
+    # Biomedical-aware, model-free sentence segmentation (Concept 2): pysbd keeps sentence
+    # boundaries off abbreviations/decimals/units so the per-sentence parser is not fed fragments.
+    "pysbd>=0.3.4",
     # scispaCy is a first-class detector (Concept 6): en_ner_bc5cdr_md is the authoritative
     # Chemical/Disease span source and its pipeline also supplies the parser used by Phase 10.
     # spaCy is pinned to the model's supported range (>=3.7.4,<3.8.0): spaCy 3.8 tightened config

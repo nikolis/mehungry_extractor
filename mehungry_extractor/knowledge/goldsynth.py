@@ -46,6 +46,7 @@ def _produced_for_quote(sentence_quote: str, *, use_model: bool) -> list[dict]:
     document = build_document(
         DocumentMetadata(pmid="90000000", source_type="abstract"),
         [ParsedSection(title="Body", paragraphs=[sentence_quote])],
+        use_model=use_model,
     )
     mentions = extract_entities(document, use_model=use_model)
     observations = extract_observations(document, mentions, use_model=use_model)

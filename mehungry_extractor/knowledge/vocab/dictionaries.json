@@ -447,6 +447,24 @@
       "surface_forms": ["tomato", "tomatoes"]
     },
     {
+      "concept_id": "FOOD:pumpkin",
+      "canonical_name": "Pumpkin",
+      "entity_type": "food",
+      "surface_forms": ["pumpkin", "pumpkins"]
+    },
+    {
+      "concept_id": "FOOD:lettuce",
+      "canonical_name": "Lettuce",
+      "entity_type": "food",
+      "surface_forms": ["lettuce", "lettuces"]
+    },
+    {
+      "concept_id": "FOOD:capsicum",
+      "canonical_name": "Capsicum",
+      "entity_type": "food",
+      "surface_forms": ["capsicum", "capsicums"]
+    },
+    {
       "concept_id": "FOOD:garlic",
       "canonical_name": "Garlic",
       "entity_type": "food",

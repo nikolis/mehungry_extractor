@@ -225,9 +225,24 @@ question ("show me exactly where") mechanically answerable.
 - Token offsets or (section, paragraph, sentence, token) tuples are the common alternative. They're
   more structured but fragile: retokenize and every offset shifts. Character offsets into an
   immutable string never drift.
-- Sentence boundaries currently come from a rule-based segmenter (a blank spaCy pipeline with only
-  a sentencizer). Swapping in a statistical segmenter is now fair game — it need not be
-  deterministic — but it **must** preserve the offset contract; that is the one non-negotiable.
+- Sentence boundaries come from **two segmenters, selected by `use_model`** (`knowledge/segment.py`):
+  - **Model path (default).** Boundaries are the scispaCy dependency parser's own `doc.sents`,
+    read off the *same* cached `Doc` the entity/parse stages use (`entities.analyze`). This
+    **unifies segmentation with downstream relation extraction**: because the parser runs *per
+    sentence* (Concept 6/7), delimiting sentences with the parser's own notion of a sentence means
+    it is never handed a fragment it would have re-joined — a disagreement that silently dropped any
+    relation crossing the false boundary. This couples segmentation to a loaded model; that is an
+    accepted cost now that determinism is no longer a goal, and it is kept auditable (below).
+  - **Rule floor (`pysbd`).** When the model is absent or `use_model=False`, a biomedical-aware
+    rule-based segmenter takes over. It is not a plain punctuation splitter: scientific prose is
+    dense with non-terminal periods — abbreviations (`approx.`, `vs.`, `et al.`), decimals/units
+    (`2.5 mg.`), species (`E. coli`), p-values — and a naive splitter shatters such a sentence into
+    fragments. `pysbd` keeps them whole, needs no model, and keeps canonical ingest runnable offline.
+
+  Which segmenter ran is recorded on `Document.segmenter` (`"scispacy-parser"` or `"pysbd"`), so a
+  model-derived segmentation is never silently taken for the floor — the same auditability the
+  engine applies to any model-assisted step. The one non-negotiable for *either* segmenter is the
+  offset contract.
 - Any new span you ever add (a clause, a qualifier cue, a dose phrase) **must** be expressed as
   absolute offsets into this same `text`. Don't invent a second coordinate system — that rule is
   load-bearing.
@@ -257,8 +272,8 @@ def build_document(metadata, sections, checksums=None) -> Document:
     return Document(text=canonical_text, sections=sections_out, ...)
 ```
 
-- **Parameters.** `metadata` (bibliographic), the parsed `sections` (each a `ParsedSection` of raw paragraphs from `jats`/`pubmed`), and the raw-file `checksums` for the reverse trace.
-- **Called by.** `ingest.assemble_document`, which runs on *both* the network path (`ingest_pmid`) and the offline rebuild (`normalize_document`) — so the raw→canonical transform is identical either way. Sentence spans come from `segment()` (the deterministic sentencizer in `knowledge/segment.py`).
+- **Parameters.** `metadata` (bibliographic), the parsed `sections` (each a `ParsedSection` of raw paragraphs from `jats`/`pubmed`), the raw-file `checksums` for the reverse trace, and `use_model` (default `True`) selecting the sentence segmenter.
+- **Called by.** `ingest.assemble_document`, which runs on *both* the network path (`ingest_pmid`) and the offline rebuild (`normalize_document`) — so the raw→canonical transform is identical either way *for a given `use_model` and model version*. Sentence spans come from `segment(norm, use_model=...)`: the scispaCy parser's boundaries by default, the `pysbd` rule floor when `use_model=False` or the model is absent. Because the model path depends on the model version, the invariant that online and offline rebuilds agree holds only when both run the same segmenter — which is why the chosen segmenter is stamped on `Document.segmenter`.
 - **Returns.** A `Document` whose single `text` satisfies `document.text[obj.start_char:obj.end_char] == obj.text` for every section/paragraph/sentence — the offset contract, enforced by tests. Serialized by `to_canonical_json` with sorted keys so identical input is byte-identical output.
 
 ---
@@ -646,7 +661,13 @@ adjacency:
   cannot override the non-entity-subject drop that keeps a fabricated subject out of the record.
 
 This needs **no new dependency**: the first-class scispaCy model (Concept 6) already ships a
-`parser` in its pipeline, and `parse.py` wraps that same object. The **predicate stays rule-based** —
+`parser` in its pipeline, and `parse.py` wraps that same object. It also wraps the *same analysed
+`Doc`*: the entity stage and the parse stage both obtain a sentence's spaCy `Doc` from one cached
+analyser (`entities.analyze`, a bounded LRU keyed by sentence text), so the model
+(`tok2vec → parser → ner`) runs **once per sentence**, not once in each stage. NER reads the `Doc`'s
+`.ents`; the parse binder reads its dependency tree — a single inference feeds both, which also
+guarantees the entities and the parse they are bound into describe the *same* tokenisation. The
+**predicate stays rule-based** —
 a versioned verb-lemma → predicate map (`relations.VERB_PREDICATE_MAP`) with two object-driven
 promotions: a `risk` object promotes `decreases`/`increases` to `reduces_risk`/`increases_risk`, and a
 **direction word on a non-risk object** promotes a *bare association* to a **directional association**
@@ -709,6 +730,22 @@ on three cooperating pieces:
 - **An elided subject** (control: *"require enteral nutrition … to prevent …"*) is resolved to its
   controller from the governing clause, so the relation is still bound when the controller is a real
   entity.
+- **A specificational-copula subject is expanded to the list it names.** A sentence often states a
+  relation of a *generic* head and then enumerates the members: *"The major vegetables reported to
+  ameliorate symptoms **were** stem vegetables, pumpkins, lettuce, tomatoes, carrots, capsicum, and
+  spinach."* The copula here is **specificational** — it identifies the variable *vegetables* with the
+  concrete list on the other side of *were*, so the controlled *ameliorate* (an `xcomp` inheriting its
+  subject from the governing *reported*) is really asserted of each listed vegetable, not the vague
+  superordinate. Binding only *vegetables* throws that content away. So when a subject head is
+  identified with a predicate-nominal list by a specificational copula, the binder **substitutes the
+  list members** for the head (coordination-expanded) and emits the relation of each. Two parse shapes
+  are covered — the subject's head *is* the copular predicate nominal (*"the vegetables were tomatoes
+  and carrots"*), or (after a reduced relative) the predicate nominal is a `conj` of the clause verb
+  carrying the copula (the sentence above). The substitution is **gated on entity resolution**: it
+  fires only when at least one list member resolves to a concept, so a *predicational* copula (*"the
+  diet was effective"* — an adjective complement, not an identification) and a list of non-entities
+  both leave the generic subject untouched rather than dropping the relation; list members outside the
+  vocabulary simply bind nothing, as any unresolved endpoint does.
 - **The guard blocks only a non-entity subject.** When a discovered, mapped predicate has an overt
   noun subject — or a control-resolved controller — that resolves to **no concept**, the flat
   fallback is suppressed for that sentence: the true subject is a non-entity (an abstract noun, a

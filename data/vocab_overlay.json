@@ -32,6 +32,15 @@
       "surface_forms": [
         "leafy vegetables"
       ]
+    },
+    {
+      "concept_id": "OUT:symptoms",
+      "canonical_name": "symptoms",
+      "entity_type": "outcome",
+      "surface_forms": [
+        "symptoms",
+        "disease symptoms"
+      ]
     }
   ],
   "removed": []

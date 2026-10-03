@@ -30,7 +30,7 @@ from pydantic import BaseModel
 
 from . import PIPELINE_VERSION
 from .ids import document_id, paragraph_id, section_id, sentence_id
-from .segment import segment
+from .segment import active_segmenter, segment
 
 _PARAGRAPH_SEP = "\n\n"
 _WS_RE = re.compile(r"\s+")
@@ -108,6 +108,10 @@ class Document(BaseModel):
     sections: list[Section]
     metadata: DocumentMetadata
     checksums: dict[str, str] = {}  # raw-file name -> sha256, for the reverse trace
+    # Which segmenter produced the sentence boundaries ("scispacy-parser" model path, or the
+    # "pysbd" rule floor). Recorded so a model-derived segmentation is never silently taken for
+    # the floor. Defaults to the rule id for backward-compatible deserialization of older docs.
+    segmenter: str = "pysbd"
 
     @property
     def pmid(self) -> str:
@@ -131,8 +135,15 @@ def build_document(
     metadata: DocumentMetadata,
     sections: list[ParsedSection],
     checksums: Optional[dict[str, str]] = None,
+    *,
+    use_model: bool = True,
 ) -> Document:
-    """Assemble a canonical :class:`Document` obeying the offset contract."""
+    """Assemble a canonical :class:`Document` obeying the offset contract.
+
+    ``use_model`` selects the sentence segmenter: ``True`` (default) uses the scispaCy parser's
+    boundaries (falling back to the ``pysbd`` rule floor if the model is unavailable); ``False``
+    always uses the floor. The chosen segmenter is recorded on ``Document.segmenter``.
+    """
     doc_id = document_id(metadata.pmid)
 
     parts: list[str] = []
@@ -173,7 +184,7 @@ def build_document(
                     end_char=p_start + rel_end,
                     text=stext,
                 )
-                for k, (rel_start, rel_end, stext) in enumerate(segment(norm))
+                for k, (rel_start, rel_end, stext) in enumerate(segment(norm, use_model=use_model))
             ]
             paragraphs_out.append(
                 Paragraph(
@@ -212,6 +223,7 @@ def build_document(
         sections=sections_out,
         metadata=metadata,
         checksums=checksums or {},
+        segmenter=active_segmenter(use_model),
     )
 
 

@@ -419,6 +419,32 @@ def _dedup_keep_order(mentions: "list[EntityMention]") -> "list[EntityMention]":
     return out
 
 
+def _expand_copular_subject_tokens(sp: "object", tokens: list) -> list:
+    """Substitute a specificational-copula subject with the entity list it is identified with.
+
+    *"The major vegetables reported to ameliorate symptoms were stem vegetables, pumpkins, lettuce,
+    tomatoes, carrots, capsicum, and spinach"* identifies the generic subject *vegetables* with a
+    concrete list (:meth:`.parse.SentenceParse.copular_identity_tokens`); the controlled predicate
+    (*ameliorate*) is asserted of each **listed** vegetable, not the vague superordinate — binding only
+    *vegetables* drops the sentence's real content. Each subject token heading such an identification is
+    therefore replaced by the list members.
+
+    Replacement is gated on **entity resolution**: it fires only when at least one list member resolves
+    to an entity mention. A predicational copula (*"the diet was effective"* — an adjective complement)
+    or a list of non-entities thus leaves the generic subject untouched, so the substitution cannot drop
+    a relation whose only resolvable subject is the head noun. Non-entity list members (here *pumpkins*/
+    *lettuce*/*capsicum*, absent from the vocabulary) simply bind nothing, exactly as any unresolved
+    endpoint does."""
+    out: list = []
+    for t in tokens:
+        ident = sp.copular_identity_tokens(t)
+        if ident and any(sp.subject_mention_for_token(i) is not None for i in ident):
+            out.extend(ident)
+        else:
+            out.append(t)
+    return out
+
+
 # The entity type stamped on a synthetic descriptive-object mention (below). The phrase it carries
 # is a free-text descriptor, not a dictionary entity, so this type never maps to a vocabulary and
 # the mention is never added to the persisted entity set — it exists only to carry the object
@@ -522,6 +548,11 @@ def _parse_bind_sentence(
             if pred.i != root.i and not subj_tokens:
                 subj_tokens = root_subjects
 
+            # Specificational copula ("The major vegetables … were stem vegetables, tomatoes, …"):
+            # substitute a generic subject head for the concrete entity list it is identified with, so
+            # the relation is asserted of each listed member rather than the vague superordinate.
+            subj_tokens = _expand_copular_subject_tokens(sp, subj_tokens)
+
             # Unwrap a measure/container-noun *subject* to the entities in its content genitive — the
             # subject-side mirror of the object unwrap below ("**Intake of red meat** increased CRP"
             # → red meat; "**consumption of vegetables** … associated with …" → vegetables). Without
@@ -620,7 +651,11 @@ def _parse_bind_sentence(
                 elif any(t.pos_ == "PRON" for t in subj_tokens):
                     continue
                 else:
-                    ctrl_tokens = sp.controller_tokens(pred)
+                    # Expand a control-inherited subject through a specificational copula too: in
+                    # "The major vegetables reported to ameliorate symptoms were stem vegetables, …"
+                    # the controlled *ameliorate* inherits *vegetables* from the governing *reported*,
+                    # and that generic head is the one the copula identifies with the concrete list.
+                    ctrl_tokens = _expand_copular_subject_tokens(sp, sp.controller_tokens(pred))
                     subjects = _dedup_keep_order(
                         [sp.subject_mention_for_token(t) for t in ctrl_tokens]
                     )
