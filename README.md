@@ -1,6 +1,7 @@
-# mehungry-extractor
+<p align="center"> <img src="logo_medical_extractor.png" alt="mehungry-extractor logo" width="200"> </p>
 
-Offline, **non-deployed** biomedical literature tooling for Mehungry. It has two layers:
+<p align="center"> <strong>mehungry-extractor Offline, **non-deployed** biomedical literature tooling for Mehungry.</strong> </p>
+It has two layers:
 
 1. **Offline knowledge/evidence engine** (`mehungry_extractor.knowledge`, CLI
    `mehungry`) — the source of truth. It archives PubMed/PMC sources immutably, builds an
