@@ -3,15 +3,12 @@
 <p align="center"> <strong>mehungry-extractor Offline, **non-deployed** biomedical literature tooling for Mehungry.</strong> </p>
 It has two layers:
 
-1. **Offline knowledge/evidence engine** (`mehungry_extractor.knowledge`, CLI
+**Offline knowledge/evidence engine** (`mehungry_extractor.knowledge`, CLI
    `mehungry`) — the source of truth. It archives PubMed/PMC sources immutably, builds an
    offset-addressable canonical document, and preserves complete provenance back to the exact
    source span. **Runs entirely offline (no hosted APIs); every fact traces to its source
    span.** Non-deterministic local techniques (embeddings, similarity, learned scorers) are
    allowed as long as provenance is preserved. See [Offline engine](#offline-engine-mehungry) below.
-2. **Legacy LLM recommendation extractor** (CLI `mehungry-extract`) — the original
-   phase-aware dietary-recommendation path, a Python sibling of `apps/mehungry_local_ai`.
-   Unchanged; documented under [LLM recommendation path](#llm-recommendation-path).
 
 The guiding requirement for layer 1: *if the system tells you a fact, it can show which paper,
 and — wherever the text supports it — which section, sentence, or phrase produced it.*
